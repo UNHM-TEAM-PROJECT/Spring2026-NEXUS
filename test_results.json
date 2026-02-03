@@ -1,207 +1,611 @@
 {
   "summary": {
     "modality": {
-      "accuracy": 0.7515,
-      "precision": 0.9612,
-      "recall": 0.775,
-      "f1_score": 0.8581,
-      "TP": 124,
+      "accuracy": 0.7574,
+      "precision": 0.9624,
+      "recall": 0.7805,
+      "f1_score": 0.862,
+      "TP": 128,
       "FP": 5,
       "FN": 36,
       "TN": 0
     },
     "SLOs": {
-      "accuracy": 0.8909,
+      "accuracy": 0.8935,
       "precision": 1.0,
-      "recall": 0.75,
-      "f1_score": 0.8571,
-      "TP": 54,
+      "recall": 0.7534,
+      "f1_score": 0.8594,
+      "TP": 55,
       "FP": 0,
       "FN": 18,
-      "TN": 93
+      "TN": 96
     },
     "email": {
-      "accuracy": 0.8727,
-      "precision": 0.9714,
-      "recall": 0.8889,
-      "f1_score": 0.9283,
-      "TP": 136,
-      "FP": 4,
-      "FN": 17,
-      "TN": 8
-    },
-    "credit_hour": {
-      "accuracy": 0.897,
-      "precision": 1.0,
-      "recall": 0.8509,
-      "f1_score": 0.9194,
-      "TP": 97,
-      "FP": 0,
-      "FN": 17,
-      "TN": 51
-    },
-    "workload": {
-      "accuracy": 0.903,
-      "precision": 0.9176,
-      "recall": 0.8966,
-      "f1_score": 0.907,
-      "TP": 78,
-      "FP": 7,
-      "FN": 9,
-      "TN": 71
-    },
-    "instructor_name": {
-      "accuracy": 0.9212,
-      "precision": 1.0,
-      "recall": 0.9177,
-      "f1_score": 0.9571,
-      "TP": 145,
-      "FP": 0,
-      "FN": 13,
-      "TN": 7
-    },
-    "instructor_title": {
-      "accuracy": 0.9515,
-      "precision": 0.9211,
-      "recall": 0.9722,
-      "f1_score": 0.9459,
-      "TP": 70,
-      "FP": 6,
-      "FN": 2,
-      "TN": 87
-    },
-    "instructor_department": {
-      "accuracy": 0.9091,
-      "precision": 0.8947,
-      "recall": 0.9067,
-      "f1_score": 0.9007,
-      "TP": 68,
-      "FP": 8,
-      "FN": 7,
-      "TN": 82
-    },
-    "office_address": {
-      "accuracy": 0.9212,
-      "precision": 0.9867,
-      "recall": 0.8605,
-      "f1_score": 0.9193,
-      "TP": 74,
-      "FP": 1,
-      "FN": 12,
-      "TN": 78
-    },
-    "office_hours": {
-      "accuracy": 0.8424,
-      "precision": 0.9909,
-      "recall": 0.8134,
-      "f1_score": 0.8934,
-      "TP": 109,
-      "FP": 1,
-      "FN": 25,
-      "TN": 30
-    },
-    "office_phone": {
-      "accuracy": 0.9273,
-      "precision": 0.9524,
-      "recall": 0.8696,
-      "f1_score": 0.9091,
-      "TP": 60,
-      "FP": 3,
-      "FN": 9,
-      "TN": 93
-    },
-    "preferred_contact_method": {
-      "accuracy": 0.8606,
-      "precision": 0.9577,
-      "recall": 0.8889,
-      "f1_score": 0.922,
-      "TP": 136,
-      "FP": 6,
-      "FN": 17,
-      "TN": 6
-    },
-    "assignment_types_title": {
-      "accuracy": 0.7818,
-      "precision": 0.9174,
-      "recall": 0.7874,
-      "f1_score": 0.8475,
-      "TP": 100,
-      "FP": 9,
-      "FN": 27,
-      "TN": 29
-    },
-    "deadline_expectations_title": {
-      "accuracy": 0.8061,
-      "precision": 0.9806,
-      "recall": 0.771,
-      "f1_score": 0.8632,
-      "TP": 101,
-      "FP": 2,
-      "FN": 30,
-      "TN": 32
-    },
-    "assignment_delivery": {
-      "accuracy": 0.8848,
-      "precision": 0.985,
-      "recall": 0.8851,
-      "f1_score": 0.9324,
-      "TP": 131,
-      "FP": 2,
-      "FN": 17,
-      "TN": 15
-    },
-    "final_grade_scale": {
-      "accuracy": 0.9394,
-      "precision": 0.9556,
-      "recall": 0.8431,
-      "f1_score": 0.8958,
-      "TP": 43,
-      "FP": 2,
-      "FN": 8,
-      "TN": 112
-    },
-    "response_time": {
-      "accuracy": 0.9818,
-      "precision": 0.9677,
-      "recall": 0.9375,
-      "f1_score": 0.9524,
-      "TP": 30,
-      "FP": 1,
-      "FN": 2,
-      "TN": 132
-    },
-    "class_location": {
-      "accuracy": 0.8242,
-      "precision": 0.9832,
-      "recall": 0.8125,
-      "f1_score": 0.8897,
-      "TP": 117,
-      "FP": 2,
-      "FN": 27,
-      "TN": 19
-    },
-    "grading_process": {
-      "accuracy": 0.8712,
+      "accuracy": 0.8757,
       "precision": 0.9722,
       "recall": 0.8917,
       "f1_score": 0.9302,
       "TP": 140,
       "FP": 4,
       "FN": 17,
+      "TN": 8
+    },
+    "credit_hour": {
+      "accuracy": 0.8994,
+      "precision": 1.0,
+      "recall": 0.8559,
+      "f1_score": 0.9224,
+      "TP": 101,
+      "FP": 0,
+      "FN": 17,
+      "TN": 51
+    },
+    "workload": {
+      "accuracy": 0.8817,
+      "precision": 0.9176,
+      "recall": 0.8571,
+      "f1_score": 0.8864,
+      "TP": 78,
+      "FP": 7,
+      "FN": 13,
+      "TN": 71
+    },
+    "instructor_name": {
+      "accuracy": 0.9231,
+      "precision": 1.0,
+      "recall": 0.9198,
+      "f1_score": 0.9582,
+      "TP": 149,
+      "FP": 0,
+      "FN": 13,
+      "TN": 7
+    },
+    "instructor_title": {
+      "accuracy": 0.9527,
+      "precision": 0.9211,
+      "recall": 0.9722,
+      "f1_score": 0.9459,
+      "TP": 70,
+      "FP": 6,
+      "FN": 2,
+      "TN": 91
+    },
+    "instructor_department": {
+      "accuracy": 0.9112,
+      "precision": 0.8987,
+      "recall": 0.9103,
+      "f1_score": 0.9045,
+      "TP": 71,
+      "FP": 8,
+      "FN": 7,
+      "TN": 83
+    },
+    "office_address": {
+      "accuracy": 0.9231,
+      "precision": 0.9873,
+      "recall": 0.8667,
+      "f1_score": 0.9231,
+      "TP": 78,
+      "FP": 1,
+      "FN": 12,
+      "TN": 78
+    },
+    "office_hours": {
+      "accuracy": 0.8402,
+      "precision": 0.9912,
+      "recall": 0.8116,
+      "f1_score": 0.8924,
+      "TP": 112,
+      "FP": 1,
+      "FN": 26,
+      "TN": 30
+    },
+    "office_phone": {
+      "accuracy": 0.929,
+      "precision": 0.9545,
+      "recall": 0.875,
+      "f1_score": 0.913,
+      "TP": 63,
+      "FP": 3,
+      "FN": 9,
+      "TN": 94
+    },
+    "preferred_contact_method": {
+      "accuracy": 0.8402,
+      "precision": 0.9315,
+      "recall": 0.8889,
+      "f1_score": 0.9097,
+      "TP": 136,
+      "FP": 10,
+      "FN": 17,
+      "TN": 6
+    },
+    "assignment_types_title": {
+      "accuracy": 0.787,
+      "precision": 0.9204,
+      "recall": 0.7939,
+      "f1_score": 0.8525,
+      "TP": 104,
+      "FP": 9,
+      "FN": 27,
+      "TN": 29
+    },
+    "deadline_expectations_title": {
+      "accuracy": 0.787,
+      "precision": 0.9806,
+      "recall": 0.7481,
+      "f1_score": 0.8487,
+      "TP": 101,
+      "FP": 2,
+      "FN": 34,
+      "TN": 32
+    },
+    "assignment_delivery": {
+      "accuracy": 0.8876,
+      "precision": 0.9853,
+      "recall": 0.8874,
+      "f1_score": 0.9338,
+      "TP": 134,
+      "FP": 2,
+      "FN": 17,
+      "TN": 16
+    },
+    "final_grade_scale": {
+      "accuracy": 0.9408,
+      "precision": 0.9556,
+      "recall": 0.8431,
+      "f1_score": 0.8958,
+      "TP": 43,
+      "FP": 2,
+      "FN": 8,
+      "TN": 116
+    },
+    "response_time": {
+      "accuracy": 0.9822,
+      "precision": 0.9677,
+      "recall": 0.9375,
+      "f1_score": 0.9524,
+      "TP": 30,
+      "FP": 1,
+      "FN": 2,
+      "TN": 136
+    },
+    "class_location": {
+      "accuracy": 0.8284,
+      "precision": 0.9837,
+      "recall": 0.8176,
+      "f1_score": 0.893,
+      "TP": 121,
+      "FP": 2,
+      "FN": 27,
+      "TN": 19
+    },
+    "grading_process": {
+      "accuracy": 0.8623,
+      "precision": 0.9726,
+      "recall": 0.882,
+      "f1_score": 0.9251,
+      "TP": 142,
+      "FP": 4,
+      "FN": 19,
       "TN": 2
     }
   },
   "overall": {
-    "accuracy": 0.8809,
-    "precision": 0.9664,
-    "recall": 0.854,
-    "f1_score": 0.9067,
-    "TP": 1813,
-    "FP": 63,
-    "FN": 310,
-    "TN": 947
+    "accuracy": 0.8791,
+    "precision": 0.9652,
+    "recall": 0.8525,
+    "f1_score": 0.9054,
+    "TP": 1856,
+    "FP": 67,
+    "FN": 321,
+    "TN": 965
   },
   "details": [
+    {
+      "filename": "Jin Fall 2021.pdf",
+      "modality": {
+        "gt": "Hybrid Delivery - SCHEDULED MEETING TIME, ONLINE WITH SOME CAMPUS VISITS",
+        "pred": "Hybrid",
+        "match": true
+      },
+      "slos": {
+        "gt_present": false,
+        "pred_present": false,
+        "match": true,
+        "gt_text": "Missing",
+        "pred_text": "Missing"
+      },
+      "email": {
+        "gt": "karen.jin@unh.edu",
+        "pred": "karen.jin@unh.edu",
+        "match": true
+      },
+      "credit_hour": {
+        "gt": "4",
+        "pred": "Credits: 4",
+        "match": true
+      },
+      "workload": {
+        "gt": "108 hours",
+        "pred": "expected to study at least 3 hours outside of class every week",
+        "match": false
+      },
+      "instructor_name": {
+        "gt": "Karen Jin",
+        "pred": "Karen Jin",
+        "match": true
+      },
+      "instructor_title": {
+        "gt": "Missing",
+        "pred": "Missing",
+        "match": true
+      },
+      "instructor_department": {
+        "gt": "Applied Engineering and Sciences Department, UNH Manchester",
+        "pred": "Applied Engineering and Sciences Department,",
+        "match": true
+      },
+      "office_address": {
+        "gt": "P139",
+        "pred": "P139",
+        "match": true
+      },
+      "office_hours": {
+        "gt": "https://calendly.com/karenajin You may also email to arrange a time to meet other than the time slots listed.",
+        "pred": "https://calendly.com/karenajin",
+        "match": true
+      },
+      "office_phone": {
+        "gt": "(603) 641-4398",
+        "pred": "(603) 641-4398",
+        "match": true
+      },
+      "preferred_contact_method": {
+        "gt": "Missing",
+        "pred": "karen.jin@unh.edu",
+        "match": false
+      },
+      "assignment_types_title": {
+        "gt": "Homework (25%), Labs (25%)",
+        "pred": "Homework",
+        "match": true
+      },
+      "deadline_expectations_title": {
+        "gt": "Homework (25%), Labs (25%)",
+        "pred": "11:59pm on the day of class. Submissions will not be accepted after the deadline. Submissions must be completed through MyCourses in order to receive credits. Homework (25%)",
+        "match": false
+      },
+      "assignment_delivery": {
+        "gt": "MyCourses",
+        "pred": "MyCourses",
+        "match": true
+      },
+      "final_grade_scale": {
+        "gt": "Missing",
+        "pred": "Missing",
+        "match": true
+      },
+      "response_time": {
+        "gt": "Missing",
+        "pred": "Missing",
+        "match": true
+      },
+      "class_location": {
+        "gt": "P128",
+        "pred": "P128",
+        "match": true,
+        "modality": "Hybrid Delivery - SCHEDULED MEETING TIME, ONLINE WITH SOME CAMPUS VISITS"
+      },
+      "grading_process": {
+        "gt": "Your final grade is calculated as follows:Labs (25%)The weekly labs consist of hands-on lab exercises and other active learning activities. Students will be activeparticipants in the development of the content material through individual and group activities and Internetresearch. Labs are designed to be started and completed during the class meeting time. If you are unable tocomplete the lab during class then you need to complete on your own before the due day. All Labs are due at11:59pm on the day of class. Submissions will not be accepted after the deadline. Submissions must becompleted through MyCourses in order to receive credits.Homework (25%)Independent homework assignments are given and collected on a weekly basis. Unless specifically stated, themajor portion of the course work will be done using a browser and a text editor. The homework is designed tobuild your understanding of the class topics and use of the Internet and to develop your coding ability, e.g., inHTML and CSS. Topics from the homework will be used in class activities, exams and the final project so it isimportant to complete the material with accuracy and understanding. Each assignment is due at the date andtime listed. It is your responsibility to allow enough time during the week to complete the activities despiteobstacles (technology driven or personal) that may arise. Late work is anything submitted after the announceddue date and time. You will lose 10% per day for work submitted late for up to 48 hours after the dueday. Submissions must be completed through MyCourses in order to receive credits.Final Web Project (25%)You will create a multi-page web site as the web project. It is an individual project designed to apply your webauthoring knowledge. It is also intended to give you experience in the creative and artistic aspects of designingand implementing an effective web presence. Web projects will be hosted for grading and public viewing. Youwill submit a 2-page summary and give a 10 mins final demonstration of your project in class during our lastclass meeting. Additional check points and progress demo may also be required. The details of projectrequirements and grading rubrics will be posted in the assignment section of MyCourses.Participation (10%)The participation is calculated based on 1) both the quantity and quality of the posts in the class discussionforum, 2) reflections on course work, and 3) individual check-in meetings with the instructor. To earn fullpoints, you must fulfill the discussion requirements for the discussion topic assigned, submit the requiredreflections and complete at least one check-in meeting during the semester.Final Exam (15%)There will be a final exam in the format of oral test and/or take-home test. The oral test will be 30 mins andconducted through 1-on-1 Zoom meetings. Details TBA.",
+        "pred": "Your final grade is calculated as follows:\nLabs (25%)\nThe weekly labs consist of hands-on lab exercises and other active learning activities. Students will be active\nparticipants in the development of the content material through individual and group activities and Internet\ncompleted through MyCourses in order to receive credits.\nHomework (25%)",
+        "match": false
+      }
+    },
+    {
+      "filename": "Jin Fall 2023 M1 M2.pdf",
+      "modality": {
+        "gt": "in person",
+        "pred": "In-Person",
+        "match": true
+      },
+      "slos": {
+        "gt_present": false,
+        "pred_present": false,
+        "match": true,
+        "gt_text": "Missing",
+        "pred_text": "Missing"
+      },
+      "email": {
+        "gt": "karen.jin@unh.edu",
+        "pred": "karen.jin@unh.edu",
+        "match": true
+      },
+      "credit_hour": {
+        "gt": "4",
+        "pred": "Credits: 4",
+        "match": true
+      },
+      "workload": {
+        "gt": "192 hours",
+        "pred": "expected to study at least 3-6 hours outside class every week",
+        "match": false
+      },
+      "instructor_name": {
+        "gt": "Karen Jin",
+        "pred": "Karen Jin",
+        "match": true
+      },
+      "instructor_title": {
+        "gt": "Missing",
+        "pred": "Missing",
+        "match": true
+      },
+      "instructor_department": {
+        "gt": "Applied Engineering and Sciences Department, UNH Manchester",
+        "pred": "Applied Engineering and Sciences Department,",
+        "match": true
+      },
+      "office_address": {
+        "gt": "P139",
+        "pred": "P139",
+        "match": true
+      },
+      "office_hours": {
+        "gt": "Please email to arrange a meeting time.",
+        "pred": "Missing",
+        "match": false
+      },
+      "office_phone": {
+        "gt": "(603) 641-4398",
+        "pred": "(603) 641-4398",
+        "match": true
+      },
+      "preferred_contact_method": {
+        "gt": "Missing",
+        "pred": "karen.jin@unh.edu",
+        "match": false
+      },
+      "assignment_types_title": {
+        "gt": "Homework (25%), Labs (25%)",
+        "pred": "Homework",
+        "match": true
+      },
+      "deadline_expectations_title": {
+        "gt": "Homework (25%), Labs (25%)",
+        "pred": "11:59pm on the day of class. Submissions will not be accepted after the deadline. Submissions must be completed through MyCourses in order to receive credits. Homework (25%)",
+        "match": false
+      },
+      "assignment_delivery": {
+        "gt": "MyCourses",
+        "pred": "Canvas; MyCourses",
+        "match": true
+      },
+      "final_grade_scale": {
+        "gt": "Missing",
+        "pred": "Missing",
+        "match": true
+      },
+      "response_time": {
+        "gt": "Missing",
+        "pred": "Missing",
+        "match": true
+      },
+      "class_location": {
+        "gt": "P128",
+        "pred": "P128",
+        "match": true,
+        "modality": "in person"
+      },
+      "grading_process": {
+        "gt": "Your final grade is calculated as follows:Labs (25%)The weekly labs consist of hands-on lab exercises and other active learning activities. Students will be activeparticipants in the development of the content material through individual and group activities and Internetresearch. Labs are designed to be started and completed during the class meeting time. If you are unable tocomplete the lab during class then you need to complete on your own before the due day. All Labs are due atCOMP 405 Intro to Web Design & DevelopmentFall 2023. 2. 11:59pm on the day of class. Submissions will not be accepted after the deadline. Submissions must becompleted through MyCourses in order to receive credits.Homework (25%)Independent homework assignments are given and collected on a weekly basis. Unless specifically stated, themajor portion of the course work will be done using a browser and a text editor. The homework is designed tobuild your understanding of the class topics and use of the Internet and to develop your coding ability, e.g., inHTML and CSS. Topics from the homework will be used in class activities, exams and the final project so it isimportant to complete the material with accuracy and understanding. Each assignment is due at the date andtime listed. It is your responsibility to allow enough time during the week to complete the activities despiteobstacles (technology driven or personal) that may arise. Late work is anything submitted after the announceddue date and time. You will lose 10% per day for work submitted late for up to 48 hours after the dueday. Submissions must be completed through MyCourses in order to receive credits.Final Web Project (30%)You will create a multi-page web site as the web project. It is an individual project designed to apply your webauthoring knowledge. It is also intended to give you experience in the creative and artistic aspects of designingand implementing an effective web presence. Web projects will be hosted for grading and public viewing. Youwill submit a 2-page summary and give a 10 mins final demonstration of your project in class during our lastclass meeting. Additional check points and progress demo may also be required. The details of projectrequirements and grading rubrics will be posted in the assignment section of MyCourses.Participation (10%)The participation is calculated based on 1) both the quantity and quality of the posts in the class discussion forum, 2) reflections on course work, and 3) individual check-in meetings with the instructor. To earn fullpoints, you must fulfill the discussion requirements for the discussion topic assigned, submit the required reflections and complete at least one check-in meeting during the semester. Quiz (10%). There will be 2-3 quizzes in the format of oral test and live coding exercises.",
+        "pred": "Your final grade is calculated as follows:\nLabs (25%)\nThe weekly labs consist of hands-on lab exercises and other active learning activities. Students will be active",
+        "match": false
+      }
+    },
+    {
+      "filename": "Jin Spring 2021.pdf",
+      "modality": {
+        "gt": "Online",
+        "pred": "Online",
+        "match": true
+      },
+      "slos": {
+        "gt_present": false,
+        "pred_present": false,
+        "match": true,
+        "gt_text": "Missing",
+        "pred_text": "Missing"
+      },
+      "email": {
+        "gt": "karen.jin@unh.edu",
+        "pred": "karen.jin@unh.edu",
+        "match": true
+      },
+      "credit_hour": {
+        "gt": "4",
+        "pred": "Credits: 4",
+        "match": true
+      },
+      "workload": {
+        "gt": "192 hours",
+        "pred": "expected to study at least 2-4 hours outside class every week",
+        "match": false
+      },
+      "instructor_name": {
+        "gt": "Karen Jin",
+        "pred": "Karen Jin",
+        "match": true
+      },
+      "instructor_title": {
+        "gt": "Missing",
+        "pred": "Missing",
+        "match": true
+      },
+      "instructor_department": {
+        "gt": "Applied Engineering and Sciences Department, UNH Manchester",
+        "pred": "Applied Engineering and Sciences Department,",
+        "match": true
+      },
+      "office_address": {
+        "gt": "P139",
+        "pred": "P139",
+        "match": true
+      },
+      "office_hours": {
+        "gt": "https://calendly.com/karenajin You may also email to arrange a time to meet other than the time slots listed.",
+        "pred": "https://calendly.com/karenajin",
+        "match": true
+      },
+      "office_phone": {
+        "gt": "(603) 641-4398",
+        "pred": "(603) 641-4398",
+        "match": true
+      },
+      "preferred_contact_method": {
+        "gt": "Missing",
+        "pred": "karen.jin@unh.edu",
+        "match": false
+      },
+      "assignment_types_title": {
+        "gt": "Homework (25%)",
+        "pred": "Homework",
+        "match": true
+      },
+      "deadline_expectations_title": {
+        "gt": "Labs (25%), Homework (25%)",
+        "pred": "11:59pm on the day of class. Submissions will not be accepted after the deadline. Submissions must be completed through MyCourses in order to receive credits. Homework (25%)",
+        "match": false
+      },
+      "assignment_delivery": {
+        "gt": "MyCourses",
+        "pred": "MyCourses",
+        "match": true
+      },
+      "final_grade_scale": {
+        "gt": "Missing",
+        "pred": "Missing",
+        "match": true
+      },
+      "response_time": {
+        "gt": "Missing",
+        "pred": "Missing",
+        "match": true
+      },
+      "class_location": {
+        "gt": "Online",
+        "pred": "Online",
+        "match": true,
+        "modality": "Online"
+      },
+      "grading_process": {
+        "gt": "Your final grade is calculated as follows: Labs (25%) The weekly labs consist of hands-on lab exercises and other active learning activities. Students will be active participants in the development of the content material through individual and group activities and Internet research. Labs are designed to be started and completed during the class meeting time. If you are unable to COMP 405 Intro to Web Design & Development Spring 2021. 2. complete the lab during class then you need to complete on your own before the due day. All Labs are due at 11:59pm on the day of class. Submissions will not be accepted after the deadline. Submissions must be completed through MyCourses in order to receive credits. Homework (25%). Independent homework assignments are given and collected on a weekly basis. Unless specifically stated, the major portion of the course work will be done using a browser and a text editor. The homework is designed to build your understanding of the class topics and use of the Internet and to develop your coding ability, e.g., in HTML and CSS. Topics from the homework will be used in class activities, exams and the final project so it is important to complete the material with accuracy and understanding. Each assignment is due at the date and time listed. It is your responsibility to allow enough time during the week to complete the activities despite obstacles (technology driven or personal) that may arise. Late work is anything submitted after the announced due date and time. You will lose 10% per day for work submitted late for up to 48 hours after the due day. Submissions must be completed through MyCourses in order to receive credits. Final Web Project (25%). You will create a multi-page web site as the web project. It is an individual project designed to apply your web authoring knowledge. It is also intended to give you experience in the creative and artistic aspects of designing and implementing an effective web presence. Web projects will be hosted for grading and public viewing. You will submit a 2-page summary and give a 10 mins final demonstration of your project in class during our last class meeting. Additional check points and progress demo may also be required. The details of project requirements and grading rubrics will be posted in the assignment section of MyCourses. Participation (10%). The participation is calculated based on 1) both the quantity and quality of the posts in the Discord server discussion forum., and 2) individual check-in meetings with the instructor. To earn full points, you must fulfill the discussion requirements for the discussion topic assigned, and complete at least one check-in meeting during the semester. Final Exam (15%). There will be a final exam in the format of oral test and/or take-home test. The oral test will be 30 mins and conducted through 1-on-1 Zoom meetings. Details TBA.",
+        "pred": "Your final grade is calculated as follows:\nLabs (25%)\nThe weekly labs consist of hands-on lab exercises and other active learning activities. Students will be active",
+        "match": true
+      }
+    },
+    {
+      "filename": "Jonas Fall 2025.pdf",
+      "modality": {
+        "gt": "in person",
+        "pred": "In-Person",
+        "match": true
+      },
+      "slos": {
+        "gt_present": true,
+        "pred_present": true,
+        "match": true,
+        "gt_text": "Students develop understanding of modern internet, the world wide web, and how a web browser bridges that divide. Students will develop skills in building web pages using HTML that can both display information and gather input from users. Students will also learn to control and modify web pages with JavaScript",
+        "pred_text": "Learning Objectives:\nStudents develop understanding of modern internet, the world wide web, and how a web browser\nbridges that divide. Students will develop skills in building web pages using HTML that can both\ndisplay information and gather input from users. Students will also learn to control and modify\nweb pages with JavaScript\nSoftware Tools:\nWe will use a text editor and a web browser which most modern operating systems provide or\nare easily downloadable free of charge..\nStudent Work and Class Pedagogies:"
+      },
+      "email": {
+        "gt": "mcy59@unh.edu",
+        "pred": "mcy59@unh.edu",
+        "match": true
+      },
+      "credit_hour": {
+        "gt": " 3 credits for undergraduates and 4 credits for graduates",
+        "pred": "4 credits",
+        "match": true
+      },
+      "workload": {
+        "gt": "Total of 192 credit hours for undergraduates and 256 credit hours for graduates",
+        "pred": "minimum of 3 hours engaged time per week per credit",
+        "match": false
+      },
+      "instructor_name": {
+        "gt": "Michael Jonas",
+        "pred": "Michael Jonas",
+        "match": true
+      },
+      "instructor_title": {
+        "gt": "Missing",
+        "pred": "Missing",
+        "match": true
+      },
+      "instructor_department": {
+        "gt": "Missing",
+        "pred": "Missing",
+        "match": true
+      },
+      "office_address": {
+        "gt": "room 141",
+        "pred": "Room 141",
+        "match": true
+      },
+      "office_hours": {
+        "gt": "by appointment",
+        "pred": "by appointment",
+        "match": true
+      },
+      "office_phone": {
+        "gt": "Missing",
+        "pred": "Missing",
+        "match": true
+      },
+      "preferred_contact_method": {
+        "gt": "Missing",
+        "pred": "mcy59@unh.edu",
+        "match": false
+      },
+      "assignment_types_title": {
+        "gt": "Homework Assignments:",
+        "pred": "Homework Assignments:",
+        "match": true
+      },
+      "deadline_expectations_title": {
+        "gt": "Schedule:",
+        "pred": "Late Assignments and Make-Up Exams:",
+        "match": false
+      },
+      "assignment_delivery": {
+        "gt": "Missing",
+        "pred": "Missing",
+        "match": true
+      },
+      "final_grade_scale": {
+        "gt": "Missing",
+        "pred": "Missing",
+        "match": true
+      },
+      "response_time": {
+        "gt": "Missing",
+        "pred": "Missing",
+        "match": true
+      },
+      "class_location": {
+        "gt": "room 142",
+        "pred": "room 142",
+        "match": true,
+        "modality": "in person"
+      },
+      "grading_process": {
+        "gt": "10% Participation. Includes showing up to class on time, submitting assignments on their due dates. 30% Labs. Lab work is done during classroom time. Point total is 10 out of 11 at 3 points each. 30% Assignments. There will be 2 assignments at 15 points, with each assignment divided into: A design document worth 4 points. Presenting your work in class worth 1 point. Core elements of your assignments worth 10 points. 30% Exams. Two exams worth 15 points each",
+        "pred": "Includes showing up to class on time, submitting assignments on their due dates\n30% Labs\nLab work is done during classroom time\nPoint total is 10 out of 11 at 3 points each\n30% Assignments\nThere will be 2 assignments at 15 points, with each assignment divided into:\nA design document worth 4 points\nPresenting your work in class worth 1 point\nCore elements of your assignments worth 10 points\n30% Exams\nTwo exams worth 15 points each\nPolicies",
+        "match": true
+      }
+    },
     {
       "filename": "Diener Spring 2005.pdf",
       "modality": {

@@ -506,7 +506,7 @@ class InstructorDetector:
                 if name:
                     break
 
-        found = bool(name and title and department and name != 'N/A' and title != 'N/A' and department != 'N/A')
+        found = bool(name and name != 'Missing' and name != 'N/A')
 
         if found:
             self.logger.info(f"FOUND: {self.field_name} - Name: {name}, Title: {title}, Dept: {department}")

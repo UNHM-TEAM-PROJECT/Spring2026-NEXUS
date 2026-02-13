@@ -13,6 +13,7 @@ uploads/
 db/
 gunicorn.log
 test_results.json
+new_test_results.json
 
 # Claude Code files
 .claude/
@@ -35,6 +36,7 @@ build/
 *.swp
 *.swo
 test_results.json
+new_test_results.json
 
 # Python
 __pycache__/
@@ -55,6 +57,7 @@ gunicorn.log
 
 # Test results (generated)
 test_results.json
+new_test_results.json
 
 # IDE
 .vscode/

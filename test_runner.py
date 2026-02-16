@@ -572,14 +572,16 @@ def detect_all_fields(text: str) -> dict:
     return preds
 
 # ======================================================================
-# MAIN
+# Team NEXUS
+# Helper function to run tests for a single folder + ground truth
 # ======================================================================
 
-def main():
+
+def run_tests_for_folder(folder_path, ground_truth_json, output_json):
     ap = argparse.ArgumentParser(description="Run detectors vs ground_truth.json")
-    ap.add_argument("--syllabi", default="ground_truth_syllabus", help="Folder with PDFs/DOCX")
-    ap.add_argument("--ground_truth", default="ground_truth.json", help="Ground truth JSON")
-    ap.add_argument("--output", default="test_results.json", help="Output JSON file")
+    ap.add_argument("--syllabi", default=folder_path, help="Folder with PDFs/DOCX")
+    ap.add_argument("--ground_truth", default=ground_truth_json, help="Ground truth JSON")
+    ap.add_argument("--output", default=output_json, help="Output JSON file")
     args = ap.parse_args()
 
     print(f"\n[INFO] Folder: {os.path.abspath(args.syllabi)}")
@@ -887,6 +889,26 @@ def main():
         json.dump(output_data, f, indent=2, ensure_ascii=False)
 
     print(f"\n[SUCCESS] Results saved to {args.output}")
+
+
+# ======================================================================
+# Team NEXUS
+# Modified main() to handle two folders
+# ======================================================================
+def main():
+    run_tests_for_folder(
+        folder_path="ground_truth_syllabus",
+        ground_truth_json="ground_truth.json",
+        output_json="test_results.json"
+    )
+
+    # Second folder
+    run_tests_for_folder(
+        folder_path="new_ground_truth_syllabus",
+        ground_truth_json="new_ground_truth.json",
+        output_json="new_test_results.json"
+    )
+
 
 if __name__ == "__main__":
     main()

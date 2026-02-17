@@ -1,0 +1,113 @@
+WARNING:root:Page 14: No text extracted - possible image/scanned page
+WARNING:root:Page 14: No character objects found - likely image-based
+WARNING:root:Page 15: No text extracted - possible image/scanned page
+WARNING:root:Page 15: No character objects found - likely image-based
+WARNING:root:Page 16: No text extracted - possible image/scanned page
+WARNING:root:Page 16: No character objects found - likely image-based
+WARNING:root:Page 14: No text extracted - possible image/scanned page
+WARNING:root:Page 14: No character objects found - likely image-based
+WARNING:root:Page 15: No text extracted - possible image/scanned page
+WARNING:root:Page 15: No character objects found - likely image-based
+WARNING:root:Page 16: No text extracted - possible image/scanned page
+WARNING:root:Page 16: No character objects found - likely image-based
+WARNING:root:Page 17: No text extracted - possible image/scanned page
+WARNING:root:Page 17: No character objects found - likely image-based
+WARNING:root:Page 14: No text extracted - possible image/scanned page
+WARNING:root:Page 14: No character objects found - likely image-based
+WARNING:root:Page 15: No text extracted - possible image/scanned page
+WARNING:root:Page 15: No character objects found - likely image-based
+WARNING:root:Page 16: No text extracted - possible image/scanned page
+WARNING:root:Page 16: No character objects found - likely image-based
+WARNING:root:Page 17: No text extracted - possible image/scanned page
+WARNING:root:Page 17: No character objects found - likely image-based
+WARNING:root:Low character count per page (896) - possible scanned/image-based PDF
+WARNING:root:Low character count per page (968) - possible scanned/image-based PDF
+
+[INFO] Folder: /Users/srujanreddy/Desktop/Spring2026-NEXUS/ground_truth_syllabus
+[INFO] Ground truth: /Users/srujanreddy/Desktop/Spring2026-NEXUS/ground_truth.json
+
+Found 163 records in ground truth.
+[135] [ERROR] Missing file: Gerard Spring 2018
+[142] [ERROR] Missing file: Troy Fall 2024.docx
+
+==========================================================================================
+RESULTS SUMMARY - Detector Performance Metrics
+==========================================================================================
+Field                           Accuracy  Precision    Recall   F1 Score
+------------------------------------------------------------------------------------------
+modality                          77.0%      96.1%     79.5%      87.0%
+SLOs                              85.1%      82.3%     82.3%      82.3%
+email                             89.4%      97.1%     91.3%      94.1%
+credit_hour                       89.4%     100.0%     85.1%      91.9%
+workload                          90.1%      91.8%     89.7%      90.7%
+instructor_name                   93.2%     100.0%     92.9%      96.3%
+instructor_title                  91.9%      89.3%     93.1%      91.2%
+instructor_department             83.9%      91.5%     72.0%      80.6%
+office_address                    91.9%      98.7%     86.1%      91.9%
+office_hours                      86.3%      99.1%     83.9%      90.8%
+office_phone                      92.5%      95.2%     87.0%      90.9%
+preferred_contact_method          88.2%      95.8%     91.3%      93.5%
+assignment_types_title            80.1%      91.7%     81.3%      86.2%
+deadline_expectations_title       80.1%      98.1%     77.1%      86.3%
+assignment_delivery               90.7%      98.5%     91.0%      94.6%
+final_grade_scale                 93.8%      95.6%     84.3%      89.6%
+response_time                     98.1%      96.8%     93.8%      95.2%
+class_location                    84.5%      98.3%     83.6%      90.3%
+grading_process                   89.3%      97.2%     91.5%      94.3%
+------------------------------------------------------------------------------------------
+OVERALL                           88.2%      96.0%     86.2%      90.9%
+==========================================================================================
+
+METRIC DEFINITIONS:
+  • Accuracy:  How often the detector is correct overall
+  • Precision: When detector finds something, how often is it right?
+  • Recall:    Of all fields that exist, how many did we find?
+  • F1 Score:  Balanced measure combining Precision and Recall
+               (Higher F1 = better overall detector quality)
+==========================================================================================
+
+[SUCCESS] Results saved to test_results.json
+
+[INFO] Folder: /Users/srujanreddy/Desktop/Spring2026-NEXUS/new_ground_truth_syllabus
+[INFO] Ground truth: /Users/srujanreddy/Desktop/Spring2026-NEXUS/new_ground_truth.json
+
+Found 24 records in ground truth.
+[20] [ERROR] Missing file: CPRM 860 Syllabus.pdf
+
+==========================================================================================
+RESULTS SUMMARY - Detector Performance Metrics
+==========================================================================================
+Field                           Accuracy  Precision    Recall   F1 Score
+------------------------------------------------------------------------------------------
+modality                          73.9%      94.4%     77.3%      85.0%
+SLOs                             100.0%     100.0%    100.0%     100.0%
+email                             82.6%     100.0%     81.8%      90.0%
+credit_hour                       73.9%     100.0%     60.0%      75.0%
+workload                          43.5%       0.0%      0.0%       0.0%
+instructor_name                   91.3%     100.0%     90.9%      95.2%
+instructor_title                 100.0%     100.0%    100.0%     100.0%
+instructor_department             95.7%      90.9%    100.0%      95.2%
+office_address                    87.0%     100.0%     75.0%      85.7%
+office_hours                      69.6%      92.3%     66.7%      77.4%
+office_phone                      87.0%     100.0%     75.0%      85.7%
+preferred_contact_method           4.3%       0.0%      0.0%       0.0%
+assignment_types_title            78.3%      87.5%     82.3%      84.9%
+deadline_expectations_title       30.4%      33.3%     14.3%      20.0%
+assignment_delivery               56.5%      61.1%     78.6%      68.8%
+final_grade_scale                 82.6%     100.0%     55.6%      71.4%
+response_time                     95.7%      66.7%    100.0%      80.0%
+class_location                    87.0%      94.1%     88.9%      91.4%
+grading_process                   43.5%     100.0%     40.9%      58.1%
+------------------------------------------------------------------------------------------
+OVERALL                           72.8%      83.8%     69.1%      75.8%
+==========================================================================================
+
+METRIC DEFINITIONS:
+  • Accuracy:  How often the detector is correct overall
+  • Precision: When detector finds something, how often is it right?
+  • Recall:    Of all fields that exist, how many did we find?
+  • F1 Score:  Balanced measure combining Precision and Recall
+               (Higher F1 = better overall detector quality)
+==========================================================================================
+
+[SUCCESS] Results saved to new_test_results.json

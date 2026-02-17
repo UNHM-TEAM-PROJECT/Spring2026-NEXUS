@@ -7,6 +7,8 @@ It provides functions to extract text and tables from documents for further proc
 import logging
 import pdfplumber
 from docx import Document as DocxDocument
+import pytesseract
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 # Alternative PDF extraction methods
 try:
@@ -50,7 +52,13 @@ def extract_text_from_pdf(pdf_path):
                     logging.info(f"{file_name}: Page {i}: Extracted {page_char_count} characters")
                 else:
                     logging.warning(f"{file_name}: Page {i}: No text extracted - possible image/scanned page")
-                    
+                    # Team NEXUS: Attempt OCR on image-based page
+                    ocr_text = extract_text_from_image_page(pdf_path, i)
+                    if ocr_text:
+                        text.append(ocr_text)
+                        logging.info(f"{file_name}: Page {i}: OCR extracted {len(ocr_text)} characters")
+                    else:
+                        logging.warning(f"{file_name}: Page {i}: OCR found no text")
                     # Try alternative extraction for image-based pages
                     try:
                         # Check if page has extractable content
@@ -247,6 +255,12 @@ def extract_text_from_docx(docx_path):
     
     combined_text = "\n".join(full_text)
     
+    # Team NEXUS: Attempt OCR on embedded images in DOCX
+    ocr_image_text = extract_text_from_docx_images(docx_path)
+    if ocr_image_text:
+        logging.info(f"{file_name}: OCR extracted {len(ocr_image_text)} characters from embedded images")
+        combined_text += "\n" + ocr_image_text
+
     if not combined_text.strip():
         logging.warning(f"{file_name}: No text extracted from {docx_path}")
         return None
@@ -262,3 +276,56 @@ def extract_text_from_docx(docx_path):
         logging.info(f"  - Estimated ~{estimated_pages:.1f} pages of content")
         
         return combined_text
+
+
+# Team NEXUS: Additional OCR functions for image-based PDFs and DOCX files with embedded images
+def extract_text_from_image_page(pdf_path, page_number):
+    """
+    Perform OCR on a specific page of a PDF.
+    """
+    try:
+        from pdf2image import convert_from_path
+        import pytesseract
+
+        images = convert_from_path(
+            pdf_path,
+            first_page=page_number,
+            last_page=page_number
+        )
+
+        if images:
+            ocr_text = pytesseract.image_to_string(images[0])
+            return ocr_text.strip()
+
+    except Exception as e:
+        logging.error(f"OCR failed for PDF page {page_number}: {e}")
+
+    return ""
+
+
+def extract_text_from_docx_images(docx_path):
+    """
+    Extract text from images embedded inside a DOCX file using OCR.
+    """
+    import zipfile
+    from io import BytesIO
+    from PIL import Image
+    import pytesseract
+
+    ocr_texts = []
+
+    try:
+        with zipfile.ZipFile(docx_path, 'r') as docx_zip:
+            for file in docx_zip.namelist():
+                if file.startswith("word/media/"):
+                    image_data = docx_zip.read(file)
+                    image = Image.open(BytesIO(image_data))
+
+                    ocr_text = pytesseract.image_to_string(image)
+                    if ocr_text.strip():
+                        ocr_texts.append(ocr_text.strip())
+
+    except Exception as e:
+        logging.error(f"OCR failed for DOCX images in {docx_path}: {e}")
+
+    return "\n".join(ocr_texts)

@@ -646,7 +646,8 @@ class InstructorDetector:
                 if name:
                     break
 
-        found = bool(name and name != 'Missing' and name != 'N/A')
+        found = bool(name and name != 'Missing' and name != 'N/A')  
+        # TEAM-NEXUS: Added check to ensure name is not just 'Missing' or 'N/A'
 
         if found:
             self.logger.info(f"FOUND: {self.field_name} - Name: {name}, Title: {title}, Dept: {department}")

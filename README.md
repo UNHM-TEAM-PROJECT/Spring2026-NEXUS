@@ -17,7 +17,6 @@ The **Syllabus Field Detector** is a web application that automatically analyzes
 - Supports batch processing via ZIP uploads or folder selection
 - Achieves **91.6% F1 Score** across all detectors (tested on 161 syllabi)
 
-**Confluence Space:** [Team Alpha Documentation](https://alpha-egaa.atlassian.net/wiki/x/AYADAw)
 
 ---
 
@@ -59,13 +58,16 @@ Fall2025-Team-Alpha/
 │
 ├── ground_truth_syllabus/      # Test syllabi (PDF/DOCX files)
 ├── ground_truth.json           # Expected values for each test syllabus
+├── new_ground_truth_syllabus/  # New Test syllabi (PDF/DOCX files)
+├── new_ground_truth.json       # Expected values for each new test syllabus
 ├── test_runner.py              # Automated testing framework
-├── test_results.json           # Latest test metrics output
+├── test_results.json           # Test metrics output
+├── new_test_results.json       # Latest test metrics output
 │
 ├── requirements.txt            # Python dependencies
 ├── Dockerfile                  # Container configuration
-├── DockerREADME.md            # Docker deployment guide
-├── DEVELOPER_GUIDE.md         # How to add new detectors
+├── DockerREADME.md             # Docker deployment guide
+├── DEVELOPER_GUIDE.md          # How to add new detectors
 └── README.md                   # This file
 ```
 
@@ -279,30 +281,59 @@ python test_runner.py
 ```
 
 ### Current Test Results (161 syllabi)
+**ground_truth_syllabus**
+==========================================================================================
+Field                           Accuracy  Precision    Recall   F1 Score
+------------------------------------------------------------------------------------------
+modality                          77.3%      96.2%     79.8%      87.2%
+SLOs                              90.8%     100.0%     78.3%      87.8%
+email                             89.6%      97.2%     91.4%      94.2%
+credit_hour                       89.6%     100.0%     85.2%      92.0%
+workload                          89.6%      90.7%     89.7%      90.2%
+instructor_name                   94.5%     100.0%     94.2%      97.0%
+instructor_title                  93.9%      89.7%     97.2%      93.3%
+instructor_department             89.6%      88.3%     89.5%      88.9%
+office_address                    91.4%      97.4%     86.2%      91.5%
+office_hours                      85.9%      99.1%     83.3%      90.5%
+office_phone                      92.6%      95.4%     87.3%      91.2%
+preferred_contact_method          88.3%      95.8%     91.4%      93.6%
+assignment_types_title            80.4%      91.7%     81.3%      86.2%
+deadline_expectations_title       79.8%      98.1%     76.5%      86.0%
+assignment_delivery               90.8%      98.5%     91.1%      94.7%
+final_grade_scale                 93.2%      95.7%     83.0%      88.9%
+response_time                     98.2%      96.8%     93.8%      95.2%
+class_location                    84.0%      98.3%     83.1%      90.1%
+grading_process                   88.8%      97.2%     91.0%      94.0%
+------------------------------------------------------------------------------------------
+OVERALL                           88.9%      96.4%     86.9%      91.4%
+==========================================================================================
 
-| Field | Accuracy | Precision | Recall | F1 Score |
-|-------|----------|-----------|--------|----------|
-| response_time | 98.1% | 96.8% | 93.8% | 95.2% |
-| instructor_name | 94.4% | 100.0% | 94.2% | 97.0% |
-| instructor_title | 95.0% | 92.1% | 97.2% | 94.6% |
-| assignment_delivery | 90.7% | 98.5% | 91.0% | 94.6% |
-| grading_process | 89.3% | 97.2% | 91.5% | 94.3% |
-| email | 89.4% | 97.1% | 91.3% | 94.1% |
-| preferred_contact_method | 88.2% | 95.8% | 91.3% | 93.5% |
-| credit_hour | 89.4% | 100.0% | 85.1% | 91.9% |
-| office_address | 91.9% | 98.7% | 86.1% | 91.9% |
-| office_phone | 92.5% | 95.2% | 87.0% | 90.9% |
-| office_hours | 86.3% | 99.1% | 83.9% | 90.8% |
-| workload | 90.1% | 91.8% | 89.7% | 90.7% |
-| class_location | 84.5% | 98.3% | 83.6% | 90.3% |
-| instructor_department | 90.7% | 89.5% | 90.7% | 90.1% |
-| final_grade_scale | 93.8% | 95.6% | 84.3% | 89.6% |
-| SLOs | 91.3% | 100.0% | 79.4% | 88.5% |
-| modality | 77.0% | 96.1% | 79.5% | 87.0% |
-| deadline_expectations_title | 80.1% | 98.1% | 77.1% | 86.3% |
-| assignment_types_title | 80.1% | 91.7% | 81.3% | 86.2% |
-| **OVERALL** | **89.1%** | **96.6%** | **87.0%** | **91.6%** |
-
+**new_ground_truth_syllabus**
+==========================================================================================
+Field                           Accuracy  Precision    Recall   F1 Score
+------------------------------------------------------------------------------------------
+modality                          70.8%      89.5%     77.3%      82.9%
+SLOs                              62.5%     100.0%     40.0%      57.1%
+email                             79.2%     100.0%     78.3%      87.8%
+credit_hour                       70.8%     100.0%     56.2%      72.0%
+workload                          45.8%     100.0%      7.1%      13.3%
+instructor_name                   79.2%      94.7%     81.8%      87.8%
+instructor_title                  91.7%      88.9%     88.9%      88.9%
+instructor_department             70.8%      63.6%     70.0%      66.7%
+office_address                    83.3%     100.0%     69.2%      81.8%
+office_hours                      66.7%      92.3%     63.2%      75.0%
+office_phone                      83.3%     100.0%     69.2%      81.8%
+preferred_contact_method           4.2%       0.0%      0.0%       0.0%
+assignment_types_title            79.2%      88.2%     83.3%      85.7%
+deadline_expectations_title       33.3%      42.9%     20.0%      27.3%
+assignment_delivery               54.2%      57.9%     78.6%      66.7%
+final_grade_scale                 83.3%     100.0%     60.0%      75.0%
+response_time                     95.8%      66.7%    100.0%      80.0%
+class_location                    83.3%      88.9%     88.9%      88.9%
+grading_process                   41.7%      90.0%     40.9%      56.2%
+------------------------------------------------------------------------------------------
+OVERALL                           67.3%      79.3%     63.1%      70.3%
+==========================================================================================
 ---
 
 ## Next Steps and Future Work
@@ -339,7 +370,7 @@ python test_runner.py
 
 ### Known Issues
 
-1. **Missing Test Files** — Two ground truth files are missing: `Gerard Spring 2018` and `Troy Fall 2024.docx`
+1. **Missing Test Files** — Two ground truth files are missing: `Gerard Spring 2018` and `Troy Fall 2024.docx` - Solved
 
 2. **Image-Based PDFs** — Pages 14-17 in some test PDFs are image-based and cannot be processed (warning logged but no text extracted)
 
@@ -359,7 +390,6 @@ python test_runner.py
 
 ## Documentation Links
 
-- **Confluence Space:** [Team Alpha Documentation](https://alpha-egaa.atlassian.net/wiki/x/AYADAw)
 - **Developer Guide:** See `DEVELOPER_GUIDE.md` for adding new detectors
 - **Docker Guide:** See `DockerREADME.md` for VM deployment details
 - **Test Results Guide:** See `test_results_guide.md` for understanding metrics
@@ -369,3 +399,4 @@ python test_runner.py
 ## Contributors
 
 **Fall 2025 Team Alpha** — University of New Hampshire
+**Spring 2026 Team Nexus** - Univeristy of New Hampshire

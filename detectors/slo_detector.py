@@ -215,16 +215,19 @@ class SLODetector:
                         pass  # Continue collecting
                     else:
                         break
-                
+
                 content_lines.append(next_line)
                 content_length += len(next_line)
-                
+
                 if content_length > self.MAX_CONTENT_LENGTH:
                     break
-            
+
             content = '\n'.join(content_lines)
+            # HARD FILTER: ignore course-purpose descriptions
+            if content.strip().lower().startswith("the purpose of this course"):
+                return False, ""
             return True, content
-        
+
         return False, ""
 
     def _simple_title_detection(self, text: str) -> Tuple[bool, str]:

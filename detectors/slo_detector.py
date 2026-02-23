@@ -58,7 +58,9 @@ class SLODetector:
             "learning objective",
             "course learning outcomes",
             "course learning objectives",
-            "business program student learning outcomes"  # Team NEXUS Improve SLO detector f1 score to > 91
+            "business program student learning outcomes",  # Team NEXUS Improve SLO detector f1 score to > 91
+            "student outcomes",  # For ABET/engineering course outcomes
+            "program learning outcomes"
         ]
 
         self.approved_abbreviations = ["slos", "slo"]
@@ -87,7 +89,7 @@ class SLODetector:
             # Pattern 4 and Pattern 5 Removed - too generic
             # Pattern 6: "course will help you develop"
             {
-                'regex': r'(?i)(?:the\s+)?course\s+will\s+help\s+you\s+develop',
+                'regex': r'(?i)(?:the\s+)?course\s+will\s+help\s+you\s+develop\s+(?:skills?|proficiency|understanding|ability|abilities)',
                 'min_score': 9
             },
             # Pattern 7: "by the end of this course, students will be able to"
@@ -176,6 +178,11 @@ class SLODetector:
                 
                 match = re.search(pattern, line)
                 if match:
+                    # Hard filter: reject if line looks like generic course description
+                    line_lower = line.lower()
+                    if "read the complex texts" in line_lower or "study at least" in line_lower:
+                        continue
+                    
                     # Found a match - calculate score based on pattern strength and position
                     score = min_score
                     

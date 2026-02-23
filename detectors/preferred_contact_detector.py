@@ -14,8 +14,9 @@ MAX_HEADING_SCAN_LINES = 150
 MAX_HEADER_CHARS = 1200
 PREFERRED_CONFIDENCE_SCORE = 0.95
 
+# updated regex to detect @wildcats.unh.edu & @comcast.net" - Team Nexus
 PREFERRED_RX = re.compile(
-    r"[A-Za-z0-9]+(?:\.[A-Za-z0-9]+)*@(?:unh|usnh)\.edu"
+    r"[A-Za-z0-9._%+-]+@(?:(?:wildcats\.)?(?:unh|usnh)\.edu|comcast\.net)"
 )
 
 # Heading keywords to look for (will be normalized during search)

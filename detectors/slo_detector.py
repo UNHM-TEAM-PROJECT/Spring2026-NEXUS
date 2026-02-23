@@ -164,7 +164,7 @@ class SLODetector:
     def _embedded_pattern_detection(self, text: str) -> Tuple[bool, str]:
         """
         Find SLOs embedded in course descriptions without formal section titles.
-        Designed to catch all 9 failure cases.
+        Designed to catch additional failure cases.
         """
         lines = text.split('\n')
         best_match = None

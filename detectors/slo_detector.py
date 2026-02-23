@@ -23,7 +23,7 @@ class SLODetector:
     SCORE_LONG_LINE_PENALTY = -5
     SCORE_HAS_COLON = 3
     SCORE_ALL_CAPS = 2
-    MIN_SCORE_THRESHOLD = 4  # Team NEXUS Improve SLO detector f1 score to > 91
+    MIN_SCORE_THRESHOLD = 5
 
     SHORT_LINE_THRESHOLD = 50
     LONG_LINE_THRESHOLD = 100
@@ -63,21 +63,25 @@ class SLODetector:
         
         # Comprehensive embedded patterns - covers ALL 9 failure cases
         self.embedded_patterns = [
-            # Pattern 1: "primary objectives of this course are to give students" (line start/end)  # Team NEXUS Improve SLO detector f1 score to > 91
-            {  # Team NEXUS Improve SLO detector f1 score to > 91
-                'regex': r'(?i)^\s*(?:the\s+)?primary\s+objectives?\s+(?:of\s+this\s+)?course',  # Team NEXUS Improve SLO detector f1 score to > 91
-                'min_score': 12  # Team NEXUS Improve SLO detector f1 score to > 91
-            },  # Team NEXUS Improve SLO detector f1 score to > 91
-            # Pattern 2: "course should help you to:" (must have colon for confidence)  # Team NEXUS Improve SLO detector f1 score to > 91
-            {  # Team NEXUS Improve SLO detector f1 score to > 91
-                'regex': r'(?i)(?:the\s+)?course\s+should\s+help\s+you\s+(?:to\s*):\s*$',  # Team NEXUS Improve SLO detector f1 score to > 91
-                'min_score': 11  # Team NEXUS Improve SLO detector f1 score to > 91
-            },  # Team NEXUS Improve SLO detector f1 score to > 91
-            # Pattern 3: "Students will" (only with numbered list to reduce false positives)  # Team NEXUS Improve SLO detector f1 score to > 91
-            {  # Team NEXUS Improve SLO detector f1 score to > 91
+            # Pattern 1: "primary objectives of this course are to give students"
+            {
+                'regex': r'(?i)(?:the\s+)?primary\s+objectives?\s+of\s+this\s+course\s+(?:are|is)\s+to\s+give\s+students?',
+                'min_score': 10
+            },
+            # Pattern 2: "course should help you to:"
+            {
+                'regex': r'(?i)(?:the\s+)?course\s+should\s+help\s+you\s+(?:to\s*)?:',
+                'min_score': 10
+            },
+            # Pattern 3: "Students will" (standalone or with numbered list)
+            {
+                'regex': r'(?i)^students?\s+will\s*:?\s*$',
+                'min_score': 8
+            },
+            {
                 'regex': r'(?i)students?\s+will\s*:?\s*\d+\.',
-                'min_score': 10  # Team NEXUS Improve SLO detector f1 score to > 91
-            },  # Team NEXUS Improve SLO detector f1 score to > 91
+                'min_score': 10
+            },
             # Pattern 4: "purpose of this course is for you to learn"
             {
                 'regex': r'(?i)(?:the\s+)?purpose\s+of\s+(?:this\s+)?(?:the\s+)?course\s+is\s+for\s+you\s+to\s+learn',
@@ -88,11 +92,11 @@ class SLODetector:
                 'regex': r'(?i)learning\s+in\s+this\s+course\s+will\s+help\s+you\s+meet\s+this\s+expectation',
                 'min_score': 10
             },
-            # Pattern 6: "course will help you develop" (stricter - require context)  # Team NEXUS Improve SLO detector f1 score to > 91
-            {  # Team NEXUS Improve SLO detector f1 score to > 91
-                'regex': r'(?i)(?:the\s+)?course\s+(?:is\s+designed\s+to|will\s+help\s+you)\s+develop\s+(?:the\s+)?(?:skills|competencies|abilities|understanding)',  # Team NEXUS Improve SLO detector f1 score to > 91
-                'min_score': 10  # Team NEXUS Improve SLO detector f1 score to > 91
-            },  # Team NEXUS Improve SLO detector f1 score to > 91
+            # Pattern 6: "course will help you develop"
+            {
+                'regex': r'(?i)(?:the\s+)?course\s+will\s+help\s+you\s+develop',
+                'min_score': 9
+            },
             # Pattern 7: "by the end of this course, students will be able to"
             {
                 'regex': r'(?i)by\s+the\s+end\s+of\s+this\s+course,?\s+(?:you|students?)\s+(?:will\s+be\s+able\s+to|should\s+be\s+able\s+to)',
@@ -113,14 +117,9 @@ class SLODetector:
                 'regex': r'(?i)we\s+will\s+do\s+so\s+by\s+building',
                 'min_score': 8
             },
-            # Pattern 11: "students will be able to" (numbered list format)  # Team NEXUS Improve SLO detector f1 score to > 91
+            # Pattern 11: "students will be able to" (standalone lead-in)  # Team NEXUS Improve SLO detector f1 score to > 91
             {  # Team NEXUS Improve SLO detector f1 score to > 91
-                'regex': r'(?i)^students?\s+(?:will\s+be\s+able\s+to|should\s+be\s+able\s+to)\s+\d+\.',  # Team NEXUS Improve SLO detector f1 score to > 91
-                'min_score': 10  # Team NEXUS Improve SLO detector f1 score to > 91
-            },  # Team NEXUS Improve SLO detector f1 score to > 91
-            # Pattern 12: "students will learn/develop/understand" (broad catch for missed SLOs)  # Team NEXUS Improve SLO detector f1 score to > 91
-            {  # Team NEXUS Improve SLO detector f1 score to > 91
-                'regex': r'(?i)students?\s+(?:will\s+)?(?:learn|gain|develop|master|understand|explore|apply|create)\s+(?:the\s+)?(?:ability|skill|knowledge|understanding|how)\b',  # Team NEXUS Improve SLO detector f1 score to > 91
+                'regex': r'(?i)^students?\s+(?:will\s+be\s+able\s+to|should\s+be\s+able\s+to)\b',  # Team NEXUS Improve SLO detector f1 score to > 91
                 'min_score': 9  # Team NEXUS Improve SLO detector f1 score to > 91
             },  # Team NEXUS Improve SLO detector f1 score to > 91
         ]

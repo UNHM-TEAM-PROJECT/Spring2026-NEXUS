@@ -103,11 +103,12 @@ class SLODetector:
                 'regex': r'(?i)upon\s+completion\s+of\s+this\s+course\s+students?\s+should\s+be\s+able\s+to',
                 'min_score': 10
             },
-            # Pattern 9: "is designed to provide instruction" (English courses)
-            {
-                'regex': r'(?i)is\s+designed\s+to\s+provide\s+instruction\s+and\s+practice',
-                'min_score': 9
-            },
+            # Pattern 9: "is designed to provide instruction" (English courses) - DISABLED
+            # Creates false positives without catching new SLOs
+            # {
+            #     'regex': r'(?i)is\s+designed\s+to\s+provide\s+instruction\s+and\s+practice',
+            #     'min_score': 9
+            # },
             # Pattern 10 Removed - "we wil do so by building..." is too generic
 
             # Pattern 11: "students will be able to" (standalone lead-in)  # Team NEXUS Improve SLO detector f1 score to > 91
@@ -117,6 +118,11 @@ class SLODetector:
             },  # Team NEXUS Improve SLO detector f1 score to > 91
             {
                 'regex': r'(?i)learning\s+objectives?\s+for\s+\w+\s+courses?\s+are\s+aligned',
+                'min_score': 10
+            },
+            # Pattern 12: "Student Outcomes:" header line for ABET engineering courses
+            {
+                'regex': r'(?i)student\s+outcomes?\s*:',
                 'min_score': 10
             },
         ]

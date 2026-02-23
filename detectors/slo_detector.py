@@ -8,7 +8,7 @@ Designed to achieve >91% F1 by catching both:
 
 import re
 import logging
-from typing import Dict, Any, Tuple, List
+from typing import Dict, Any, Tuple
 
 
 class SLODetector:
@@ -54,7 +54,9 @@ class SLODetector:
             "learning objective",
             "course learning outcomes",
             "course learning objectives",
-            "business program student learning outcomes"
+            "business program student learning outcomes",  # Team NEXUS Improve SLO detector f1 score to > 91
+            "student outcomes",  # Team NEXUS Improve SLO detector f1 score to > 91
+            "course outcomes"  # Team NEXUS Improve SLO detector f1 score to > 91
         ]
 
         self.approved_abbreviations = ["slos", "slo"]
@@ -114,6 +116,11 @@ class SLODetector:
             {
                 'regex': r'(?i)we\s+will\s+do\s+so\s+by\s+building',
                 'min_score': 8
+            },
+            # Pattern 11: "students will be able to" (standalone lead-in)  # Team NEXUS Improve SLO detector f1 score to > 91
+            {
+                'regex': r'(?i)^students?\s+(?:will\s+be\s+able\s+to|should\s+be\s+able\s+to)\b',
+                'min_score': 9
             },
         ]
 

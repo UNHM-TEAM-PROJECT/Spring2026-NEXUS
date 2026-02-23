@@ -37,6 +37,10 @@ class SLODetector:
         'course requirements', 'homework', 'assignments', 'exams'
     ]
 
+    LIST_ITEM_PATTERN = re.compile(
+        r'^\s*(?:\d+[.)]\s|[•\-\*▪◦§■]\s|[a-z][.)]\s|\([a-z\d]\)\s|\(\d+\)\s)'
+    )
+
     def __init__(self):
         self.field_name = 'slos'
         self.logger = logging.getLogger('detector.slos')
@@ -54,9 +58,7 @@ class SLODetector:
             "learning objective",
             "course learning outcomes",
             "course learning objectives",
-            "business program student learning outcomes",  # Team NEXUS Improve SLO detector f1 score to > 91
-            "student outcomes",  # Team NEXUS Improve SLO detector f1 score to > 91
-            "course outcomes"  # Team NEXUS Improve SLO detector f1 score to > 91
+            "business program student learning outcomes"  # Team NEXUS Improve SLO detector f1 score to > 91
         ]
 
         self.approved_abbreviations = ["slos", "slo"]
@@ -82,16 +84,7 @@ class SLODetector:
                 'regex': r'(?i)students?\s+will\s*:?\s*\d+\.',
                 'min_score': 10
             },
-            # Pattern 4: "purpose of this course is for you to learn"
-            {
-                'regex': r'(?i)(?:the\s+)?purpose\s+of\s+(?:this\s+)?(?:the\s+)?course\s+is\s+for\s+you\s+to\s+learn',
-                'min_score': 10
-            },
-            # Pattern 5: "learning in this course will help you meet"
-            {
-                'regex': r'(?i)learning\s+in\s+this\s+course\s+will\s+help\s+you\s+meet\s+this\s+expectation',
-                'min_score': 10
-            },
+            # Pattern 4 and Pattern 5 Removed - too generic
             # Pattern 6: "course will help you develop"
             {
                 'regex': r'(?i)(?:the\s+)?course\s+will\s+help\s+you\s+develop',
@@ -112,16 +105,17 @@ class SLODetector:
                 'regex': r'(?i)is\s+designed\s+to\s+provide\s+instruction\s+and\s+practice',
                 'min_score': 9
             },
-            # Pattern 10: "we will do so by" (computing courses)
-            {
-                'regex': r'(?i)we\s+will\s+do\s+so\s+by\s+building',
-                'min_score': 8
-            },
+            # Pattern 10 Removed - "we wil do so by building..." is too generic
+
             # Pattern 11: "students will be able to" (standalone lead-in)  # Team NEXUS Improve SLO detector f1 score to > 91
-            {  # Team NEXUS Improve SLO detector f1 score to > 91
-                'regex': r'(?i)^students?\s+(?:will\s+be\s+able\s+to|should\s+be\s+able\s+to)\b',  # Team NEXUS Improve SLO detector f1 score to > 91
-                'min_score': 9  # Team NEXUS Improve SLO detector f1 score to > 91
+            {
+                'regex': r'(?i)(?:the\s+)?student\s+will\s+receive\s+a\s+solid\s+foundation',
+                'min_score': 9
             },  # Team NEXUS Improve SLO detector f1 score to > 91
+            {
+                'regex': r'(?i)learning\s+objectives?\s+for\s+\w+\s+courses?\s+are\s+aligned',
+                'min_score': 10
+            },
         ]
 
     def detect(self, text: str) -> Dict[str, Any]:

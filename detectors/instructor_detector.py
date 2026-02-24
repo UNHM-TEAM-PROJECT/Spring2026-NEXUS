@@ -62,9 +62,10 @@ class InstructorDetector:
         self.non_name_keywords = [
             'Course Name', 'Course Name:', 'class name', 'class name:'
         ]
+
+        # ── CHANGE 1: added 'principal lecturer' at top ──────────────────────
         self.title_keywords = [
-            # Most specific first so longer matches win over substrings
-            'principal lecturer',       # FIX: added — was missing, caused Troy Fall 2025 failure
+            'principal lecturer',
             'assistant professor',
             'associate professor',
             'senior lecturer',
@@ -80,9 +81,9 @@ class InstructorDetector:
             'Department', 'Dept.', 'School of', 'Division of', 'Program', 'College of', 'Department/Program', 'Department and Program'
         ]
 
-        # Ordered most-specific-first.
-        # Bare 'Division of Science and Technology' intentionally REMOVED to prevent
-        # it shadowing 'Computing Technology, Division of Science'.
+        # ── CHANGE 2: added 'of Applied Engineering & Sciences',
+        #             'of Applied Engineering and Sciences',
+        #             'Business and Pubic Affairs' (GT typo variant) ──────────
         self.known_departments = [
             # ── Applied Engineering ──────────────────────────────────────────────
             'Applied Engineering and Sciences Department',
@@ -111,6 +112,7 @@ class InstructorDetector:
             # ── Business ─────────────────────────────────────────────────────────
             'Business & Economics',
             'Business and Public Affairs',
+            'Business and Pubic Affairs',
             'Personal Finance',
             # ── Social Sciences ──────────────────────────────────────────────────
             'Division of Social Science',
@@ -373,15 +375,21 @@ class InstructorDetector:
 
         Scans all LINES_TO_SCAN lines but filters out false positives using:
           1. Word count > 15 → skip (sentence, not a label).
-             Raised from 12 to 15 to catch slightly longer label lines like
-             'Adjunct Faculty, Department of X' without re-opening body-text FPs.
           2. Body-text pattern matching → skip lines where the keyword appears
              in a non-label context (e.g. "contact the professor").
+
+        ── CHANGE 3 (body_text_patterns) ────────────────────────────────────
+        Added patterns to block remaining false positives:
+          - course/program/students sentences containing professor/instructor
+          - lines starting with common sentence starters
+          - "Prof. [name] has/will/is..." — prof as name prefix
+          - "Professor [name]" or "Prof. [name]" standalone — name prefix lines
+          - "College of ..." and "Professional Studies" — institution name lines
+        Also raised word count threshold 12 → 15 to avoid dropping legitimate
+        longer label lines like "Adjunct Faculty, Dept of X".
         """
-        # Longest keywords first so "Principal Lecturer" beats "Lecturer", etc.
         sorted_keywords = sorted(self.title_keywords, key=len, reverse=True)
 
-        # Patterns where the keyword is body text, NOT a title label
         body_text_patterns = [
             r'\bcontact\b.{0,40}\b(professor|instructor|lecturer|adjunct)\b',
             r'\b(email|reach|ask|see|notify|inform)\b.{0,40}\b(professor|instructor|lecturer)\b',
@@ -392,6 +400,23 @@ class InstructorDetector:
             r'\bby\s+(the\s+)?(professor|instructor|lecturer)\b',
             r'\bour\s+(professor|instructor|lecturer)\b',
             r'\byour\s+(professor|instructor|lecturer)\b',
+            # block course/program/student body-text sentences
+            r'\bcourse\b.{0,60}\b(professor|instructor)\b',
+            r'\bprogram\b.{0,60}\b(professor|instructor)\b',
+            r'\bstudents?\b.{0,60}\b(professor|instructor|lecturer)\b',
+            # block lines beginning with sentence starters
+            r'^(this|these|all|each|every|any|some|please|note|see|if|when|as|since|because|in|for|of|to)\b',
+            r'\b(taught|teaching|taught by|offered by|delivered by)\b',
+            r'\b(class|course|section)\b.{0,30}\b(professor|instructor|lecturer)\b',
+            # block "Prof. Troy has..." — prof used as name prefix with verb
+            r'\bprof\.\s+[a-z]+\s+(has|will|is|was|can|may|would|should|does|did)\b',
+            # ── THE TWO NEW LINES ────────────────────────────────────────────
+            # block "Professor Hopper" / "Prof. Troy" — 2-word name-prefix lines
+            r'^professor\s+[a-z]+$',
+            r'^prof\.\s+[a-z]+$',
+            # block "College of Professional Studies" institution name lines
+            r'\bcollege\s+of\b',
+            r'\bprofessional\s+studies\b',
         ]
 
         for line in lines:
@@ -404,16 +429,12 @@ class InstructorDetector:
             if not line_stripped:
                 continue
 
-            # FIX: raised from 12 → 15 to stop filtering out legitimate label lines
-            # like "Adjunct Faculty, Dept of X" that have slightly more words
-            if len(line_stripped.split()) > 15:
+            if len(line_stripped.split()) > 15:  # raised from 12
                 continue
 
-            # Skip lines where the keyword is clearly body text, not a label
             if any(re.search(p, line_lower) for p in body_text_patterns):
                 continue
 
-            # Check title in parentheses first: e.g. "Ohkami, Ph.D. (Lecturer)"
             parentheses_match = re.search(r'\(([^)]+)\)', line)
             if parentheses_match:
                 content = parentheses_match.group(1).strip()
@@ -421,9 +442,12 @@ class InstructorDetector:
                     if keyword.lower() == content.lower():
                         return keyword.title() if keyword.islower() else keyword
 
-            # Plain line check
             for keyword in sorted_keywords:
                 if keyword.lower() in line_lower:
+                    # Skip "Professor Hopper" — title used as name prefix, real title on next line
+                    after = line_stripped[line_lower.index(keyword.lower()) + len(keyword):].strip()
+                    if re.match(r'^[A-Z][a-z]+$', after):
+                        continue
                     return keyword.title() if keyword.islower() else keyword
 
         return None

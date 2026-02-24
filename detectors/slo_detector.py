@@ -59,7 +59,7 @@ class SLODetector:
             "course learning outcomes",
             "course learning objectives",
             "business program student learning outcomes",  # Team NEXUS Improve SLO detector f1 score to > 91
-            "student outcomes",  # For ABET/engineering course outcomes
+            "student outcomes",
             "program learning outcomes",
             "course learning goals"
         ]
@@ -87,40 +87,32 @@ class SLODetector:
                 'regex': r'(?i)students?\s+will\s*:?\s*\d+\.',
                 'min_score': 10
             },
-            # Pattern 4 and Pattern 5 Removed - too generic
-            # Pattern 6: "course will help you develop"
+            # Pattern 4: "course will help you develop"
             {
                 'regex': r'(?i)(?:the\s+)?course\s+will\s+help\s+you\s+develop\s+(?:skills?|proficiency|understanding|ability|abilities)',
                 'min_score': 9
             },
-            # Pattern 7: "by the end of this course, students will be able to"
+            # Pattern 5: "by the end of this course, students will be able to"
             {
                 'regex': r'(?i)by\s+the\s+end\s+of\s+this\s+course,?\s+(?:you|students?)\s+(?:will\s+be\s+able\s+to|should\s+be\s+able\s+to)',
                 'min_score': 10
             },
-            # Pattern 8: "upon completion of this course students should be able to"
+            # Pattern 6: "upon completion of this course students should be able to"
             {
                 'regex': r'(?i)upon\s+completion\s+of\s+this\s+course\s+students?\s+should\s+be\s+able\s+to',
                 'min_score': 10
             },
-            # Pattern 9: "is designed to provide instruction" (English courses) - DISABLED
-            # Creates false positives without catching new SLOs
-            # {
-            #     'regex': r'(?i)is\s+designed\s+to\s+provide\s+instruction\s+and\s+practice',
-            #     'min_score': 9
-            # },
-            # Pattern 10 Removed - "we wil do so by building..." is too generic
-
-            # Pattern 11: "students will be able to" (standalone lead-in)  # Team NEXUS Improve SLO detector f1 score to > 91
+            # Pattern 7: "student will receive a solid foundation"
             {
                 'regex': r'(?i)(?:the\s+)?student\s+will\s+receive\s+a\s+solid\s+foundation',
                 'min_score': 9
-            },  # Team NEXUS Improve SLO detector f1 score to > 91
+            },
+            # Pattern 8: "learning objectives for [subject] courses are aligned"
             {
                 'regex': r'(?i)learning\s+objectives?\s+for\s+\w+\s+courses?\s+are\s+aligned',
                 'min_score': 10
             },
-            # Pattern 12: "Student Outcomes:" header line for ABET engineering courses
+            # Pattern 9: "Student Outcomes:" header line for engineering courses
             {
                 'regex': r'(?i)student\s+outcomes?\s*:',
                 'min_score': 10
@@ -185,7 +177,7 @@ class SLODetector:
                 
                 match = re.search(pattern, line)
                 if match:
-                    # Hard filter: reject if line looks like generic course description
+                    # reject if line looks like generic course description
                     line_lower = line.lower()
                     if "read the complex texts" in line_lower or "study at least" in line_lower:
                         continue
@@ -237,7 +229,7 @@ class SLODetector:
                     break
 
             content = '\n'.join(content_lines)
-            # HARD FILTER: ignore course-purpose descriptions
+            # ignore course-purpose descriptions
             if content.strip().lower().startswith("the purpose of this course"):
                 return False, ""
             return True, content

@@ -319,7 +319,7 @@ class GradingScaleDetector:
         # Fallback: look for abbreviated scales (e.g. "90% and above earns A-") (TeamNexus)
         abbreviated_pattern = re.compile(
             r'(\d{1,3})\s*%?\s*(?:and\s+above|or\s+higher|or\s+better|and\s+up)\s*'
-            r'(?:earns?|gets?|is|=|:)?\s*([ABCDF][+-]?)',
+            r'(?:\w+\s+)?(?:earns?|gets?|is|=|:)?\s*([ABCDF][+-]?)',
             re.IGNORECASE
         )
         abbrev_matches = abbreviated_pattern.findall(text)

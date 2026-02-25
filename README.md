@@ -280,7 +280,7 @@ python test_runner.py
 # Results saved to test_results.json
 ```
 
-### Current Test Results (161 syllabi)
+### Current Test Results (163 syllabi)
 **ground_truth_syllabus**
 ==========================================================================================
 Field                           Accuracy  Precision    Recall   F1 Score
@@ -308,31 +308,31 @@ grading_process                   88.8%      97.2%     91.0%      94.0%
 OVERALL                           88.9%      96.4%     86.9%      91.4%
 ==========================================================================================
 
-**new_ground_truth_syllabus**
+### CURRENT WEIGHTED COMBINED RESULTS - All 2 Folders (187 total files)
 ==========================================================================================
 Field                           Accuracy  Precision    Recall   F1 Score
 ------------------------------------------------------------------------------------------
-modality                          70.8%      89.5%     77.3%      82.9%
-SLOs                              62.5%     100.0%     40.0%      57.1%
-email                             79.2%     100.0%     78.3%      87.8%
-credit_hour                       70.8%     100.0%     56.2%      72.0%
-workload                          45.8%     100.0%      7.1%      13.3%
-instructor_name                   79.2%      94.7%     81.8%      87.8%
-instructor_title                  91.7%      88.9%     88.9%      88.9%
-instructor_department             70.8%      63.6%     70.0%      66.7%
-office_address                    83.3%     100.0%     69.2%      81.8%
-office_hours                      66.7%      92.3%     63.2%      75.0%
-office_phone                      83.3%     100.0%     69.2%      81.8%
-preferred_contact_method           4.2%       0.0%      0.0%       0.0%
-assignment_types_title            79.2%      88.2%     83.3%      85.7%
-deadline_expectations_title       33.3%      42.9%     20.0%      27.3%
-assignment_delivery               54.2%      57.9%     78.6%      66.7%
-final_grade_scale                 83.3%     100.0%     60.0%      75.0%
-response_time                     95.8%      66.7%    100.0%      80.0%
-class_location                    83.3%      88.9%     88.9%      88.9%
-grading_process                   41.7%      90.0%     40.9%      56.2%
+modality                          77.0%      96.0%     79.6%      87.0%
+SLOs                              90.9%      94.3%     83.8%      88.7%
+email                             88.8%      96.9%     90.7%      93.7%
+credit_hour                       88.2%      93.1%     90.1%      91.5%
+workload                          90.9%      91.9%     91.0%      91.4%
+instructor_name                   93.0%     100.0%     92.7%      96.2%
+instructor_title                  93.0%      94.9%     88.9%      91.8%
+instructor_department             93.6%      94.2%     92.0%      93.0%
+office_address                    90.9%      97.7%     84.8%      90.7%
+office_hours                      84.5%      99.2%     81.4%      89.3%
+office_phone                      92.0%      96.0%     85.7%      90.5%
+preferred_contact_method          89.3%      94.7%     93.6%      94.2%
+assignment_types_title            81.3%      92.8%     81.8%      86.9%
+deadline_expectations_title       75.9%      96.9%     72.1%      82.3%
+assignment_delivery               87.2%      94.2%     90.5%      92.0%
+final_grade_scale                 92.5%      96.2%     81.3%      88.1%
+response_time                     97.3%      92.9%     90.3%      91.6%
+class_location                    84.0%      97.1%     83.8%      89.9%
+grading_process                   82.8%      96.3%     84.5%      89.2%
 ------------------------------------------------------------------------------------------
-OVERALL                           67.3%      79.3%     63.1%      70.3%
+OVERALL                           88.1%      95.8%     86.1%      90.7%
 ==========================================================================================
 ---
 

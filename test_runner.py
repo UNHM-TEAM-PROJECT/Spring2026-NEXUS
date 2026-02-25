@@ -594,7 +594,9 @@ def run_tests_for_folder(folder_path, ground_truth_json, output_json):
     with open(args.ground_truth, "r", encoding="utf-8") as f:
         gt_data = json.load(f)
 
-    print(f"\nFound {len(gt_data)} records in ground truth.")
+    # CHANGE 1: Store file count so main() can use it for weighted combining
+    file_count = len(gt_data)
+    print(f"\nFound {file_count} records in ground truth.")
 
     # Track TP, FP, FN, TN for F1 score calculation
     # TP = True Positive: GT has value, Pred has value, Match correct
@@ -843,45 +845,44 @@ def run_tests_for_folder(folder_path, ground_truth_json, output_json):
     overall_total = total_tp + total_fp + total_fn + total_tn
     overall_accuracy = ((total_tp + total_tn) / overall_total) if overall_total > 0 else 0.0
 
-    # Print summary to terminal with F1 Score
-    print("\n" + "=" * 90)
-    print("RESULTS SUMMARY - Detector Performance Metrics")
-    print("=" * 90)
-    print(f"{'Field':<30} {'Accuracy':>9} {'Precision':>10} {'Recall':>9} {'F1 Score':>10}")
-    print("-" * 90)
-
-    for field in SUPPORTED_FIELDS:
-        stats = summary[field]
-        print(f"{field:<30} {stats['accuracy']:>8.1%} {stats['precision']:>10.1%} "
-              f"{stats['recall']:>9.1%} {stats['f1_score']:>10.1%}")
-
-    print("-" * 90)
-    print(f"{'OVERALL':<30} {overall_accuracy:>8.1%} {overall_precision:>10.1%} "
-          f"{overall_recall:>9.1%} {overall_f1:>10.1%}")
-    print("=" * 90)
-
-    # Print explanation for non-technical audience
-    print("\nMETRIC DEFINITIONS:")
-    print("  • Accuracy:  How often the detector is correct overall")
-    print("  • Precision: When detector finds something, how often is it right?")
-    print("  • Recall:    Of all fields that exist, how many did we find?")
-    print("  • F1 Score:  Balanced measure combining Precision and Recall")
-    print("               (Higher F1 = better overall detector quality)")
-    print("=" * 90)
+    # INDIVIDUAL TABLE: Comment out the block below to hide per-folder tables.
+    # To show individual tables again, remove the '#' from each line below.
+    # print("\n" + "=" * 90)
+    # print(f"RESULTS SUMMARY - {folder_path} ({file_count} files)")
+    # print("=" * 90)
+    # print(f"{'Field':<30} {'Accuracy':>9} {'Precision':>10} {'Recall':>9} {'F1 Score':>10}")
+    # print("-" * 90)
+    # for field in SUPPORTED_FIELDS:
+    #     stats = summary[field]
+    #     print(f"{field:<30} {stats['accuracy']:>8.1%} {stats['precision']:>10.1%} "
+    #           f"{stats['recall']:>9.1%} {stats['f1_score']:>10.1%}")
+    # print("-" * 90)
+    # print(f"{'OVERALL':<30} {overall_accuracy:>8.1%} {overall_precision:>10.1%} "
+    #       f"{overall_recall:>9.1%} {overall_f1:>10.1%}")
+    # print("=" * 90)
+    # print("\nMETRIC DEFINITIONS:")
+    # print("  • Accuracy:  How often the detector is correct overall")
+    # print("  • Precision: When detector finds something, how often is it right?")
+    # print("  • Recall:    Of all fields that exist, how many did we find?")
+    # print("  • F1 Score:  Balanced measure combining Precision and Recall")
+    # print("               (Higher F1 = better overall detector quality)")
+    # print("=" * 90)
 
     # Save results to JSON
+    overall_metrics = {
+        "accuracy": round(overall_accuracy, 4),
+        "precision": round(overall_precision, 4),
+        "recall": round(overall_recall, 4),
+        "f1_score": round(overall_f1, 4),
+        "TP": total_tp,
+        "FP": total_fp,
+        "FN": total_fn,
+        "TN": total_tn
+    }
+
     output_data = {
         "summary": summary,
-        "overall": {
-            "accuracy": round(overall_accuracy, 4),
-            "precision": round(overall_precision, 4),
-            "recall": round(overall_recall, 4),
-            "f1_score": round(overall_f1, 4),
-            "TP": total_tp,
-            "FP": total_fp,
-            "FN": total_fn,
-            "TN": total_tn
-        },
+        "overall": overall_metrics,
         "details": details
     }
 
@@ -890,24 +891,82 @@ def run_tests_for_folder(folder_path, ground_truth_json, output_json):
 
     print(f"\n[SUCCESS] Results saved to {args.output}")
 
+    # CHANGE 1: Return summary, overall metrics, and file count so main() can combine them
+    return summary, overall_metrics, file_count
+
+
+# ======================================================================
+# NEW FUNCTION: Print weighted combined table
+# Weights each folder's scores by its file count, so a folder with more
+# files has proportionally more influence on the combined result.
+# If you add more files to either folder later, the weights update automatically.
+# ======================================================================
+def print_weighted_combined_table(results_list):
+    """
+    results_list: list of (summary, overall, file_count) tuples — one per folder.
+    Each folder is weighted by its file count so larger folders count more.
+
+    Example with 163 and 24 files (total = 187):
+      folder1 weight = 163/187 = 87.2%
+      folder2 weight =  24/187 = 12.8%
+    """
+    METRICS = ("accuracy", "precision", "recall", "f1_score")
+
+    # Calculate total files across all folders (used to compute each folder's weight)
+    total_files = sum(file_count for _, _, file_count in results_list)
+
+    print("\n" + "=" * 90)
+    print(f"WEIGHTED COMBINED RESULTS - All {len(results_list)} Folders ({total_files} total files)")
+    print("=" * 90)
+    print(f"{'Field':<30} {'Accuracy':>9} {'Precision':>10} {'Recall':>9} {'F1 Score':>10}")
+    print("-" * 90)
+
+    for field in SUPPORTED_FIELDS:
+        weighted = {m: 0.0 for m in METRICS}
+        for summary, _, file_count in results_list:
+            # Each folder's weight = its file count / total files across all folders
+            weight = file_count / total_files
+            for m in METRICS:
+                weighted[m] += summary.get(field, {}).get(m, 0.0) * weight
+        print(f"{field:<30} {weighted['accuracy']:>8.1%} {weighted['precision']:>10.1%} "
+              f"{weighted['recall']:>9.1%} {weighted['f1_score']:>10.1%}")
+
+    print("-" * 90)
+
+    # Weighted overall row
+    weighted_overall = {m: 0.0 for m in METRICS}
+    for _, overall, file_count in results_list:
+        weight = file_count / total_files
+        for m in METRICS:
+            weighted_overall[m] += overall.get(m, 0.0) * weight
+    print(f"{'OVERALL':<30} {weighted_overall['accuracy']:>8.1%} {weighted_overall['precision']:>10.1%} "
+          f"{weighted_overall['recall']:>9.1%} {weighted_overall['f1_score']:>10.1%}")
+    print("=" * 90)
+
 
 # ======================================================================
 # Team NEXUS
-# Modified main() to handle two folders
+# Modified main() to handle two folders with weighted combined table
 # ======================================================================
 def main():
-    run_tests_for_folder(
+    # CHANGE 2: Capture the return values (summary, overall, file_count) from each folder
+    result1 = run_tests_for_folder(
         folder_path="ground_truth_syllabus",
         ground_truth_json="ground_truth.json",
         output_json="test_results.json"
     )
 
-    # Second folder
-    run_tests_for_folder(
+    result2 = run_tests_for_folder(
         folder_path="new_ground_truth_syllabus",
         ground_truth_json="new_ground_truth.json",
         output_json="new_test_results.json"
     )
+
+    # Print one combined table weighted by file count of each folder
+    # e.g. if folder1=163 files and folder2=24 files:
+    #   folder1 contributes 163/187 = 87.2% of the combined score
+    #   folder2 contributes  24/187 = 12.8% of the combined score
+    print_weighted_combined_table([result1, result2])
 
 
 if __name__ == "__main__":

@@ -308,33 +308,32 @@ grading_process                   88.8%      97.2%     91.0%      94.0%
 OVERALL                           88.9%      96.4%     86.9%      91.4%
 ==========================================================================================
 
-### CURRENT WEIGHTED COMBINED RESULTS - All 2 Folders (187 total files)
+### CURRENT WEIGHTED COMBINED RESULTS - All 2 Folders (184 total files)
 ==========================================================================================
 Field                           Accuracy  Precision    Recall   F1 Score
 ------------------------------------------------------------------------------------------
-modality                          77.0%      96.0%     79.6%      87.0%
-SLOs                              90.9%      94.3%     83.8%      88.7%
+modality                          84.6%      94.7%     88.9%      91.6%
+SLOs                              94.7%      93.6%     93.0%      92.9%
 email                             88.8%      96.9%     90.7%      93.7%
-credit_hour                       88.2%      93.1%     90.1%      91.5%
-workload                          90.9%      91.9%     91.0%      91.4%
-instructor_name                   93.0%     100.0%     92.7%      96.2%
-instructor_title                  93.0%      94.9%     88.9%      91.8%
-instructor_department             93.6%      94.2%     92.0%      93.0%
-office_address                    90.9%      97.7%     84.8%      90.7%
-office_hours                      84.5%      99.2%     81.4%      89.3%
-office_phone                      92.0%      96.0%     85.7%      90.5%
-preferred_contact_method          89.3%      94.7%     93.6%      94.2%
-assignment_types_title            81.3%      92.8%     81.8%      86.9%
-deadline_expectations_title       75.9%      96.9%     72.1%      82.3%
-assignment_delivery               87.2%      94.2%     90.5%      92.0%
-final_grade_scale                 93.6%      93.2%     87.6%      90.2%
-response_time                     97.3%      92.9%     90.3%      91.6%
-class_location                    84.0%      97.1%     83.8%      89.9%
-grading_process                   82.8%      96.3%     84.5%      89.2%
+credit_hour                       89.4%      94.6%     90.3%      92.4%
+workload                          94.1%      96.0%     93.2%      94.6%
+instructor_name                   89.9%      99.4%     90.1%      94.5%
+instructor_title                  92.5%      94.9%     87.8%      91.2%
+instructor_department             92.0%      94.3%     89.0%      91.6%
+office_address                    88.8%      95.5%     82.8%      88.6%
+office_hours                      73.9%      89.3%     76.4%      82.2%
+office_phone                      93.6%     100.0%     86.1%      92.4%
+preferred_contact_method          98.9%      96.0%     96.0%      96.0%
+assignment_types_title            64.4%      91.8%     61.4%      73.4%
+deadline_expectations_title       62.2%      97.5%     55.4%      70.6%
+assignment_delivery               66.0%      65.4%     91.1%      76.1%
+final_grade_scale                 94.7%      96.6%     87.9%      92.0%
+response_time                     97.9%      92.9%     94.5%      93.3%
+class_location                    87.8%      97.9%     87.6%      92.5%
+grading_process                   62.9%      96.3%     63.7%      76.4%
 ------------------------------------------------------------------------------------------
-OVERALL                           88.1%      95.7%     86.3%      90.7%
+OVERALL                           85.1%      93.2%     82.2%      87.3%
 ==========================================================================================
----
 
 ## Next Steps and Future Work
 

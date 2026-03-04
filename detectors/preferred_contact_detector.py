@@ -10,19 +10,35 @@ import logging
 from typing import Dict, Any, Optional, List
 
 # Detection Configuration
-MAX_HEADING_SCAN_LINES = 150
-MAX_HEADER_CHARS = 1200
 PREFERRED_CONFIDENCE_SCORE = 0.95
 
-# updated regex to detect @wildcats.unh.edu & @comcast.net" - Team Nexus
+# Email regex
 PREFERRED_RX = re.compile(
-    r"[A-Za-z0-9._%+-]+@(?:(?:wildcats\.)?(?:unh|usnh)\.edu|comcast\.net)"
+    r"[A-Za-z0-9]+(?:\.[A-Za-z0-9]+)*@(?:unh|usnh)\.edu"
 )
 
-# Heading keywords to look for (will be normalized during search)
+# Heading keywords to look for
 HEADING_CLUES = [
-    "email", "e-mail", "contact", "contact information",
-    "preferred contact method", "instructor", "professor"
+    # Preferred variations
+    "preferred contact method",
+    "preferred method of contact",
+    "preferred way to contact",
+    "preferred initial contact",
+    "prefer email",
+    "(email preferred)",
+    "(preferred)",
+
+    # Best way variations
+    "best way to reach",
+    "best way to contact",
+    "best way to communicate",
+
+    # Primary variations
+    "primary contact method",
+    "primary method of contact",
+    "primary communication method",
+    "primary method of communication",
+    "(primary)",
 ]
 
 
@@ -33,30 +49,15 @@ class PreferredDetector:
 
     @staticmethod
     def _normalize_text(text: str) -> str:
-        """
-        Normalize text for consistent matching.
-        Handles:
-        - Lowercasing
-        - Unicode punctuation (full-width colon, em-dash, etc.)
-        - Extra whitespace
-        """
         if not text:
             return ""
-
-        # Lowercase first
         normalized = text.lower()
-
-        # Replace Unicode punctuation with ASCII equivalents
-        # Full-width colon, em-dash, en-dash, etc.
-        normalized = normalized.replace('：', ':')  # Full-width colon
-        normalized = normalized.replace('—', '-')  # Em-dash
-        normalized = normalized.replace('–', '-')  # En-dash
-        normalized = normalized.replace('\u2014', '-')  # Em-dash (unicode)
-        normalized = normalized.replace('\u2013', '-')  # En-dash (unicode)
-
-        # Normalize whitespace (multiple spaces -> single space)
+        normalized = normalized.replace('：', ':')
+        normalized = normalized.replace('—', '-')
+        normalized = normalized.replace('–', '-')
+        normalized = normalized.replace('\u2014', '-')
+        normalized = normalized.replace('\u2013', '-')
         normalized = ' '.join(normalized.split())
-
         return normalized
 
     def detect(self, text: str) -> Dict[str, Any]:
@@ -65,50 +66,90 @@ class PreferredDetector:
         if not text:
             return self._not_found()
 
-        # 1) Try: scan first N lines for heading + preferred on the same/next line
+        # Scan ENTIRE document for heading clues (no line limit)
         lines = text.splitlines()
-        window_lines = lines[:MAX_HEADING_SCAN_LINES] if len(lines) > MAX_HEADING_SCAN_LINES else lines
-        candidate = self._find_near_heading(window_lines)
+        candidate = self._find_near_heading(lines)
+
         if candidate:
             return self._found(candidate, method="heading_window")
 
-        # 2) Try: any valid email in the first N chars (header area)
-        header = text[:MAX_HEADER_CHARS]
-        header_preferred = PREFERRED_RX.findall(header)
-        if header_preferred:
-            return self._found(header_preferred[0], method="header_any")
-
-        # 3) Fallback: first valid preferred contact anywhere in the doc
-        all_preferred = PREFERRED_RX.findall(text)
-        if all_preferred:
-            return self._found(all_preferred[0], method="fallback_any")
-
+        # If no preference phrase found, return Missing
         return self._not_found()
 
-    # ---------------- helpers ----------------
-
     def _find_near_heading(self, lines: List[str]) -> Optional[str]:
-        """Find a preferred contact on a line that contains a clue word, or the next line."""
+        """Find email when preference phrase is found.
+        If phrase mentions 'above' or 'email', search header section for email."""
+
+        # Words that should appear near preference phrase for validation
+        contact_indicators = ["email", "e-mail", "contact", "reach", "office", "communicate"]
+
         for i, raw in enumerate(lines):
             line = raw.strip()
-            # Normalize the line for comparison
             normalized_line = self._normalize_text(line)
 
             # Check if any heading clue appears in the normalized line
-            if any(self._normalize_text(clue) in normalized_line for clue in HEADING_CLUES):
-                # same line (search in original, not normalized)
-                m = PREFERRED_RX.search(line)
-                if m:
-                    return m.group(0)
-                # next line
-                if i + 1 < len(lines):
-                    m2 = PREFERRED_RX.search(lines[i+1])
-                    if m2:
-                        return m2.group(0)
+            for clue in HEADING_CLUES:
+                if self._normalize_text(clue) in normalized_line:
+
+                    if clue in ["(primary)", "(preferred)"]:
+                        # Check if (primary)/(preferred) is on the SAME LINE as phone/mobile
+                        phone_indicators = ["phone", "mobile", "telephone", "cell"]
+
+                        # Only skip if phone word and (primary)/(preferred) are on SAME line
+                        if any(phone_word in normalized_line for phone_word in phone_indicators):
+
+                            # If email/e-mail is on same line, it's OK even if phone word exists
+                            if "email" in normalized_line or "e-mail" in normalized_line:
+                                pass  # Email on same line → (preferred) refers to email ✓
+                            else:
+                                continue  # Phone on same line, no email → Skip
+
+                    # Get context: previous line + current line + next 2 lines
+                    context_lines = [normalized_line]
+                    if i > 0:
+                        context_lines.insert(0, self._normalize_text(lines[i-1]))
+                    if i + 1 < len(lines):
+                        context_lines.append(self._normalize_text(lines[i+1]))
+                    if i + 2 < len(lines):
+                        context_lines.append(self._normalize_text(lines[i+2]))
+
+                    context = " ".join(context_lines)
+
+                    # Only proceed if contact indicator appears in context
+                    has_contact_indicator = any(indicator in context for indicator in contact_indicators)
+                    if not has_contact_indicator:
+                        continue  # Skip this match - doesn't look like contact section
+
+                    # Strategy 1: Check nearby lines (±2 lines) for email
+                    search_lines = []
+                    if i >= 2:
+                        search_lines.append(lines[i-2])
+                    if i >= 1:
+                        search_lines.append(lines[i-1])
+                    search_lines.append(line)
+                    if i + 1 < len(lines):
+                        search_lines.append(lines[i+1])
+                    if i + 2 < len(lines):
+                        search_lines.append(lines[i+2])
+
+                    for search_line in search_lines:
+                        m = PREFERRED_RX.search(search_line)
+                        if m:
+                            return m.group(0)
+
+                    # Strategy 2: If phrase mentions "above" or is in "Email:" section,
+                    # search header area (first 150 lines) for email
+                    if "above" in normalized_line or "email" in normalized_line or "e-mail" in normalized_line:
+                        # Search first 150 lines for email
+                        header_lines = lines[:min(150, len(lines))]
+                        for header_line in header_lines:
+                            m = PREFERRED_RX.search(header_line)
+                            if m:
+                                return m.group(0)
+
         return None
 
     def _found(self, content: str, method: str) -> Dict[str, Any]:
-        """Return found result with preferred contact as string (consistent with other detectors)."""
         self.logger.info(f"FOUND: preferred via {method}")
         return {
             "field_name": self.field_name,
@@ -128,21 +169,21 @@ class PreferredDetector:
             "metadata": {}
         }
 
+
 if __name__ == "__main__":
-    # Test cases (avoiding Unicode in console output for Windows compatibility)
     test_cases = [
-        ("Email: jane.doe@unh.edu", "Standard email with colon"),
-        ("E-mail: john.smith@unh.edu", "E-mail variant"),
-        ("Contact   :   test@unh.edu", "Extra spaces around colon"),
-        ("Instructor\nEmail: prof@unh.edu", "Email on next line"),
+        ("Email (preferred): jane.doe@unh.edu", True),
+        ("Best way to reach me: john.smith@unh.edu", True),
+        ("Primary contact: test@unh.edu", True),
+        ("Email: prof@unh.edu", False),
+        ("Contact: prof@unh.edu", False),
     ]
 
     detector = PreferredDetector()
-    print("Testing Preferred Detector:")
+    print("Testing Preferred Detector (NO FALLBACKS):")
     print("=" * 60)
-    for test_text, description in test_cases:
-        result = detector.detect(test_text)
-        print(f"\nTest: {description}")
-        print(f"Found: {result.get('found')}")
-        print(f"Preferred: {result.get('content')}")
-        print(f"Method: {result.get('metadata', {}).get('method')}")
+    for text, should_find in test_cases:
+        result = detector.detect(text)
+        found = result.get('found')
+        status = "✓" if found == should_find else "✗"
+        print(f"{status} {text[:50]:<50} Found: {found}")

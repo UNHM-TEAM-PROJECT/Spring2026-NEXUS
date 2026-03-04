@@ -194,6 +194,11 @@ def detect_course_delivery(text: str) -> Dict[str, object]:
         "this course meets synchronously online",
         "no scheduled class times", "no scheduled class meeting times",
         "there are no scheduled class times", "there are no scheduled meeting times",
+        "this course is an online",
+        "course is an online",
+        "as an online class",
+        "online, asynchronous course",
+        "online asynchronous course",
     ]
     for phrase in online_definitive:
         if phrase in t_lower:
@@ -203,6 +208,12 @@ def detect_course_delivery(text: str) -> Dict[str, object]:
     hybrid_definitive = [
         "hybrid course", "hy-flex", "hyflex", "blended course",
         "hybrid format", "blended format", "hybrid delivery",
+        "hybrid accelerated",
+        "both in-person and remote modality",
+        "in-person and remote modality",
+        "face-to-face every other week",
+        "every other week and online",
+        "in-person and online via asynchronous",
     ]
     for phrase in hybrid_definitive:
         if phrase in t_lower:
@@ -221,9 +232,12 @@ def detect_course_delivery(text: str) -> Dict[str, object]:
         location_text = t_lower[location_online_match.start():min(location_online_match.end() + 100, len(t_lower))]
         if not any(word in location_text for word in ["room", "rm", "hall", "building", "pandora", "pandra"]):
             return {"modality": "Online", "confidence": 0.93, "evidence": ["location states online"]}
+    # ADD after location_online_match block:
+    if re.search(r"(?i)location\s*:.*\bhybrid\b", t_lower[:HEADER_SEARCH_LIMIT_1500]):
+        return {"modality": "Hybrid", "confidence": 0.95, "evidence": ["location states hybrid"]}
     
     # Day/time with online
-    if re.search(r"(?i)(?:mon|tue|wed|thu|fri|sat|sun)[a-z]*[,\s]+\d{1,2}:\d{2}.*\bonline\b", t_lower[:HEADER_SEARCH_LIMIT_800]):
+    if re.search(r"(?i)(?:mon|tue|wed|thu|fri|sat|sun)[a-z]*[,\s]+[\d:\-]+(?:am|pm)?.*\bonline\b", t_lower[:HEADER_SEARCH_LIMIT_800]):
         return {"modality": "Online", "confidence": 0.93, "evidence": ["class time shows online"]}
     
     # Face-to-face + async/online
@@ -236,7 +250,8 @@ def detect_course_delivery(text: str) -> Dict[str, object]:
     
     header_1500 = t_lower[:HEADER_SEARCH_LIMIT_1500]
     if "hybrid" in header_1500:
-        if any(word in header_1500 for word in ["hybrid delivery", "hybrid course", "hybrid format", "hybrid modality", "online with some campus"]):
+        if any(word in header_1500 for word in ["hybrid delivery", "hybrid course", "hybrid format", "hybrid modality", "online with some campus",
+                                                  "hybrid accelerated", "in-person and remote modality"]):
             return {"modality": "Hybrid", "confidence": 0.95, "evidence": ["header explicitly states hybrid"]}
     
     if class_section:

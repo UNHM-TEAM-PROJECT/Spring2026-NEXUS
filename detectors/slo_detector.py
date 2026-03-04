@@ -58,10 +58,7 @@ class SLODetector:
             "learning objective",
             "course learning outcomes",
             "course learning objectives",
-            "business program student learning outcomes",  # Team NEXUS Improve SLO detector f1 score to > 91
-            "student outcomes",
-            "program learning outcomes",
-            "course learning goals"
+            "business program student learning outcomes"
         ]
 
         self.approved_abbreviations = ["slos", "slo"]

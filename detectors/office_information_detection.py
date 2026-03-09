@@ -219,6 +219,14 @@ class LocationDetector(BaseDetector):
                 match = match[0] if match else ''
 
             room = match.strip() if match else ''
+            
+            # Check if it's a special format (Virtual, Remote, Suite, etc.)
+            if any(keyword in room.lower() for keyword in ['virtual', 'remote', 'suite', 'building', 'unh-', 'unhm']):
+                # These are full office locations, not just room numbers
+                if room and room not in seen:
+                    unique_rooms.append(room)
+                    seen.add(room)
+                continue
 
             # Validate format: digits optionally followed by a letter (e.g., "529", "105A")
             if room and re.match(r'^\d+[A-Z]?$', room) and room not in seen:
@@ -234,14 +242,24 @@ class LocationDetector(BaseDetector):
     def _format_room_number(self, room: str, text: str) -> str:
         """
         Format room number to match how it appears in the document.
-        Priority: P### > Pandora Room ### > Room ###
+        Priority: Full context > P### > Pandora Room ### > Room ### > Rm ###
         Args:
-            room (str): Room number (e.g., "529")
+            room (str): Room number (e.g., "529") or full match (e.g., "Room 139, Pandora Mill building")
             text (str): syllabus text for context.
         Returns:
             str: Formatted room string.
         """
         search_text = text[:DEFAULT_LOCATION_SEARCH_LIMIT]
+        
+        # If room already contains building info or special format, return as-is
+        if any(keyword in room.lower() for keyword in ['building', 'mill', 'virtual', 'remote', 'suite', 'unh-', 'unhm']):
+            return room
+        
+        # Check for full "Rm ###, Pandora Mill building" format in text
+        full_pattern = rf'((?:Rm\.?|Room)\s*{re.escape(room)}[A-Z]?,?\s*Pand[o]?ra\s+(?:Mill\s+)?Building)'
+        full_match = re.search(full_pattern, search_text, re.IGNORECASE)
+        if full_match:
+            return full_match.group(1)
 
         # Check for P### format (shorthand)
         p_pattern = rf'\bP{re.escape(room)}\b'
@@ -258,6 +276,11 @@ class LocationDetector(BaseDetector):
                 # Extract the full match and replace Pandra with Pandora
                 return re.sub(r'Pandra', 'Pandora', building_name, flags=re.IGNORECASE)
             return building_name
+        
+        # Check if it's formatted as "Rm ###" in the text (prefer "Rm" over "Room")
+        rm_pattern = rf'\bRm\.?\s*{re.escape(room)}\b'
+        if re.search(rm_pattern, search_text, re.IGNORECASE):
+            return f"Rm {room}"
 
         # Default to "Room ###" format
         return f"Room {room}"

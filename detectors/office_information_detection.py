@@ -882,6 +882,24 @@ class HoursDetector(BaseDetector):
         # Reject invalid phrases
         if any(phrase in text_lower for phrase in self.INVALID_PHRASES):
             return False
+        
+        # Reject if it's ONLY a URL without office hours context
+        # Allow if it's a calendly link (commonly used for office hours)
+        if re.match(r'^https?://', text_lower) and 'calendly' not in text_lower and 'office' not in text_lower:
+            return False
+        
+        # Reject if it's ONLY "Canvas Inbox tool" as standalone text
+        if re.match(r'^(?:mycourses\s+)?canvas\s+inbox\s+tool$', text_lower):
+            return False
+        
+        # Reject if it looks like a room/location mention for office hours
+        # e.g., "Monday 9:10am-noon in PANDRA 380" - has location indicator
+        if re.search(r'\b(?:in|at|room|rm\.?)\s+[A-Z]+\s*\d+', text, re.IGNORECASE):
+            return False
+        
+        # Reject if it's just "for help session" without more context
+        if text_lower.strip() == 'for help session':
+            return False
 
         # Reject class/lecture times (not office hours)
         # These patterns indicate class meeting times, not office hours
@@ -893,6 +911,26 @@ class HoursDetector(BaseDetector):
             r'class\s+(?:is\s+)?held',
         ]
         if any(re.search(pattern, text_lower) for pattern in class_time_indicators):
+            return False
+        
+        # IMPROVED: Reject if it looks like a classroom meeting time without office hours context
+        # Pattern: "Day(s) Time - Time" without any appointment/office hours keywords
+        # e.g., "Mondays 5:31 PM - 8:30 PM" should be rejected unless it has context
+        if re.search(r'^\s*(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)s?\s+\d{1,2}:\d{2}\s*[ap]m\s*[-–]\s*\d{1,2}:\d{2}\s*[ap]m\s*$', text_lower):
+            # This looks like a class meeting time unless it has office hours context
+            if not any(keyword in text_lower for keyword in ['appointment', 'office', 'available', 'zoom', 'virtual', 'by']):
+                return False
+        
+        # IMPROVED: Reject "Monday 11:40 AM 1:00 PM" style (likely class time)
+        if re.search(r'^\s*(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s+\d{1,2}:\d{2}\s*[ap]m\s+\d{1,2}:\d{2}\s*[ap]m\s*$', text_lower):
+            # This looks like a class meeting time
+            if not any(keyword in text_lower for keyword in ['appointment', 'office', 'available', 'zoom', 'virtual', 'by']):
+                return False
+        
+        # IMPROVED: Reject simple "Day, Time - Time" patterns without office hours context
+        # Matches: "Monday, 4 - 6 pm" or "Thursday, 4-6 pm"
+        if re.match(r'^\s*(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday),?\s+\d{1,2}\s*[-\u2013]\s*\d{1,2}\s*[ap]m\s*$', text_lower):
+            # This is too generic - likely a class time unless it has office hours context
             return False
 
         # Accept valid indicators

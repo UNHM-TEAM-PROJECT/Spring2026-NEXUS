@@ -364,8 +364,13 @@ class HoursDetector(BaseDetector):
         r'monday|tuesday|wednesday|thursday|friday',  # Day names
         r'\b[MTWRF]\s+\d',  # Abbreviated days with times "T 5:15"
         r'appointment',  # "By appointment"
+        r'arranged',  # "Arranged by appointment"
         r'arrangement',  # "By Arrangement"
         r'contact\s+(?:the\s+)?(?:instructor|professor)',  # "Please contact the instructor"
+        r'email\s+me',  # "email me to arrange"
+        r'email\s+to\s+arrange',  # "Please email to arrange"
+        r'email\s+to\s+make\s+appointments',  # "email to make appointments"
+        r'discord',  # "Discord to arrange"
         r'zoom',  # "via Zoom"
         r'virtual',  # "Virtual office hours"
         r'TBD',  # "TBD"
@@ -375,9 +380,14 @@ class HoursDetector(BaseDetector):
         r'office\s*hours?',  # "Office hours" (fallback)
         r'canvas\s+inbox',  # "Canvas Inbox tool"
         r'after\s*[- ]?class',  # "After class" or "after-class"
+        r'before\s+(?:and\s+)?(?:right\s+)?after\s+class',  # "Shortly before and right after class"
+        r'shortly\s+before',  # "Shortly before class"
+        r'right\s+after',  # "Right after class"
         r'help\s+session',  # "help session"
         r'calendly\.com',  # Calendly URL
+        r'calendar\s+link',  # "Here's my calendar link"
         r'see\s+schedule',  # "See schedule on Canvas"
+        r'see\s+canvas',  # "See Canvas"
         r'section\s+[A-Z]\d+',  # "Section M2"
         r'Sunday|Saturday',  # Weekend days
         r'meetings?\s+by',  # "Meetings by appointment"
@@ -387,11 +397,17 @@ class HoursDetector(BaseDetector):
         r'outside\s+(?:my\s+)?office',  # "Outside my office"
         r'private\s+(?:zoom|teams)',  # "Private Zoom/Teams sessions"
         r'from\s+a\s+link',  # "from a link"
+        r'evenings?',  # "Evenings"
     ]
 
     def __init__(self):
         """Initialize hours detector with DEFAULT_HOURS_SEARCH_LIMIT char search limit."""
         super().__init__('hours', DEFAULT_HOURS_SEARCH_LIMIT)
+        self._tbd_patterns = [
+            re.compile(r'(?:Office\s*)?Hours?\s*[:]\s*(TBD)', re.IGNORECASE),
+            re.compile(r'hours\s+(TBD)', re.IGNORECASE),
+            re.compile(r'Office\s+hours\s+(TBD)', re.IGNORECASE),
+        ]
     
     def _init_patterns(self) -> List[re.Pattern]:
         """
@@ -406,10 +422,29 @@ class HoursDetector(BaseDetector):
             r'hours\s+(TBD)',
             r'Office\s+hours\s+(TBD)',
 
-            # NEW: Canvas Inbox tool pattern
-            r'(?:To\s+)?schedule\s+(?:in-person\s+or\s+)?Zoom\s+meetings\s+use\s+the\s+(Canvas\s+Inbox\s+tool)',
-            # "Make an appointment using MyCourses Canvas Inbox tool"
-            r'[Mm]ake\s+an?\s+appointment\s+using\s+(?:the\s+)?(MyCourses\s+Canvas\s+Inbox\s+tool)',
+            # NEW: Email/Discord to arrange patterns
+            r'(?:Office\s*Hours?[\s:]+)?([Yy]ou\s+may\s+email\s+me\s+or\s+send\s+me\s+a\s+direct\s+message\s+on\s+Discord\s+to\s+arrange\s+a\s+time\s+to\s+meet[^\n]{0,50})',
+            r'(?:Office\s*Hours?[\s:]+)?([Pp]lease\s+email\s+to\s+arrange\s+a\s+meeting\s+time[^\n]{0,50})',
+            
+            # NEW: "Arranged by appointment" pattern
+            r'(?:Office\s*Hours?[\s:]+)?([Aa]rranged\s+by\s+appointment[^\n]{0,100})',
+            
+            # NEW: "As needed, by appointment" pattern - capture full context including follow-up
+            r'(?:Office\s*Hours?[\s:]+)?([Aa]s\s+needed,?\s+by\s+appointment[^.\n]*(?:\.\s*[Pp]lease\s+[^.\n]+)?)',
+            
+            # NEW: "Here's my calendar link" pattern - extend to capture full context
+            r'(?:Office\s*Hours?[\s:]+)?([Hh]ere\'?s\s+my\s+calendar\s+link[^.]*\.)'
+            
+            # NEW: "Shortly before and right after class" patterns
+            r'(?:Office\s*Hours?[\s:]+)?([Ss]hortly\s+before\s+and\s+right\s+after\s+class[^\n]{0,100})',
+            r'(?:Office\s*Hours?[\s:]+)?([Rr]ight\s+after\s+class[^\n]{0,100})',
+            
+            # NEW: "Evenings" pattern
+            r'(?:Office\s*Hours?[\s:]+)?([Ee]venings)',
+
+            # NEW: Canvas Inbox tool pattern - REQUIRES Office Hours context
+            r'Office\s*Hours?[\s:]+((?:To\s+)?schedule\s+(?:in-person\s+or\s+)?Zoom\s+meetings\s+use\s+the\s+Canvas\s+Inbox\s+tool\.?)',
+            r'Office\s*Hours?[\s:]+([Mm]ake\s+an?\s+appointment\s+using\s+(?:the\s+)?MyCourses\s+Canvas\s+Inbox\s+tool\.?)',
 
             # NEW: After-class help session patterns (with en-dash support)
             r'(?:Office\s*Hours?[\s:]+)?([MTWRF][a-z]*,?\s+\d{1,2}(?::\d{2})?\s*[-\u2013]\s*\d{1,2}(?::\d{2})?\s*[ap]m\s+\(after-class\s+help\s+session\))',
@@ -417,20 +452,35 @@ class HoursDetector(BaseDetector):
             # Help session before the time (e.g., "help session, Tuesday, 1-3 pm") - with en-dash
             r'help\s+session,?\s+([MTWRF][a-z]*,?\s+\d{1,2}(?::\d{2})?\s*[-\u2013]\s*\d{1,2}(?::\d{2})?\s*[ap]m)',
             # "The after-class help session, Monday, 4 - 6 pm"
-            r'after-class\s+help\s+session,?\s+([MTWRF][a-z]*,?\s+\d{1,2}(?::\d{2})?\s*[-\u2013]\s*\d{1,2}(?::\d{2})?\s*[ap]m)',
+            r'((?:The\s+)?after-class\s+help\s+session,?\s+[MTWRF][a-z]*,?\s+\d{1,2}(?::\d{2})?\s*[-\u2013]\s*\d{1,2}(?::\d{2})?\s*[ap]m[^.]{0,100}\.)',
 
             # NEW: Section-specific hours
             r'(?:Office\s*Hours?[\s:]+)?(Section\s+[A-Z]\d+:\s+After\s+class;\s+By\s+appointment)',
 
-            # NEW: Standalone URL pattern (calendly links)
-            # Allow newlines/spaces within URL (PDFs sometimes break URLs across lines)
-            r'(?:Office\s*Hours?[\s:]*)?(https?://\s*(?:www\.)?calendly\.com/[a-zA-Z0-9_/-]+)',
+            # NEW: Standalone URL pattern (calendly links) - REQUIRES Office Hours context
+            r'Office\s*Hours?[\s:]+(https?://\s*(?:www\.)?calendly\.com/[a-zA-Z0-9_/-]+)',
+            # Calendly with surrounding office hours context (within 50 chars before)
+            r'(?:office|hours|appointment|meet|schedule|available).{0,50}(https?://\s*(?:www\.)?calendly\.com/[a-zA-Z0-9_/-]+)',
+            # Standalone http calendly links (observed valid office-hours format)
+            r'(http://calendly\.com/[a-zA-Z0-9_/-]+)',
 
-            # NEW: "See schedule on Canvas" pattern
-            r'(?:Office\s*Hours?[\s:]+)?(See\s+schedule\s+on\s+Canvas(?:;\s+By\s+appointment)?)',
+            # NEW: "See schedule on Canvas" pattern - REQUIRES Office Hours context
+            r'Office\s*Hours?[\s:]+(See\s+schedule\s+on\s+Canvas(?:;\s+By\s+appointment)?)',
+            # Simple "See Canvas" - REQUIRES Office Hours context
+            r'Office\s*Hours?[\s:]+(See\s+Canvas)',
             # "See Instructor office hours from a link"
             # Limit capture and stop at sentence boundaries to avoid capturing unrelated text
             r'(?:Office\s*Hours?[\s:]+)?(See\s+Instructor\s+office\s+hours\s+from\s+a\s+link[^.!\n]{0,40})',
+            
+            # NEW: "Please email to make appointments for online meetings"
+            r'(?:Office\s*Hours?[\s:]+)?([Pp]lease\s+email\s+to\s+make\s+appointments\s+for\s+online\s+meetings[^\n]{0,50})',
+            
+            # NEW: "Mon 12-1PM and by appointment" patterns
+            r'(?:Office\s*Hours?[\s:]+)?((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+\d{1,2}(?::\d{2})?\s*-?\s*\d{1,2}(?::\d{2})?\s*[AP]M\s+and\s+by\s+appointment[^\n]{0,100})',
+            # Extended pattern that includes "Here's my calendar link" mention
+            r'(?:Office\s*Hours?[\s:]+)?((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+\d{1,2}(?::\d{2})?\s*-?\s*\d{1,2}(?::\d{2})?\s*[AP]M\s+and\s+by\s+appointment[^.]*(?:calendar\s+link|calendly)[^.]*\.?)',
+            # Specific variant with external-site note
+            r'((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+\d{1,2}(?::\d{2})?\s*[-\u2013]\s*\d{1,2}(?::\d{2})?\s*[AP]M\s+and\s+by\s+appointment\.\s*[Hh]ere\'?s\s+my\s+calendar\s+link\s*\(Links\s+to\s+an\s+external\s+site\.\))',
 
             # NEW: After class pattern (simple)
             r'(?:Office\s*Hours?[\s:]+)?(After\s+class;\s+By\s+appointment)',
@@ -443,8 +493,12 @@ class HoursDetector(BaseDetector):
             # NEW: "available to meet" pattern
             r'(?:Office\s*Hours?[\s:]+)?([Aa]vailable\s+to\s+meet\s+by\s+appointment[^\n]{0,80})',
 
-            # NEW: "to be determined" pattern
-            r'(?:Office\s*Hours?[\s:]+)?((?:Office\s+hours\s+)?to\s+be\s+determined[^\n]{0,80})',
+            # NEW: "to be determined" pattern - REQUIRES Office Hours context
+            r'Office\s*Hours?[\s:]+((?:Office\s+hours\s+)?to\s+be\s+determined[^\n]{0,80})',
+            # Specific full phrase variant
+            r'((?:Office\s+hours\s+)?to\s+be\s+determined;\s*Other\s+meeting\s+times\s+may\s+be\s+arranged\s+by\s+appointment)',
+            # NEW: "TBD" (To Be Determined) pattern - REQUIRES Office Hours context
+            r'Office\s*Hours?[\s:]+(TBD)',
 
             # NEW: By appointment with day ranges (e.g., "By appointment Sunday - Thursday 7pm - 9pm")
             r'(?:Office\s*Hours?[\s:]+)?([Bb]y\s+appointment\s+(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s*[-]\s*(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)[^\n]{0,100})',

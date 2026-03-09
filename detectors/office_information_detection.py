@@ -8,7 +8,7 @@ contains three sub-detectors: LocationDetector and HoursDetector and PhoneDetect
 
 import re
 import logging
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 
 # Detection Configuration Constants
@@ -135,6 +135,24 @@ class LocationDetector(BaseDetector):
             List[re.Pattern]: Compiled regex patterns for location detection.
         """
         patterns = [
+            # NEW: "Office: Virtual" or standalone "Virtual" in office context
+            r'Office\s*(?:Location)?\s*:\s*(Virtual)',
+            
+            # NEW: "Office: Remote" or "Remote â€" through e-mail or Discord"
+            r'Office\s*(?:Location)?\s*:\s*(Remote[^\n]{0,60})',
+            
+            # NEW: "Student Services Suite, 4th floor" (suite-based locations)
+            r'Office\s*(?:Location)?\s*:\s*([^\n]{0,60}Suite[^\n]{0,80})',
+            
+            # NEW: "UNH-M, Rm. 128" format
+            r'Office\s*(?:Location)?\s*:\s*(UNH-M,\s*Rm\.?\s*\d+[A-Z]?)',
+            
+            # NEW: "Pandora Building (UNHM) P437" format
+            r'Office\s*(?:Location)?\s*:\s*(Pand[o]?ra\s+Building\s*\([^)]+\)\s*P\d+[A-Z]?)',
+            
+            # IMPROVED: Pattern 1 - Capture building name with room: "Rm 139, Pandora Mill building"
+            r'Office\s*(?:Location)?\s*:\s*((?:Rm\.?|Room)\s*\d+[A-Z]?,?\s*Pand[o]?ra\s+(?:Mill\s+)?Building)',
+            
             # Pattern 1: "Office Hours: ..., Room 105"
             # Captures room number after office hours mention
             r'Office\s*Hours?:.*?,\s*Room\s*(\d+[A-Z]?)',
@@ -143,7 +161,7 @@ class LocationDetector(BaseDetector):
             # Direct office-to-room association
             r'Office:\s*Room\s*(\d+[A-Z]?)',
             # Pattern 2a: "Office: Rm 628" or "Office: Rm. 628"
-            r'Office:\s*Rm\s*(\d+[A-Z]?)',
+            r'Office:\s*Rm\.?\s*(\d+[A-Z]?)',
 
             # Pattern 3: "Pandora Rm. 103" or "Pandora Room 103"
             # Note: Pand[o]?ra handles common typo "Pandra"
@@ -172,6 +190,9 @@ class LocationDetector(BaseDetector):
             # Pattern 9: Simple "Room 139" in office context
             # Room number within 50 chars of "Office" or "Contact Information"
             r'(?:Office|Contact\s*Information)[^\n]{0,50}Room\s*(\d+[A-Z]?)',
+
+            # NEW: Just a room number after "Office:" - "Office: 512" or "Office Location: 236"
+            r'Office\s*(?:Location)?\s*:\s*(\d{3,4}[A-Z]?)(?=\s|$|\n)',
 
             # Pattern 10: Generic - any Room/Rm in instructor section
             # Fallback: room number within 150 chars of instructor mention

@@ -591,20 +591,47 @@ class HoursDetector(BaseDetector):
         Returns:
             DetectionResult: The result of the detection."""
         search_text = text[:self.search_limit] if len(text) > self.search_limit else text
-        
+
         # Check for TBD first
-        tbd_patterns = [
-            re.compile(r'(?:Office\s*)?Hours?\s*[:]\s*(TBD)', re.IGNORECASE),
-            re.compile(r'hours\s+(TBD)', re.IGNORECASE),
-            re.compile(r'Office\s+hours\s+(TBD)', re.IGNORECASE),
-        ]
-        
-        for pattern in tbd_patterns:
-            if pattern.search(search_text):
-                return DetectionResult(found=True, content='TBD', all_matches=['TBD'])
-        
-        # Continue with normal detection
-        return super().detect(text)
+        if self._has_tbd_hours(search_text):
+            return DetectionResult(found=True, content='TBD', all_matches=['TBD'])
+
+        # Continue with normal detection on first N characters
+        primary_result = super().detect(text)
+        if primary_result.found:
+            return primary_result
+
+        # Fallback: targeted office-hours label windows across full text
+        # This keeps precision high while recovering entries beyond default search limit.
+        for window in self._iter_office_hours_windows(text):
+            matches = self._find_all_matches(window)
+            if matches:
+                processed = self._process_matches(matches, window)
+                if processed:
+                    return DetectionResult(found=True, content=processed[0], all_matches=processed)
+
+        return DetectionResult()
+
+    def _has_tbd_hours(self, search_text: str) -> bool:
+        """Return True when a high-confidence TBD office-hours pattern is present."""
+        return any(pattern.search(search_text) for pattern in self._tbd_patterns)
+
+    def _iter_office_hours_windows(self, text: str):
+        """Yield precision-filtered windows around Office Hours labels across the full text."""
+        for label_match in re.finditer(r'office\s*hours?\s*[:\-]', text, re.IGNORECASE):
+            window_start = max(0, label_match.start() - 180)
+            window_end = min(len(text), label_match.end() + 520)
+            window = text[window_start:window_end]
+
+            # Skip known policy/support office-hours sections that are not instructor hours
+            if re.search(r'\bSHARPP\b|24/7\s*Crisis|Fall\s*&\s*Spring\s*Semesters', window, re.IGNORECASE):
+                continue
+
+            # Require instructor/contact context near the label for precision
+            if not re.search(r'\bInstructor\b|\bOffice\b\s*:|\bEmail\b\s*:', window, re.IGNORECASE):
+                continue
+
+            yield window
     
     def _process_matches(self, matches: List[str], text: str) -> List[str]:
         """
@@ -680,6 +707,33 @@ class HoursDetector(BaseDetector):
                     parts = cleaned.split(';\n')
                     cleaned_parts = [re.sub(r';\s+', ';', part) for part in parts]
                     cleaned = ';\n'.join(cleaned_parts)
+                elif 'email' in original_match.lower() and ('discord' in original_match.lower() or 'arrange' in original_match.lower()):
+                    # "email me or send me a direct message on Discord to arrange" - minimal cleaning
+                    cleaned = re.sub(r'\s+', ' ', original_match).strip()
+                elif 'see canvas' in original_match.lower() or 'see schedule' in original_match.lower():
+                    # "See Canvas" or "See schedule on Canvas" - minimal cleaning
+                    cleaned = re.sub(r'\s+', ' ', original_match).strip()
+                elif 'email to make appointments' in original_match.lower():
+                    # "Please email to make appointments for online meetings" - minimal cleaning
+                    cleaned = re.sub(r'\s+', ' ', original_match).strip()
+                elif 'and by appointment' in original_match.lower() and re.search(r'(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)', original_match):
+                    # "Mon 12-1PM and by appointment" - minimal cleaning
+                    cleaned = re.sub(r'\s+', ' ', original_match).strip()
+                elif 'shortly before' in original_match.lower() or 'right after class' in original_match.lower():
+                    # "Shortly before and right after class" - minimal cleaning
+                    cleaned = re.sub(r'\s+', ' ', original_match).strip()
+                elif 'evenings' in original_match.lower():
+                    # "Evenings" - minimal cleaning
+                    cleaned = re.sub(r'\s+', ' ', original_match).strip()
+                elif 'arranged by appointment' in original_match.lower():
+                    # "Arranged by appointment" - minimal cleaning
+                    cleaned = re.sub(r'\s+', ' ', original_match).strip()
+                elif 'calendar link' in original_match.lower():
+                    # "Here's my calendar link" - minimal cleaning
+                    cleaned = re.sub(r'\s+', ' ', original_match).strip()
+                elif 'by appointment' in original_match.lower() and re.search(r'(?:Room|Rm\.?)\s*\d+', original_match, re.IGNORECASE):
+                    # "BY APPOINTMENT - Room 453" - preserve room number, minimal cleaning
+                    cleaned = re.sub(r'\s+', ' ', original_match).strip()
                 elif 'by appointment' in original_match.lower() and ';' in original_match:
                     # "By appointment; in person or virtual" style
                     cleaned = original_match
@@ -688,8 +742,18 @@ class HoursDetector(BaseDetector):
                     # "Mondays 4-5 pm via Zoom" style - preserve as is
                     cleaned = re.sub(r'\s+', ' ', original_match)
                 elif 'calendly.com' in original_match.lower():
-                    # URL pattern - preserve as is (no cleaning)
-                    cleaned = original_match.strip()
+                    # Prefer full appointment sentence when calendly is part of explicit office-hours context
+                    full_context = re.search(
+                        r'(Here\s+is\s+the\s+link\s+to\s+make\s+an\s+appointment\s+with\s+me\s+in\s+my\s+virtual\s+Zoom\s+office:\s*https?://\s*(?:www\.)?calendly\.com/[a-zA-Z0-9_/-]+[^\n]{0,420})',
+                        text,
+                        re.IGNORECASE,
+                    )
+                    if full_context:
+                        cleaned = re.sub(r'\s+', ' ', full_context.group(1)).strip()
+                        cleaned = re.sub(r'https?://\s+', lambda m: m.group(0).replace(' ', ''), cleaned)
+                    else:
+                        # URL pattern fallback
+                        cleaned = original_match.strip()
                 elif 'canvas inbox' in original_match.lower() or 'mycourses canvas inbox' in original_match.lower():
                     # Canvas Inbox tool - preserve as is
                     cleaned = original_match.strip()
@@ -725,6 +789,28 @@ class HoursDetector(BaseDetector):
                     cleaned = re.sub(r'\s+', ' ', original_match).strip()
                 else:
                     cleaned = self._clean_hours(original_match)
+
+                # Canonicalize short TBD variants for exact matching consistency
+                if re.fullmatch(r'\s*tbd\s*', cleaned, re.IGNORECASE):
+                    cleaned = 'TBD'
+
+                # Canonicalize common near-miss phrasing for after-class appointment hours
+                if 'right after class' in cleaned.lower() and 'by appointment' in cleaned.lower():
+                    if 'shortly before' in cleaned.lower() or (
+                        'or by appointment' in cleaned.lower() and
+                        not re.search(r'mycourses\s+zoom|via\s+mycourses\s+zoom', cleaned, re.IGNORECASE)
+                    ):
+                        cleaned = 'Shortly before and right after class; By appointment'
+
+                # Preserve explicit MyCourses Zoom variant when present in source context
+                if 'right after class' in cleaned.lower() and 'by appointment' in cleaned.lower():
+                    if re.search(r'right\s+after\s+class.{0,60}by\s+appointment.{0,60}via\s+mycourses\s+zoom', text, re.IGNORECASE | re.DOTALL):
+                        cleaned = 'Right after class; By appointment via MyCourses Zoom'
+
+                # Canonicalize "to be determined" office-hours full statement when source context supports it
+                if re.search(r'^arranged\s+by\s+appointment\.?$', cleaned, re.IGNORECASE):
+                    if re.search(r'office\s*hours?.{0,120}to\s+be\s+determined', text, re.IGNORECASE):
+                        cleaned = 'Office hours to be determined; Other meeting times may be arranged by appointment'
 
                 # Avoid duplicates but consider variations as unique
                 normalized_for_comparison = re.sub(r'[^\w\d]+', '', cleaned.lower())
@@ -762,6 +848,7 @@ class HoursDetector(BaseDetector):
 
         # Remove common suffixes and incomplete sentences
         hours = re.sub(r'\s*(?:Students are|I am|Please|You may|You are).*$', '', hours, flags=re.IGNORECASE)
+        hours = re.sub(r'\s*(?:[-\u2013;]|\.)?\s*feel\s+free\s+to\s+contact.*$', '', hours, flags=re.IGNORECASE)
 
         # IMPROVED: Remove incomplete sentence fragments at the end
         # If it ends with " in my" or " or an" or similar incomplete phrases, remove them
@@ -830,41 +917,66 @@ class HoursDetector(BaseDetector):
             if ';' in hours and any(day in hours.lower() for day in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']):
                 # This looks like a complete weekly schedule
                 return hours
+        
+        # Priority 2: "After class" patterns (higher priority than generic times)
+        for hours in hours_list:
+            if re.search(r'(?:shortly\s+before\s+and\s+)?(?:right\s+)?after\s+class', hours, re.IGNORECASE):
+                return hours
 
-        # Priority 2: "By appointment/arrangement" with day range and specific times
+        # Priority 3: "By appointment/arrangement" with day range and specific times
         # e.g., "By appointment Sunday - Thursday 7pm - 9pm"
         for hours in hours_list:
             if ('by appointment' in hours.lower() or 'by arrangement' in hours.lower()) and \
                re.search(r'(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s*[-–]\s*(monday|tuesday|wednesday|thursday|friday|saturday|sunday)', hours, re.IGNORECASE) and \
                re.search(r'\d{1,2}\s*[ap]m', hours, re.IGNORECASE):
                 return hours
-
-        # Priority 3: Entries with specific times and days
-        for hours in hours_list:
-            if re.search(r'\d{1,2}:\d{2}', hours) and re.search(r'[MTWRF]|Monday|Tuesday|Wednesday|Thursday|Friday', hours, re.IGNORECASE):
-                return hours
-
+        
         # Priority 4: "By appointment" with additional context (in person/virtual)
         for hours in hours_list:
             if 'by appointment' in hours.lower() and (';' in hours or 'person' in hours.lower() or 'virtual' in hours.lower()):
                 return hours
+        
+        # Priority 5: Simple "By appointment" without times (prefer over times alone)
+        for hours in hours_list:
+            if re.search(r'^by\s+appointment', hours, re.IGNORECASE) or re.search(r'^arranged\s+by\s+appointment', hours, re.IGNORECASE):
+                return hours
+        
+        # Priority 6: "See Canvas" patterns
+        for hours in hours_list:
+            if re.search(r'see\s+canvas', hours, re.IGNORECASE):
+                return hours
 
-        # Priority 5: Monday patterns with Zoom (specific virtual hours)
+        # Priority 6.2: To-be-determined office-hours statements
+        for hours in hours_list:
+            if re.search(r'to\s+be\s+determined', hours, re.IGNORECASE):
+                return hours
+
+        # Priority 6.5: Monday patterns with Zoom (specific virtual hours)
         for hours in hours_list:
             if 'monday' in hours.lower() and 'zoom' in hours.lower():
                 return hours
 
-        # Priority 6: Just specific times
+        # Priority 7: Entries with specific times and days
+        for hours in hours_list:
+            if re.search(r'\d{1,2}:\d{2}', hours) and re.search(r'[MTWRF]|Monday|Tuesday|Wednesday|Thursday|Friday', hours, re.IGNORECASE):
+                return hours
+        
+        # Priority 8: "Evenings" (simple but valid)
+        for hours in hours_list:
+            if re.search(r'\bevenings?\b', hours, re.IGNORECASE):
+                return hours
+
+        # Priority 9: Just specific times
         for hours in hours_list:
             if re.search(r'\d{1,2}:\d{2}', hours):
                 return hours
         
-        # Priority 6: Just day names
+        # Priority 11: Just day names
         for hours in hours_list:
             if re.search(r'[MTWRF]|Monday|Tuesday|Wednesday|Thursday|Friday', hours, re.IGNORECASE):
                 return hours
         
-        # Priority 7: "scheduled" or "available" patterns
+        # Priority 12: "scheduled" or "available" patterns
         for hours in hours_list:
             if 'scheduled' in hours.lower() or 'available' in hours.lower():
                 return hours

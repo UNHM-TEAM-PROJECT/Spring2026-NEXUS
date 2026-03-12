@@ -1,0 +1,19 @@
+## Documentation for changes in `ground_truth.json`
+During improving the f1 score of detectors, and testing, some differences were found between the detector outputs and the existing ground truth (GT) values. In some cases, the ground truth did not correctly match the actual content in the syllabus. Because of this, some ground truth entries were updated. This document explains the reasoning behind those updates so that future developers understand why the changes were made.
+
+### Email Detector
+- The email detector extracts instructor email addresses from the syllabus using regular expression patterns that match standard email formats such as name@domain.edu. In some syllabi, the email address existed but the ground truth was labeled as `Missing` because the email appeared inside paragraphs, contact sections, or non‑standard formats but not in the instructor information section that were overlooked during manual labeling.
+- When the detector processed these syllabi during evaluation, it correctly extracted the email, but the comparison with the ground truth produced mismatches. The ground truth was updated so that valid instructor emails present in the syllabus are correctly labeled.
+
+### Response Time Detector
+- The response time detector identifies statements that describe how quickly instructors respond to student communication, such as “within 24 hours”, “within 48 hours”, or “1–2 business days”. These statements often appear in different natural language forms and are not always written with a clear label like “Response Time”.
+- Some of these variations were marked as `Missing` even though a response time policy existed in the syllabus. During testing, the detector successfully identified these phrases using rule‑based pattern matching, which revealed inconsistencies between the detector output and the ground truth. The ground truth was updated to include these valid response time statements.
+
+### Assignment Delivery Detector
+- The assignment delivery detector identifies where students are required to submit assignments, typically through learning management systems such as `Canvas` or `MyCourses`. In many syllabi, these platforms are mentioned in multiple contexts, including announcements, course materials, or communication tools.
+- During the initial ground truth labeling process, some of these cases were marked as `Canvas`, `MyCourses` because syllabi did talked about the platforms but was not clearly identified whether the platform referred specifically to assignment submission.
+- As the detector logic improved to focus on phrases that explicitly indicate submission instructions for example `submit assignments on Canvas`, it became clear that some ground truth entries did not match the actual syllabus content. The ground truth was updated so that platforms are recorded only when they are explicitly used for assignment submission.
+
+### SLOs Detector
+- The SLO detector identifies sections of the syllabus that describe student learning outcomes and course learning objectives. These sections may appear under headings defined as 12 `aaproved titles` in the detector such as `student/program learning outcomes/objectives`, `course learning objectives/outcomes`, `learning objectives/outcomes`, and inside paragraphs explaining what students will learn by the end of the course.
+- Because slos structures vary widely, some valid learning outcomes statements were initially labeled as `Missing` in the ground truth even when they appeared within descriptive text of clearly labeled sections, mainly in `learning objectives/outcomes`. The ground truth was updated so that syllabi containing valid learning outcome statements are correct.

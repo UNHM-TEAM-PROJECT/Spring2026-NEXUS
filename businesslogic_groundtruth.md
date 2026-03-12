@@ -4,7 +4,7 @@ During improving the f1 score of detectors, and testing, some differences were f
 ### Assignment Delivery Detection
 - The assignment delivery detector identifies where students are required to submit assignments, typically through learning management systems such as `Canvas` or `MyCourses`. In many syllabi, these platforms are mentioned in multiple contexts, including announcements, course materials, or communication tools.
 
-- During the initial ground truth labeling process, some of these cases were marked as `Canvas`, `MyCourses` because syllabi did talked about the platforms but was not clearly identified whether the platform referred specifically to assignment submission.
+- Some of these cases were marked as `Canvas`, `MyCourses` because syllabi did talked about the platforms but was not clearly identified whether the platform referred specifically to assignment submission.
 
 - As the detector logic improved to focus on phrases that explicitly indicate submission instructions for example `submit assignments on Canvas`, it became clear that some ground truth entries did not match the actual syllabus content.
 
@@ -36,10 +36,20 @@ During improving the f1 score of detectors, and testing, some differences were f
 
 - The ground truth was updated so that the grading process field now contains the complete grading policy as written in the syllabus, including all grading components, percentages, and rules, while excluding unrelated text from other sections.
 
+### Final Grade Scale - Grading Scale Detection
+- The final grade scale field represents the grading scale used to evaluate student performance in the course.
+
+- This field was marked as `AVAILABLE` when the syllabus included any grading scale such as a standard A–F letter grade scale, pass/fail grading format, points‑based grading breakdown, or qualitative grading descriptions (for example, A = Excellent, B = Very Good). If no grading scale or grading format was described in the syllabus, the final grade scale field was labeled as `Missing`.
+
 ### Instructor Detector
 - The instructor information fields represent the instructor’s name, title, and academic department extracted from the syllabus. Several entries had missing values for the instructor name or title even though this information was clearly present in the syllabus. In addition, some department fields contained extra location information such as UNH Manchester or Manchester appended to the department name.
 
 - The ground truth was updated so that each entry includes the correct instructor name and title whenever they are available in the syllabus. The department field was also corrected to contain only the academic department name.
+
+### Office Information Detection
+- The office information fields represent the instructor’s office hours, office location, and office phone number listed in the syllabus.
+
+- These fields were marked as `AVAILABLE` only when the syllabus explicitly mentioned the corresponding information such as office hours, office address/office, or a phone number provided as the professor’s contact. If the syllabus did not contain a specific office hours section, office location, or instructor phone number, the corresponding field was labeled as `Missing`.
 
 ### Modality Detector (online_detection)
 - The modality detector identifies the course delivery format, such as `in‑person, online, hybrid`, or `asynchronous online`, based on how the syllabus describes course meetings and instruction. It was observed that the label `hybrid` was often used inconsistently. Some courses labeled as hybrid were actually fully online with no in‑person meetings, while others were fully in‑person with optional online resources.

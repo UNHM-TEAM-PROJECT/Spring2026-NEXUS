@@ -43,6 +43,7 @@ class AssignmentDeliveryDetector:
             (r'(?i)\bmastering\s*(?:a\s*&\s*p|anatomy\s*(?:and|&)\s*physiology)', 'Mastering A&P'),
             (r'(?i)\bmasteringphysics\b', 'MasteringPhysics'),
             (r'(?i)\bmastering\s+physics\b', 'MasteringPhysics'),
+            (r'\bCONNECT\b', 'CONNECT'),
             
             # Other LMS platforms
             (r'(?i)\bblackboard\b', 'Blackboard'),
@@ -81,14 +82,236 @@ class AssignmentDeliveryDetector:
             r'(?i)(?:upload|post|turn\s+in)\s+(?:your\s+)?(?:assignments?|work|homework)\s+(?:via|on|to|through|in)',
             r'(?i)all\s+(?:assignments?|work|homework)\s+(?:will\s+be\s+)?(?:submitted|posted|uploaded)\s+(?:via|on|to|in)',
             r'(?i)(?:assignments?|homework)\s+(?:should|must)\s+be\s+(?:submitted|uploaded|posted|turned\s+in)\s+(?:via|on|to|in)',
+            r'(?i)assignment\s+(?:information\s+)?(?:will\s+be\s+)?posted\s+(?:on|in)\s+(?:canvas|mycourses)\b.*due\s+dates?',
+            r'(?i)(?:homework|assignments?)\s+will\s+be\s+posted\s+(?:in|on)\s+(?:canvas|mycourses)\b',
+            r'(?i)submit\s+them\s+in\s+a\s+single\s+file\b.*(?:canvas|mycourses)',
+            r'(?i)all\s+assignments?\s+must\s+be\s+submitted\s+by\s+the\s+due\s+date',
         ]
         
         # Weak signals to ignore (grades, materials)
         self.weak_signal_patterns = [
+            # --- Original patterns ---
             r'(?i)\bgrades?\s+(?:are\s+)?(?:posted|available|viewable)\s+(?:on|in)',
             r'(?i)\bcourse\s+materials?\s+(?:are\s+)?(?:on|in|available\s+(?:on|in))',
             r'(?i)\bsyllabus\s+(?:is\s+)?(?:posted\s+)?(?:on|in)',
             r'(?i)\bresources?\s+(?:are\s+)?(?:on|in)',
+
+            # Canvas/MyCourses as gradebook / grade recording
+            r'(?i)\bcanvas\s+grades?\b',
+            r'(?i)\bentered\s+in\s+(?:the\s+)?canvas\b',
+            r'(?i)\bgrade\s+will\s+be\s+entered\b',
+            r'(?i)\blisted\s+in\s+(?:canvas|mycourses)\b',
+            r'(?i)\bdate\s+and\s+time\s+listed\s+in\b',
+
+            # Canvas/MyCourses as communication / Inbox tool
+            r'(?i)\bcanvas\s+inbox\b',
+            r'(?i)\bmycourses\s+(?:course\s+)?(?:email|inbox|message|messaging)\b',
+            r'(?i)\busing\s+(?:the\s+)?(?:canvas|mycourses)\s+(?:email|inbox)\b',
+            r'(?i)\bvia\s+mycourses\s+(?:email|messages?|messaging)\b',
+
+            # Canvas/MyCourses as announcement platform
+            r'(?i)\bannouncements?\s+(?:and\s+emails?\s+)?(?:in|on)\s+(?:canvas|mycourses)\b',
+            r'(?i)\bpost\s+an?\s+announcement\s+(?:on|in)\s+(?:canvas|mycourses)\b',
+            r'(?i)\bcheck\s+(?:the\s+)?course\s+announcements?\s+(?:and\s+emails?\s+)?(?:in|on)\s+(?:canvas|mycourses)\b',
+
+            # Canvas/MyCourses as resource/material hub
+            r'(?i)\b(?:canvas|mycourses)\s*/?s?\s*(?:mycourses|canvas)?\s+(?:at\s+https?://\S+\s+)?for\s+announcements?\b',
+            r'(?i)\b(?:canvas|mycourses)\s+for\s+(?:announcements?|links?|course\s+materials?|classmates?|gradebook)\b',
+
+            # Canvas/MyCourses as course website URL only
+            r'(?i)\bcourse\s+(?:web\s+)?site\s*:\s*https?://mycourses\b',
+            r'(?i)^https?://mycourses\.unh\.edu\S*\s*$',
+            r'(?i)\bmycourses\.unh\.edu/courses/\d+',
+            r'(?i)^\s*canvas\s+site\s*:?\s*$',
+
+            # Canvas as App Inventor drawing surface (schedule lines)
+            r'(?i)\bcanvas\s*,\s*sprites?\b',
+            r'(?i)\bsprites?\s+and\s+(?:the\s+)?canvas\b',
+            r'(?i)\banimations?\s+with\s+(?:the\s+)?canvas\b',
+
+            # MyCourses as contact method
+            r'(?i)\busing\s+mycourses\.unh\.edu\s+course\s+email\b',
+            r'(?i)\bclass\s+forum\s+on\s+my\s+courses?\b',
+
+            # "in Canvas/MyCourses" — materials, grades, solutions
+            r'(?i)\bavailable\s+(?:through|via|on|in)\s+(?:canvas|mycourses)\b',
+
+            # "See Canvas" / "See schedule on Canvas" / "Posted in Canvas."
+            r'(?i)^\s*see\s+(?:schedule\s+(?:on|in)\s+)?(?:canvas|mycourses)\b',
+
+            # mycourses.unh.edu URL (without /courses/ suffix)
+            r'(?i)\bmycourses\.unh\.edu\b',
+
+            # CAE tutoring reference — "through the CAE myCourses Canvas site"
+            r'(?i)\bcae\s+(?:my\s+courses?|mycourses)\s*(?:canvas\s+)?site\b',
+            r'(?i)\bmy\s+courses?\s+site\s+on\s+(?:your\s+)?canvas\b',
+
+            # Canvas site as section header or description block
+            r'(?i)^\s*canvas\s+site\s*$',
+            r'(?i)\bcanvas\s+site\s+has\b',
+            r'(?i)\bcanvas\s+site\s+for\s+this\s+course\b',
+
+            # Canvas as communication/notification tool
+            r'(?i)\bcanvas\s+(?:messages?|dashboard|announcements?|gradebook|calendar|mail)\b',
+            r'(?i)\bdiscussion\s+(?:on|in)\s+canvas\b',
+            r'(?i)\bcanvas\s+announcements?\b',
+            r'(?i)\bcanvas\s+here\s*:',
+
+            # "handed in late" — late penalty context, not submission method
+            r'(?i)\bhanded?\s+in\s+late\b',
+
+            # MyCourses/Canvas as LMS description
+            r'(?i)\b(?:canvas|mycourses)\s+(?:is\s+)?(?:unh[\'s]*\s+)?course\s+management\s+system\b',
+            r'(?i)\buse\s+(?:unh\s+)?mycourses\s+to\s+access\b',
+            r'(?i)\buse\s+(?:unh[\'s]*\s+)?(?:implementation\s+of\s+)?canvas\s+for\s+(?:use\s+in\s+)?(?:teaching|this\s+course)\b',
+            r'(?i)\buse\s+canvas\s*[™®]?\s+system\b',
+
+            # Course materials available through MyCourses
+            r'(?i)\bcourse\s+materials?\s+(?:are\s+)?available\s+through\b',
+            r'(?i)\ball\s+course\s+(?:information|materials?)\s+will\s+be\s+posted\b',
+
+            # Canvas as attendance/access platform
+            r'(?i)\bresponsible\s+for\s+all\s+material\s+(?:covered\s+in\s+class\s+and\s+)?posted\s+on\s+canvas\b',
+
+            # Canvas as link to textbook/resources
+            r'(?i)\bcanvas\s+(?:web)?site\s+for\s+this\s+course\s+has\s+a\s+link\b',
+
+            # Canvas site section header / tool listing
+            r'(?i)^\s*canvas\s+site\s+and\b',
+            r'(?i)\bcanvas\s+site\s*,\s*(?:github|discord|course\s+website)\b',
+
+            # Login on Canvas
+            r'(?i)\b(?:login|log\s+in)\s+on\s+canvas\b',
+
+            # "See Canvas" for office hours / schedule
+            r'(?i)^\s*(?:office\s+hours?\s*:.*)?see\s+canvas\s*\.?\s*$',
+
+            # Canvas as LMS description
+            r'(?i)\bcanvas\s+learning\s+management\s+system\b',
+            r'(?i)\b(?:canvas|mycourses)\s+is\s+the\s+learning\s+management\s+system\b',
+
+            # MyCourses late penalty
+            r'(?i)\bmycourses\s+will\s+automatically\s+subtract\b',
+
+            # Access class via Canvas/MyCourses
+            r'(?i)\buse\s+(?:mycourses|canvas)\b.*\baccessible\s+through\b',
+
+            # Changes/announcements on Canvas
+            r'(?i)\bwatch\s+for\s+(?:revisions?|updates?)\s+in\s+(?:canvas|mycourses)\b',
+            r'(?i)\b(?:changes?|updates?|cancellation)\b.*\bannounced\b.*\b(?:canvas|mycourses)\b',
+
+            # Contact through Canvas (office hours context)
+            r'(?i)\bcontact\s+(?:through|via)\s+canvas\b',
+
+            # Course platform description block
+            r'(?i)\bcourse\s+platform\s*:\s*information\s+on\s+(?:canvas|mycourses)\b',
+
+            # Canvas for accessing pre-lecture/module materials
+            r'(?i)\bpublished\s+(?:prior\s+to\s+class\s+)?in\s+canvas\b',
+            r'(?i)\breviewing\s+any\s+pre-?lecture\b',
+
+            # Turnitin Use Policy section header (not a submission instruction)
+            r'(?i)^\s*turnitin\s+use\s+policy\s*$',
+
+            # "MyCourses and this course syllabus" bullet
+            r'(?i)^\s*[●•\-\*]?\s*mycourses\s+and\s+this\s+course\s+syllabus\s*\.?\s*$',
+
+            # Canvas course page for calendar/schedule
+            r'(?i)\bcourse\s+canvas\s+page\s+for\s+the\s+most\s+up-to-date\b',
+
+            # "available through our MyCourses site" — materials, not submission
+            r'(?i)\bwill\s+be\s+available\s+through\s+(?:our\s+)?(?:canvas|mycourses)\s+site\b',
+
+            # "emails in MyCourses for up-to-date information"
+            r'(?i)\b(?:canvas|mycourses)\s+for\s+up-to-date\s+information\b',
+
+            # "Email me...using MyCourses" — truncated contact line
+            r'(?i)\bemail\s+(?:me|the\s+instructor|course\s+instructor)\b.*\busing\s+mycourses\b',
+
+            # Schedule line: "Variables, Conditionals, and the Canvas Videos"
+            r'(?i)\band\s+the\s+canvas\s+videos?\b',
+
+            # "Canvas about possible remote class meeting"
+            r'(?i)\bcanvas\s+about\s+possible\s+remote\b',
+
+            # "MyCourses will" — late penalty / grade automation
+            r'(?i)\bmycourses\s+will\s+(?:automatically\s+)?subtract\b',
+            r'(?i)\bmycourses\s+will\b',
+
+            # "myCourses (Canvas):" section header
+            r'(?i)^\s*mycourses\s*\(\s*canvas\s*\)\s*:?\s*$',
+
+            # IT/access help context
+            r'(?i)\bissues?\s+with\s+access\s+to\s+(?:canvas|mycourses)\b',
+            r'(?i)\btools?\s+for\s+accessing\s+(?:canvas|mycourses)\b',
+            r'(?i)\bmobile\s+device\s+apps?\s+for\s+(?:canvas|mycourses)\b',
+            r'(?i)\bhelp\s+button\b.*\bcanvas\b',
+            r'(?i)\btechnical\s+assistance\s+related\s+to\b',
+
+            # "check your email account and the Canvas course sites" — COVID/news context
+            r'(?i)\bcheck\s+your\b.*\bcanvas\s+course\s+sites?\b',
+
+            # "Canvas at least once a day" — check Canvas regularly
+            r'(?i)\bcanvas\s+at\s+least\s+once\s+a\s+day\b',
+
+            # "email/Canvas" — contact method shorthand
+            r'(?i)\bemail\s*/\s*canvas\b',
+
+            # "updates in Canvas" — short announcement line
+            r'(?i)\bupdates?\s+in\s+(?:canvas|mycourses)\b',
+
+            # "available via any myCourses course" — media/resource fragment
+            r'(?i)\bvia\s+any\s+mycourses\s+course\b',
+
+            # "While we use myCourses (aka Canvas) for our online course"
+            r'(?i)\bwhile\s+we\s+use\s+(?:canvas|mycourses)\b',
+
+            # "All lecture notes are on this canvas site"
+            r'(?i)\blecture\s+notes\s+are\s+on\s+this\s+canvas\s+site\b',
+
+            # "topical modules, as shown in our Canvas website"
+            r'(?i)\bmodules?\b.*\bshown\s+in\s+(?:our\s+)?canvas\b',
+
+            # Schedule table line: "Variables, Conditionals, and the Canvas |"
+            r'(?i)variables,\s*conditionals,\s*and\s*the\s*canvas\b',
+
+            # "Email me...using MyCourses" — truncated at end of line
+            r'(?i)^[\d\.\s]*email\s+me\b.*\busing\s+mycourses\s*$',
+
+            # "MyCourses Canvas Inbox tool" — contact/communication
+            r'(?i)\bmycourses\s+canvas\s+inbox\s*tool\b',
+
+            # "Canvas NameCoach" and "new tool in Canvas, NameCoach"
+            r'(?i)^\s*canvas\s+namecoach\s*$',
+            r'(?i)\bnew\s+tool\s+in\s+canvas,?\s+namecoach\b',
+
+            # Turnitin policy paragraph
+            r'(?i)\bturnitin\.com\b',
+            r'(?i)\bchecks?\s+students\W+work\s+for\s+(?:improper\s+citation|potential\s+plagiarism)\b',
+
+            # "MyCourses (also called Canvas) is the learning management system"
+            r'(?i)\bmycourses\s*\(also\s+called\s+canvas\)\b',
+
+            # "Help button in the left-hand column of your Canvas course page"
+            r'(?i)\bleft-hand\s+column\s+of\s+your\s+canvas\b',
+
+            # "weekly online quiz will be provided through Canvas (UNH MyCourses)"
+            r'(?i)\bweekly\s+online\s+quiz\s+will\s+be\s+provided\s+through\b',
+
+            # "MyCourses])" — fragment from a parenthetical reference
+            r'(?i)^mycourses\]\)',
+
+            # "Email me...using MyCourses" — any variation ending with MyCourses
+            r'(?i)\bemail\s+me\b.*\busing\s+mycourses\s*$',
+
+            # "make an appointment using MyCourses Canvas Inbox tool"
+            r'(?i)\bmake\s+an\s+appointment\s+using\s+mycourses\b',
+
+            # "myCourses is UNH's course management system"
+            r'(?i)\bmycourses\s+is\s+unh\b',
+
+            # "MyCourses (also called Canvas) is the learning management system"
+            r'(?i)\bmycourses\s*\(also\s+called\s+canvas\)\s+is\b',
         ]
     
     def _clean_line_for_extraction(self, line: str) -> str:
@@ -119,9 +342,39 @@ class AssignmentDeliveryDetector:
         """Check if line talks about submitting (e.g., 'Submit work via Canvas')"""
         return any(re.search(p, line) for p in self.context_patterns)
     
+    def _is_tool_listing(self, line: str) -> bool:
+        """
+        Catches lines listing Canvas/MyCourses as a multi-purpose hub.
+        e.g. "Canvas/MyCourses for announcements, links, gradebook, Discord..."
+        Fires if Canvas/MyCourses is mentioned + 2 or more non-submission tool keywords.
+        """
+        l = line.lower()
+        if not re.search(r'(?i)\b(?:canvas|mycourses)\b', l):
+            return False
+        tool_keywords = [
+            'announcement', 'gradebook', 'classmates', 'discord', 'runestone',
+            'google drive', 'links to', 'weekly slides', 'instructional materials',
+            'inbox tool', 'namecoach', 'onedrive', 'rave', 'zotero',
+        ]
+        hits = sum(1 for kw in tool_keywords if kw in l)
+        return hits >= 2
+
     def _is_weak_signal(self, line: str) -> bool:
-        """Check if line is about grades/materials, not submission"""
+        """Check if line is about grades/materials/tools, not submission"""
+        if self._is_tool_listing(line):
+            return True
         return any(re.search(p, line) for p in self.weak_signal_patterns)
+    
+    def _is_definite_submission(self, line: str) -> bool:
+        """Lines that are unambiguously submission instructions — always override weak signals."""
+        patterns = [
+            r'(?i)\bsubmissions?\s+must\s+be\s+completed\s+through\s+(?:canvas|mycourses)\b',
+            r'(?i)\ball\s+assignments?\s+should\s+be\s+posted\s+(?:on|in)\s+(?:canvas|mycourses)\b',
+            r'(?i)\ball\s+homework\s+will\s+be\s+uploaded\b.*\bcanvas\b',
+            r'(?i)\bsubmit\s+them\s+in\s+a\s+single\s+file\b',
+            r'(?i)\bin\s+order\s+to\s+receive\s+credits?\b',
+        ]
+        return any(re.search(p, line) for p in patterns)
     
     def detect(self, text: str) -> Dict[str, Any]:
         """
@@ -139,10 +392,10 @@ class AssignmentDeliveryDetector:
         for i, line in enumerate(lines):
             line_stripped = line.strip()
             
-            if not line_stripped or len(line_stripped) < 5 or len(line_stripped) > 500:
+            if not line_stripped or len(line_stripped) < 5 or len(line_stripped) > 1500:
                 continue
             
-            if self._is_weak_signal(line_stripped) and not self._has_delivery_context(line_stripped):
+            if self._is_weak_signal(line_stripped) and not self._is_definite_submission(line_stripped):
                 continue
             
             is_section = self._has_section_indicator(line_stripped)

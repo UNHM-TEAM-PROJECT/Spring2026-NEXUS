@@ -1,4 +1,4 @@
-[
+﻿[
   {
     "filename": "2025-summer-comp690-comp891-jin.pdf",
     "instructor_name": "Karen Jin",
@@ -362,7 +362,7 @@
     "workload": "Missing",
     "assignment_types_title": "Grading Scheme",
     "grading_procedures_title": "Missing",
-    "deadline_expectations_title": "- Homework: (bi-weekly assigned; 20% of total grade), - Labs: (weekly assigned; 30% of total grade)",
+    "deadline_expectations_title": "Submissions will not be accepted after the deadline. Submissions must be completed through MyCourses in order to receive credits.",
     "assignment_delivery": "MyCourses",
     "final_grade_scale": "Missing",
     "grading_process": "- Labs: (weekly assigned; 30% of total grade)  The weekly labs consist of hands-on lab exercises and other active learning activities. Students will beactive participants in the development of the content material through individual and group activities andInternet research.Labs are designed to be started and completed during the class meeting time. If you are unable to completethe lab during class then you need to complete on your own before the due day. All Labs are due Thursday11:59pm for both sections. Submissions will not be accepted after the deadline. Submissions must becompleted through MyCourses in order to received credits.- Homework: (bi-weekly assigned; 20% of total grade) Independent homework assignments are given and collected on a bi-weekly basis. Unless specificallystated, the major portion of the course work will be done using a browser and a text editor. The homeworkis designed to build your understanding of the class topics and use of the Internet and to develop yourcoding ability, e.g., in HTML and CSS. Topics from the homework will be used in class activities, examsand the final project so it is important to complete the material with accuracy and understanding. Eachassignment is due at the date and time listed. It is your responsibility to allow enough time during the weekto complete the activities despite obstacles (technology driven or personal) that may arise. Late work isanything submitted after the announced due date and time.You will lose 10% per day for work submittedlate for up to three days after the due day. Three days after the due date late work will not be accepted and azero will be given unless you have received prior approval to submit after this time. Submissions must becompleted through MyCourses in order to received credits.- Web Project: (30% of total grade) You will create a multi-page web site as the web project. It is an individual project designed to apply yourweb authoring knowledge. It is also intended to give you experience in the creative and artistic aspects ofdesigning and implementing an effective Web presentation. Web projects will be hosted for grading andpublic viewing. You will give a 5-10 mins demonstration of your project in class during our last classmeeting.- Final Test: (12% of total grade) The final exam consists of a in-class portion and take-home portion. The in-class portion consists of 20-25multiple choice questions. The take-home portion is open book. Makeup test will be given only in case ofan emergency.- Discussions: (weekly assigned; 8% of total grade) The participation is calculated based on both the quantity and quality of the posts in the discussion forum."
@@ -1512,7 +1512,7 @@
     "workload": "Missing",
     "assignment_types_title": "Missing",
     "grading_procedures_title": "Missing",
-    "deadline_expectations_title": "Evaluation",
+    "deadline_expectations_title": "You may hand in ONE late homework assignment. Otherwise, no late homework accepted.",
     "assignment_delivery": "Missing",
     "final_grade_scale": "Missing",
     "grading_process": "Homework 35% You may hand in ONE late homework assignment. Otherwise, no late homework accepted.\nFinal Exam 20%\nProject 35%\nA(cid:425)endance / Par(cid:415)cipa(cid:415)on 10%\nEmail the instructor before you miss class."
@@ -1558,7 +1558,7 @@
     "workload": "Missing",
     "assignment_types_title": "Selected Readings/Assignments",
     "grading_procedures_title": "Missing",
-    "deadline_expectations_title": "Late submissions and make-up exam",
+    "deadline_expectations_title": "Missing",
     "assignment_delivery": "Handed in",
     "final_grade_scale": "Missing",
     "grading_process": "Grading:\nSemester Take Home Exam: 20%\nSemester Final Project: 20%\nClass Participation: 10%\nAssignments (10; 5 pts each): 50%\nGrade Policy\nAssignments must be submitted as email attachments where appropriate. Assignments are\ngraded as binary. Best effort will be awarded 100%. Otherwise 0% will be awarded. The\nsemester exam will be in take-home format. It may be emailed or handed in by the due"
@@ -1627,7 +1627,7 @@
     "workload": "Missing",
     "assignment_types_title": "Missing",
     "grading_procedures_title": "Missing",
-    "deadline_expectations_title": "Evaluation",
+    "deadline_expectations_title": "You may hand in ONE late homework assignment. Otherwise, no late homework accepted.",
     "assignment_delivery": "Missing",
     "final_grade_scale": "Missing",
     "grading_process": "Homework 20%\n You may hand in ONE late homework assignment. Otherwise, no late homework accepted. Homeworkis completed individually.Exams 40%Midterm and FinalProject 30%Attendance / Par cipa on 10%"
@@ -2064,7 +2064,7 @@
     "workload": "Missing",
     "assignment_types_title": "Homework:",
     "grading_procedures_title": "Missing",
-    "deadline_expectations_title": "Course Administration",
+    "deadline_expectations_title": "Do NOT submit homework or final late! In the real world, tardiness is not tolerated.",
     "assignment_delivery": "Missing",
     "final_grade_scale": "Missing",
     "grading_process": "Grading\nMidterm 50%\nFinal 50%\nPrimary Text: Witten, Frank, Hall. Data Mining: Practical Machine\nTools: Weka (primary), Python/Scikit-learn (secondary)\nAssessment: Midterm 50%, Final 50%"
@@ -3503,7 +3503,7 @@
     "workload": "minimum 3 hours of engaged time per week per credit over a 15-week semester",
     "assignment_types_title": "Types of Assessments Used",
     "grading_procedures_title": "Grading Procedure and Scale",
-    "deadline_expectations_title": "Late Policy",
+    "deadline_expectations_title": "Missing",
     "assignment_delivery": "Canvas",
     "final_grade_scale": "Missing",
     "grading_process": "Capstone Participation 200 pts (Initial Check-in Meeting 50 pts, Midpoint Meeting 25 pts, Midpoint Reflection/Report 25 pts, Final Reflection 50 pts, Participation 50 pts); Supervisor Evaluation 200 pts; Final Capstone Presentation 200 pts; Total 600 pts. Each portion must be passed at 80% level to receive passing grade"

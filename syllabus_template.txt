@@ -1,0 +1,4 @@
+SYLLABUS INFORMATION TEMPLATE
+-----------------------------
+
+Preferred Contact Method: {{preferred_contact_method}}

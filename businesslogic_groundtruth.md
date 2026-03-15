@@ -14,19 +14,19 @@ During improving the f1 score of detectors, and testing, some differences were f
 - Some syllabi were marked as `Missing` because the assignment information appeared under different headers or formats. The ground truth was updated after reviewing these sections so that syllabi containing valid assignment type headers and content are updated.
 
 ### Class Location Detector
-- The class location detector identifies where the course takes place, such as `physical classroom locations` or `online platforms` like Zoom or UNH MyCourses. During the ground truth review, some syllabi were labeled with locations even though the syllabus stated `TBD` or did not provide a specific location. In other cases, online courses were labeled with a location even when no platform was mentioned.
+- The class location detector identifies where the course takes place, such as `physical classroom locations` or `online platforms` like Zoom or UNH MyCourses. Some syllabi were labeled with locations even though the syllabus stated `TBD` or did not provide a specific location. In other cases, online courses were labeled with a location even when no platform was mentioned.
 
 - The ground truth was updated to require explicit location information. Only clearly stated room numbers, named platforms, or explicit indicators such as Online are recorded. If the syllabus lists TBD or does not specify a platform, the location is labeled as `Missing`.
 
 ### Credit Hours Detection
-- The credit hours field represents the number of credits assigned to the course. During ground truth review, some syllabus files were labeled as `Missing` even though credit information existed in the document.
+- The credit hours field represents the number of credits assigned to the course. Some syllabus files were labeled as `Missing` even though credit information existed in the document.
 
 - In many cases, the credit value was written using different formats such as cr., credits, or credit hours. The ground truth was updated as `Missing` if none of these keywords are present in the syllabi.
 
 ### Deadline Expectation (late_missing_work detector)
 - Checked for action verbs and keywords in bulleted lists such as `late, deadlines, late policy, late submission`, and other keywords defined in `late_missing_work_detector.py`.
 
-- If no such title or header was present in the document or PDF, then searched for explicit sentences describing consequences for late submission or penalties. In ground truth some syllabi were labeled as `Missing` even though these policy statements existed in the text.
+- If no such title or header was present in the document or PDF, then searched for explicit sentences describing consequences for late submission or penalties.
 
 ### Email Detector
 - The email detector extracts instructor email addresses from the syllabus using regular expression patterns that match standard email formats such as name@domain.edu. In some syllabi, the email address existed but the ground truth was labeled as `Missing` because the email appeared inside paragraphs, contact sections, or non‑standard formats but not in the instructor information section these were labeled as `Missing` in ground truth.
@@ -67,7 +67,7 @@ During improving the f1 score of detectors, and testing, some differences were f
 - Some of these variations were marked as `Missing` even though a response time policy existed in the syllabus.The ground truth was updated to include these valid response time statements.
 
 ### SLO Detector
-- The SLO detector identifies sections of the syllabus that describe student learning outcomes and course learning objectives. These sections may appear under headings defined as 12 `aaproved titles` in the detector such as `student/program learning outcomes/objectives`, `course learning objectives/outcomes`, `learning objectives/outcomes`, and inside paragraphs explaining what students will learn by the end of the course.
+- The SLO detector identifies sections of the syllabus that describe student learning outcomes and course learning objectives. These sections may appear under headings defined as 12 `approved titles` in the detector such as `student/program learning outcomes/objectives`, `course learning objectives/outcomes`, `learning objectives/outcomes`, and inside paragraphs explaining what students will learn by the end of the course.
 
 - Because slos structures vary widely, some valid learning outcomes statements were initially labeled as `Missing` in the ground truth even when they appeared within descriptive text of clearly labeled sections, mainly in `learning objectives/outcomes`.
 

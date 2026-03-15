@@ -7,7 +7,7 @@ and returns the completed template
 """
 
 
-def generate_template(preferred_contact_method):
+def generate_template(preferred_contact_method, filename):
 
     with open("syllabus_template.txt", "r") as f:
         template = f.read()
@@ -16,5 +16,6 @@ def generate_template(preferred_contact_method):
         "{{preferred_contact_method}}",
         preferred_contact_method
     )
+    filled_template = template.replace("{{filename}}", filename)
 
     return filled_template

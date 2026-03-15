@@ -44,6 +44,8 @@ __pycache__/
 *$py.class
 *.so
 .Python
+test_api.py
+test_upload.py
 
 # Virtual Environment
 .venv/

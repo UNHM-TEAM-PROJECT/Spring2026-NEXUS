@@ -1,4 +1,6 @@
+-----------------------------
 SYLLABUS INFORMATION TEMPLATE
 -----------------------------
-
+File name: {{filename}}
 Preferred Contact Method: {{preferred_contact_method}}
+-----------------------------

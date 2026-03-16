@@ -20,15 +20,25 @@ from difflib import SequenceMatcher
 # Constants
 FUZZY_MATCH_THRESHOLD = 0.80
 SUPPORTED_FIELDS = (
-    "modality", "SLOs", "email", "credit_hour", "workload",
-    "instructor_name", "instructor_title", "instructor_department",
-    "office_address", "office_hours", "office_phone",
+    "modality",
+    "SLOs",
+    "email",
+    "credit_hour",
+    "workload",
+    "instructor_name",
+    "instructor_title",
+    "instructor_department",
+    "office_address",
+    "office_hours",
+    "office_phone",
     "preferred_contact_method",
     "assignment_types_title",
-    "deadline_expectations_title", "assignment_delivery", "final_grade_scale",
+    "deadline_expectations_title",
+    "assignment_delivery",
+    "final_grade_scale",
     "response_time",
     "class_location",
-    "grading_process"
+    "grading_process",
 )
 
 # Add repo root to path
@@ -43,6 +53,7 @@ from document_processing import extract_text_from_pdf, extract_text_from_docx
 # ------------------ Detector Imports ------------------
 try:
     from detectors.online_detection import detect_modality
+
     MODALITY_AVAILABLE = True
 except Exception:
     MODALITY_AVAILABLE = False
@@ -50,6 +61,7 @@ except Exception:
 
 try:
     from detectors.slo_detector import SLODetector
+
     SLO_AVAILABLE = True
 except Exception:
     SLO_AVAILABLE = False
@@ -57,6 +69,7 @@ except Exception:
 
 try:
     from detectors.email_detector import EmailDetector
+
     EMAIL_AVAILABLE = True
 except Exception:
     EMAIL_AVAILABLE = False
@@ -64,6 +77,7 @@ except Exception:
 
 try:
     from detectors.credit_hours_detection import CreditHoursDetector
+
     CREDIT_HOURS_AVAILABLE = True
 except Exception:
     CREDIT_HOURS_AVAILABLE = False
@@ -71,6 +85,7 @@ except Exception:
 
 try:
     from detectors.workload_detection import WorkloadDetector
+
     WORKLOAD_AVAILABLE = True
 except Exception:
     WORKLOAD_AVAILABLE = False
@@ -78,6 +93,7 @@ except Exception:
 
 try:
     from detectors.instructor_detector import InstructorDetector
+
     INSTRUCTOR_AVAILABLE = True
 except Exception:
     INSTRUCTOR_AVAILABLE = False
@@ -85,6 +101,7 @@ except Exception:
 
 try:
     from detectors.office_information_detection import OfficeInformationDetector
+
     OFFICE_INFO_AVAILABLE = True
 except Exception:
     OFFICE_INFO_AVAILABLE = False
@@ -92,6 +109,7 @@ except Exception:
 
 try:
     from detectors.preferred_contact_detector import PreferredDetector
+
     PREFERRED_CONTACT_AVAILABLE = True
 except Exception:
     PREFERRED_CONTACT_AVAILABLE = False
@@ -99,6 +117,7 @@ except Exception:
 
 try:
     from detectors.assignment_types_detection import AssignmentTypesDetector
+
     ASSIGNMENT_TYPES_AVAILABLE = True
 except Exception:
     ASSIGNMENT_TYPES_AVAILABLE = False
@@ -106,6 +125,7 @@ except Exception:
 
 try:
     from detectors.late_missing_work_detector import LateDetector
+
     DEADLINE_EXPECTATIONS_AVAILABLE = True
 except Exception:
     DEADLINE_EXPECTATIONS_AVAILABLE = False
@@ -113,6 +133,7 @@ except Exception:
 
 try:
     from detectors.assignment_delivery_detection import AssignmentDeliveryDetector
+
     ASSIGNMENT_DELIVERY_AVAILABLE = True
 except Exception:
     ASSIGNMENT_DELIVERY_AVAILABLE = False
@@ -120,6 +141,7 @@ except Exception:
 
 try:
     from detectors.grading_scale_detection import GradingScaleDetector
+
     GRADING_SCALE_AVAILABLE = True
 except Exception:
     GRADING_SCALE_AVAILABLE = False
@@ -127,6 +149,7 @@ except Exception:
 
 try:
     from detectors.grading_process_detection import GradingProcessDetector
+
     GRADING_PROCESS_AVAILABLE = True
 except Exception:
     GRADING_PROCESS_AVAILABLE = False
@@ -135,6 +158,7 @@ except Exception:
 # NEW: Response Time Detector
 try:
     from detectors.class_location_detector import ClassLocationDetector
+
     CLASS_LOCATION_AVAILABLE = True
 except Exception:
     CLASS_LOCATION_AVAILABLE = False
@@ -142,6 +166,7 @@ except Exception:
 
 try:
     from detectors.response_time_detector import ResponseTimeDetector
+
     RESPONSE_TIME_AVAILABLE = True
 except Exception:
     RESPONSE_TIME_AVAILABLE = False
@@ -151,10 +176,12 @@ except Exception:
 # COMPARISON HELPERS
 # ======================================================================
 
+
 def norm(s):
     if s is None:
         return ""
     return " ".join(str(s).strip().lower().split())
+
 
 def has_value(value):
     """
@@ -165,6 +192,7 @@ def has_value(value):
     # Consider these as "no value"
     empty_indicators = ["", "not found", "missing", "n/a", "tbd", "not specified"]
     return normalized not in empty_indicators
+
 
 def update_field_stats(stats, gt_value, pred_value, match):
     """
@@ -186,9 +214,12 @@ def update_field_stats(stats, gt_value, pred_value, match):
     elif not gt_has and pred_has:
         stats["FP"] += 1  # False alarm (detected something that doesn't exist)
     elif gt_has and (not pred_has or not match):
-        stats["FN"] += 1  # Missed detection (should have found but didn't, or found wrong value)
+        stats[
+            "FN"
+        ] += 1  # Missed detection (should have found but didn't, or found wrong value)
     elif not gt_has and not pred_has:
         stats["TN"] += 1  # Correct rejection (correctly found nothing)
+
 
 def fuzzy_match(a, b, threshold=FUZZY_MATCH_THRESHOLD):
     a, b = norm(a), norm(b)
@@ -199,6 +230,7 @@ def fuzzy_match(a, b, threshold=FUZZY_MATCH_THRESHOLD):
     if a == b or a in b or b in a:
         return True
     return SequenceMatcher(None, a, b).ratio() >= threshold
+
 
 def loose_compare(gt, pred):
     """GT 'not found'/empty/missing means field doesn't exist - expect empty pred."""
@@ -212,64 +244,67 @@ def loose_compare(gt, pred):
 
     return fuzzy_match(g, p)
 
+
 def compare_grading_scale(gt, pred):
     """Compare grading scales - focus on grade letters found rather than exact formatting."""
     import re
-    
+
     # Normalize empty values
     def is_empty(value):
         if not value:
             return True
         value_str = str(value).strip()
         return value_str == "" or value_str.lower() == "missing"
-    
+
     # If both are empty/Missing, they match
     if is_empty(gt) and is_empty(pred):
         return True
-    
+
     # If one is empty and the other isn't, no match
     if is_empty(gt) or is_empty(pred):
         return False
-    
+
     def extract_grade_letters(text):
         """Extract just the grade letters (A, A-, B+, etc.) from text."""
         if not text:
             return set()
-        
+
         # Pattern to find grade letters
-        pattern = r'\b([A-F][+-]?)(?=[\s:=\d<>%]|$)'
+        pattern = r"\b([A-F][+-]?)(?=[\s:=\d<>%]|$)"
         matches = re.findall(pattern, str(text), re.IGNORECASE)
         return set(match.upper() for match in matches)
-    
+
     gt_grades = extract_grade_letters(gt)
     pred_grades = extract_grade_letters(pred)
-    
+
     # If both have no grade letters, check if they're similar text
     if not gt_grades and not pred_grades:
         return fuzzy_match(gt, pred, 0.7)  # Lower threshold for non-grade text
-        
-    # If one has grades and the other doesn't, no match    
+
+    # If one has grades and the other doesn't, no match
     if not gt_grades or not pred_grades:
         return False
-        
+
     # Compare the sets of grades found
     # Allow for some flexibility - if we have at least 80% overlap of the larger set
     if len(gt_grades) == 0 and len(pred_grades) == 0:
         return True
-    
+
     intersection = gt_grades & pred_grades
     union = gt_grades | pred_grades
-    
+
     # If they have exactly the same grades, perfect match
     if gt_grades == pred_grades:
         return True
-    
+
     # Allow for good overlap (at least 80% of grades match)
     overlap_ratio = len(intersection) / len(union) if union else 0
     return overlap_ratio >= 0.8
 
+
 def compare_modality(gt, pred):
     """Normalize to buckets before compare. Missing means field doesn't exist."""
+
     def core(s):
         s = norm(s)
         # If GT is Missing/empty, field doesn't exist in syllabus
@@ -285,13 +320,28 @@ def compare_modality(gt, pred):
             return "hybrid"
 
         # Online variations (including synchronous/asynchronous, remote, zoom)
-        if any(x in s for x in ("online", "remote", "asynchronous", "synchronous", "zoom")):
+        if any(
+            x in s for x in ("online", "remote", "asynchronous", "synchronous", "zoom")
+        ):
             return "online"
 
         # In-person variations (face-to-face, on campus, specific locations, outdoor/field)
-        if any(x in s for x in ("in-person", "in person", "on campus", "face to face",
-                                 "face-to-face", "outdoor", "field meeting", "classroom",
-                                 "lab activit", "pandra", "pandora")):
+        if any(
+            x in s
+            for x in (
+                "in-person",
+                "in person",
+                "on campus",
+                "face to face",
+                "face-to-face",
+                "outdoor",
+                "field meeting",
+                "classroom",
+                "lab activit",
+                "pandra",
+                "pandora",
+            )
+        ):
             return "in-person"
 
         return s
@@ -301,6 +351,7 @@ def compare_modality(gt, pred):
 
     # Both normalized values should match
     return gt_norm == pred_norm
+
 
 def normalize_location(s):
     """
@@ -320,7 +371,8 @@ def normalize_location(s):
     # Room prefix variations - normalize all "rm" variants to "room "
     # Handle "rm." "rm " and "rm" followed by number
     import re as re_local
-    s = re_local.sub(r'\brm\.?\s*', 'room ', s)
+
+    s = re_local.sub(r"\brm\.?\s*", "room ", s)
     s = s.replace("classroom:", "room ")
     s = s.replace("classroom ", "room ")
 
@@ -337,18 +389,19 @@ def normalize_location(s):
     import re
 
     # First, normalize "P 146" (with space) to "p146" (no space)
-    s = re.sub(r'\bp\s+(\d+)\b', r'p\1', s)
+    s = re.sub(r"\bp\s+(\d+)\b", r"p\1", s)
 
     # Handle "Pandora Building (UNHM) P146" -> extract just p146
-    s = re.sub(r'pandora\s+(?:building|mill|hall)?\s*(?:\([^)]+\))?\s*(p\d+)', r'\1', s)
+    s = re.sub(r"pandora\s+(?:building|mill|hall)?\s*(?:\([^)]+\))?\s*(p\d+)", r"\1", s)
 
     # If format is "pandora 123" or "pandora hall 123", convert to "p123"
-    s = re.sub(r'pandora\s+(?:hall\s+)?(\d+)', r'p\1', s)
+    s = re.sub(r"pandora\s+(?:hall\s+)?(\d+)", r"p\1", s)
 
     # If format is "room p123", convert to "p123"
-    s = re.sub(r'room\s+(p\d+)', r'\1', s)
+    s = re.sub(r"room\s+(p\d+)", r"\1", s)
 
     return s
+
 
 def compare_class_location(gt, pred, modality):
     """
@@ -375,7 +428,10 @@ def compare_class_location(gt, pred, modality):
     # Empty prediction is acceptable (no physical location expected)
     if gt_is_online and modality:
         modality_norm = norm(modality)
-        modality_is_online = any(word in modality_norm for word in ["online", "remote", "zoom", "teams", "webex"])
+        modality_is_online = any(
+            word in modality_norm
+            for word in ["online", "remote", "zoom", "teams", "webex"]
+        )
         if modality_is_online:
             # Both empty or pred is empty when GT says "online/remote"
             if p in ("", "missing") or g == p:
@@ -401,6 +457,7 @@ def compare_class_location(gt, pred, modality):
 
     # Fuzzy match on normalized strings
     return SequenceMatcher(None, g_norm, p_norm).ratio() >= FUZZY_MATCH_THRESHOLD
+
 
 def compare_grading_process(gt, pred):
     """
@@ -429,9 +486,11 @@ def compare_grading_process(gt, pred):
 
     return SequenceMatcher(None, g, p).ratio() >= GRADING_PROCESS_THRESHOLD
 
+
 # ======================================================================
 # DETECTOR WRAPPERS
 # ======================================================================
+
 
 def detect_all_fields(text: str) -> dict:
     preds = {}
@@ -472,7 +531,9 @@ def detect_all_fields(text: str) -> dict:
     # Credit Hours
     if CREDIT_HOURS_AVAILABLE:
         c = CreditHoursDetector().detect(text)
-        preds["credit_hour"] = c.get("content", "Missing") if c.get("found") else "Missing"
+        preds["credit_hour"] = (
+            c.get("content", "Missing") if c.get("found") else "Missing"
+        )
     else:
         preds["credit_hour"] = "Missing"
 
@@ -497,9 +558,21 @@ def detect_all_fields(text: str) -> dict:
     # Office Information
     if OFFICE_INFO_AVAILABLE:
         o = OfficeInformationDetector().detect(text)
-        preds["office_address"] = o.get("office_location", {}).get("content", "Missing") if o.get("office_location", {}).get("found") else "Missing"
-        preds["office_hours"] = o.get("office_hours", {}).get("content", "Missing") if o.get("office_hours", {}).get("found") else "Missing"
-        preds["office_phone"] = o.get("phone", {}).get("content", "Missing") if o.get("phone", {}).get("found") else "Missing"
+        preds["office_address"] = (
+            o.get("office_location", {}).get("content", "Missing")
+            if o.get("office_location", {}).get("found")
+            else "Missing"
+        )
+        preds["office_hours"] = (
+            o.get("office_hours", {}).get("content", "Missing")
+            if o.get("office_hours", {}).get("found")
+            else "Missing"
+        )
+        preds["office_phone"] = (
+            o.get("phone", {}).get("content", "Missing")
+            if o.get("phone", {}).get("found")
+            else "Missing"
+        )
     else:
         preds["office_address"] = "Missing"
         preds["office_hours"] = "Missing"
@@ -508,14 +581,18 @@ def detect_all_fields(text: str) -> dict:
     # Preferred Contact Method
     if PREFERRED_CONTACT_AVAILABLE:
         pc = PreferredDetector().detect(text)
-        preds["preferred_contact_method"] = pc.get("content", "Missing") if pc.get("found") else "Missing"
+        preds["preferred_contact_method"] = (
+            pc.get("content", "Missing") if pc.get("found") else "Missing"
+        )
     else:
         preds["preferred_contact_method"] = "Missing"
 
     # Assignment Types
     if ASSIGNMENT_TYPES_AVAILABLE:
         a = AssignmentTypesDetector().detect(text)
-        preds["assignment_types_title"] = a.get("content", "Missing") if a.get("found") else "Missing"
+        preds["assignment_types_title"] = (
+            a.get("content", "Missing") if a.get("found") else "Missing"
+        )
     else:
         preds["assignment_types_title"] = "Missing"
 
@@ -528,7 +605,7 @@ def detect_all_fields(text: str) -> dict:
         # Extract just the title (first line) from content
         content = d.get("content", "")
         if content and d.get("found"):
-            preds["deadline_expectations_title"] = content.split('\n')[0].strip()
+            preds["deadline_expectations_title"] = content.split("\n")[0].strip()
         else:
             preds["deadline_expectations_title"] = "Missing"
     else:
@@ -537,39 +614,50 @@ def detect_all_fields(text: str) -> dict:
     # Assignment Delivery
     if ASSIGNMENT_DELIVERY_AVAILABLE:
         ad = AssignmentDeliveryDetector().detect(text)
-        preds["assignment_delivery"] = ad.get("content", "Missing") if ad.get("found") else "Missing"
+        preds["assignment_delivery"] = (
+            ad.get("content", "Missing") if ad.get("found") else "Missing"
+        )
     else:
         preds["assignment_delivery"] = "Missing"
 
     # Grading Scale
     if GRADING_SCALE_AVAILABLE:
         gs = GradingScaleDetector().detect(text)
-        preds["final_grade_scale"] = gs.get("content", "Missing") if gs.get("found") else "Missing"
+        preds["final_grade_scale"] = (
+            gs.get("content", "Missing") if gs.get("found") else "Missing"
+        )
     else:
         preds["final_grade_scale"] = "Missing"
 
     # Response Time
     if RESPONSE_TIME_AVAILABLE:
         rt = ResponseTimeDetector().detect(text)
-        preds["response_time"] = rt.get("content", "Missing") if rt.get("found") else "Missing"
+        preds["response_time"] = (
+            rt.get("content", "Missing") if rt.get("found") else "Missing"
+        )
     else:
         preds["response_time"] = "Missing"
 
     # Grading Process
     if GRADING_PROCESS_AVAILABLE:
         gp = GradingProcessDetector().detect(text)
-        preds["grading_process"] = gp.get("content", "Missing") if gp.get("found") else "Missing"
+        preds["grading_process"] = (
+            gp.get("content", "Missing") if gp.get("found") else "Missing"
+        )
     else:
         preds["grading_process"] = "Missing"
 
     # Class Location
     if CLASS_LOCATION_AVAILABLE:
         cl = ClassLocationDetector().detect(text)
-        preds["class_location"] = cl.get("content", "Missing") if cl.get("found") else "Missing"
+        preds["class_location"] = (
+            cl.get("content", "Missing") if cl.get("found") else "Missing"
+        )
     else:
         preds["class_location"] = "Missing"
 
     return preds
+
 
 # ======================================================================
 # Team NEXUS
@@ -580,7 +668,9 @@ def detect_all_fields(text: str) -> dict:
 def run_tests_for_folder(folder_path, ground_truth_json, output_json):
     ap = argparse.ArgumentParser(description="Run detectors vs ground_truth.json")
     ap.add_argument("--syllabi", default=folder_path, help="Folder with PDFs/DOCX")
-    ap.add_argument("--ground_truth", default=ground_truth_json, help="Ground truth JSON")
+    ap.add_argument(
+        "--ground_truth", default=ground_truth_json, help="Ground truth JSON"
+    )
     ap.add_argument("--output", default=output_json, help="Output JSON file")
     args = ap.parse_args()
 
@@ -591,7 +681,7 @@ def run_tests_for_folder(folder_path, ground_truth_json, output_json):
         print("[ERROR] Missing folder or JSON.")
         sys.exit(1)
 
-    with open(args.ground_truth, "r", encoding="utf-8") as f:
+    with open(args.ground_truth, "r", encoding="utf-8-sig") as f:
         gt_data = json.load(f)
 
     # CHANGE 1: Store file count so main() can use it for weighted combining
@@ -633,16 +723,16 @@ def run_tests_for_folder(folder_path, ground_truth_json, output_json):
             match = compare_modality(gt_val, pred_val)
             update_field_stats(field_stats["modality"], gt_val, pred_val, match)
             result["modality"] = {"gt": gt_val, "pred": pred_val, "match": match}
-            
+
         # SLOs: compare presence, store texts (JSON only)
         if "SLOs" in record:
             gt_val = record.get("SLOs", "")
             pred_val = preds.get("slos_text", "Missing")
-            
+
             # FIXED: Use has_value() to properly determine if GT has SLOs
             gt_has = has_value(gt_val)
             pred_has = has_value(pred_val)
-            match = (gt_has == pred_has)
+            match = gt_has == pred_has
 
             update_field_stats(field_stats["SLOs"], gt_val, pred_val, match)
 
@@ -651,7 +741,7 @@ def run_tests_for_folder(folder_path, ground_truth_json, output_json):
                 "pred_present": pred_has,
                 "match": match,
                 "gt_text": str(gt_val).strip(),
-                "pred_text": pred_val
+                "pred_text": pred_val,
             }
 
         # Email
@@ -692,15 +782,25 @@ def run_tests_for_folder(folder_path, ground_truth_json, output_json):
             pred_val = preds.get("instructor_title", "Missing")
             match = loose_compare(gt_val, pred_val)
             update_field_stats(field_stats["instructor_title"], gt_val, pred_val, match)
-            result["instructor_title"] = {"gt": gt_val, "pred": pred_val, "match": match}
+            result["instructor_title"] = {
+                "gt": gt_val,
+                "pred": pred_val,
+                "match": match,
+            }
 
         # Instructor Department
         if "instructor_department" in record:
             gt_val = record["instructor_department"]
             pred_val = preds.get("instructor_department", "Missing")
             match = loose_compare(gt_val, pred_val)
-            update_field_stats(field_stats["instructor_department"], gt_val, pred_val, match)
-            result["instructor_department"] = {"gt": gt_val, "pred": pred_val, "match": match}
+            update_field_stats(
+                field_stats["instructor_department"], gt_val, pred_val, match
+            )
+            result["instructor_department"] = {
+                "gt": gt_val,
+                "pred": pred_val,
+                "match": match,
+            }
 
         # Office Address
         if "office_address" in record:
@@ -731,41 +831,71 @@ def run_tests_for_folder(folder_path, ground_truth_json, output_json):
             gt_val = record["preferred_contact_method"]
             pred_val = preds.get("preferred_contact_method", "Missing")
             match = loose_compare(gt_val, pred_val)
-            update_field_stats(field_stats["preferred_contact_method"], gt_val, pred_val, match)
-            result["preferred_contact_method"] = {"gt": gt_val, "pred": pred_val, "match": match}
+            update_field_stats(
+                field_stats["preferred_contact_method"], gt_val, pred_val, match
+            )
+            result["preferred_contact_method"] = {
+                "gt": gt_val,
+                "pred": pred_val,
+                "match": match,
+            }
 
         # Assignment Types Title
         if "assignment_types_title" in record:
             gt_val = record["assignment_types_title"]
             pred_val = preds.get("assignment_types_title", "Missing")
             match = loose_compare(gt_val, pred_val)
-            update_field_stats(field_stats["assignment_types_title"], gt_val, pred_val, match)
-            result["assignment_types_title"] = {"gt": gt_val, "pred": pred_val, "match": match}
+            update_field_stats(
+                field_stats["assignment_types_title"], gt_val, pred_val, match
+            )
+            result["assignment_types_title"] = {
+                "gt": gt_val,
+                "pred": pred_val,
+                "match": match,
+            }
 
         # Deadline Expectations Title
         if "deadline_expectations_title" in record:
             gt_val = record["deadline_expectations_title"]
             pred_val = preds.get("deadline_expectations_title", "Missing")
             match = loose_compare(gt_val, pred_val)
-            update_field_stats(field_stats["deadline_expectations_title"], gt_val, pred_val, match)
-            result["deadline_expectations_title"] = {"gt": gt_val, "pred": pred_val, "match": match}
+            update_field_stats(
+                field_stats["deadline_expectations_title"], gt_val, pred_val, match
+            )
+            result["deadline_expectations_title"] = {
+                "gt": gt_val,
+                "pred": pred_val,
+                "match": match,
+            }
 
         # Assignment Delivery
         if "assignment_delivery" in record:
             gt_val = record["assignment_delivery"]
             pred_val = preds.get("assignment_delivery", "Missing")
             match = loose_compare(gt_val, pred_val)
-            update_field_stats(field_stats["assignment_delivery"], gt_val, pred_val, match)
-            result["assignment_delivery"] = {"gt": gt_val, "pred": pred_val, "match": match}
+            update_field_stats(
+                field_stats["assignment_delivery"], gt_val, pred_val, match
+            )
+            result["assignment_delivery"] = {
+                "gt": gt_val,
+                "pred": pred_val,
+                "match": match,
+            }
 
         # Final Grade Scale
         if "final_grade_scale" in record:
-            gt_val = record["final_grade_scale"]  
-            pred_val = preds.get("final_grade_scale", "Missing")    
-            match = compare_grading_scale(gt_val, pred_val)  
-            update_field_stats(field_stats["final_grade_scale"], gt_val, pred_val, match)  
-            result["final_grade_scale"] = {"gt": gt_val, "pred": pred_val, "match": match}  
-            
+            gt_val = record["final_grade_scale"]
+            pred_val = preds.get("final_grade_scale", "Missing")
+            match = compare_grading_scale(gt_val, pred_val)
+            update_field_stats(
+                field_stats["final_grade_scale"], gt_val, pred_val, match
+            )
+            result["final_grade_scale"] = {
+                "gt": gt_val,
+                "pred": pred_val,
+                "match": match,
+            }
+
         # Response Time
         if "response_time" in record:
             gt_val = record["response_time"]
@@ -773,7 +903,7 @@ def run_tests_for_folder(folder_path, ground_truth_json, output_json):
             match = loose_compare(gt_val, pred_val)
             update_field_stats(field_stats["response_time"], gt_val, pred_val, match)
             result["response_time"] = {"gt": gt_val, "pred": pred_val, "match": match}
-            
+
         # Class Location (with smart comparison considering modality)
         if "class_location" in record:
             gt_val = record["class_location"]
@@ -785,7 +915,7 @@ def run_tests_for_folder(folder_path, ground_truth_json, output_json):
                 "gt": gt_val,
                 "pred": pred_val,
                 "match": match,
-                "modality": modality_value
+                "modality": modality_value,
             }
         # Grading Process
         if "grading_process" in record:
@@ -816,7 +946,11 @@ def run_tests_for_folder(folder_path, ground_truth_json, output_json):
         recall = (tp / (tp + fn)) if (tp + fn) > 0 else 0.0
 
         # F1 Score: Harmonic mean of precision and recall
-        f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
+        f1 = (
+            (2 * precision * recall / (precision + recall))
+            if (precision + recall) > 0
+            else 0.0
+        )
 
         # Accuracy: Overall correctness
         total = tp + fp + fn + tn
@@ -830,7 +964,7 @@ def run_tests_for_folder(folder_path, ground_truth_json, output_json):
             "TP": tp,
             "FP": fp,
             "FN": fn,
-            "TN": tn
+            "TN": tn,
         }
 
         total_tp += tp
@@ -839,11 +973,21 @@ def run_tests_for_folder(folder_path, ground_truth_json, output_json):
         total_tn += tn
 
     # Overall metrics
-    overall_precision = (total_tp / (total_tp + total_fp)) if (total_tp + total_fp) > 0 else 0.0
-    overall_recall = (total_tp / (total_tp + total_fn)) if (total_tp + total_fn) > 0 else 0.0
-    overall_f1 = (2 * overall_precision * overall_recall / (overall_precision + overall_recall)) if (overall_precision + overall_recall) > 0 else 0.0
+    overall_precision = (
+        (total_tp / (total_tp + total_fp)) if (total_tp + total_fp) > 0 else 0.0
+    )
+    overall_recall = (
+        (total_tp / (total_tp + total_fn)) if (total_tp + total_fn) > 0 else 0.0
+    )
+    overall_f1 = (
+        (2 * overall_precision * overall_recall / (overall_precision + overall_recall))
+        if (overall_precision + overall_recall) > 0
+        else 0.0
+    )
     overall_total = total_tp + total_fp + total_fn + total_tn
-    overall_accuracy = ((total_tp + total_tn) / overall_total) if overall_total > 0 else 0.0
+    overall_accuracy = (
+        ((total_tp + total_tn) / overall_total) if overall_total > 0 else 0.0
+    )
 
     # INDIVIDUAL TABLE: Comment out the block below to hide per-folder tables.
     # To show individual tables again, remove the '#' from each line below.
@@ -877,14 +1021,10 @@ def run_tests_for_folder(folder_path, ground_truth_json, output_json):
         "TP": total_tp,
         "FP": total_fp,
         "FN": total_fn,
-        "TN": total_tn
+        "TN": total_tn,
     }
 
-    output_data = {
-        "summary": summary,
-        "overall": overall_metrics,
-        "details": details
-    }
+    output_data = {"summary": summary, "overall": overall_metrics, "details": details}
 
     with open(args.output, "w", encoding="utf-8") as f:
         json.dump(output_data, f, indent=2, ensure_ascii=False)
@@ -916,9 +1056,13 @@ def print_weighted_combined_table(results_list):
     total_files = sum(file_count for _, _, file_count in results_list)
 
     print("\n" + "=" * 90)
-    print(f"WEIGHTED COMBINED RESULTS - All {len(results_list)} Folders ({total_files} total files)")
+    print(
+        f"WEIGHTED COMBINED RESULTS - All {len(results_list)} Folders ({total_files} total files)"
+    )
     print("=" * 90)
-    print(f"{'Field':<30} {'Accuracy':>9} {'Precision':>10} {'Recall':>9} {'F1 Score':>10}")
+    print(
+        f"{'Field':<30} {'Accuracy':>9} {'Precision':>10} {'Recall':>9} {'F1 Score':>10}"
+    )
     print("-" * 90)
 
     for field in SUPPORTED_FIELDS:
@@ -928,8 +1072,10 @@ def print_weighted_combined_table(results_list):
             weight = file_count / total_files
             for m in METRICS:
                 weighted[m] += summary.get(field, {}).get(m, 0.0) * weight
-        print(f"{field:<30} {weighted['accuracy']:>8.1%} {weighted['precision']:>10.1%} "
-              f"{weighted['recall']:>9.1%} {weighted['f1_score']:>10.1%}")
+        print(
+            f"{field:<30} {weighted['accuracy']:>8.1%} {weighted['precision']:>10.1%} "
+            f"{weighted['recall']:>9.1%} {weighted['f1_score']:>10.1%}"
+        )
 
     print("-" * 90)
 
@@ -939,8 +1085,10 @@ def print_weighted_combined_table(results_list):
         weight = file_count / total_files
         for m in METRICS:
             weighted_overall[m] += overall.get(m, 0.0) * weight
-    print(f"{'OVERALL':<30} {weighted_overall['accuracy']:>8.1%} {weighted_overall['precision']:>10.1%} "
-          f"{weighted_overall['recall']:>9.1%} {weighted_overall['f1_score']:>10.1%}")
+    print(
+        f"{'OVERALL':<30} {weighted_overall['accuracy']:>8.1%} {weighted_overall['precision']:>10.1%} "
+        f"{weighted_overall['recall']:>9.1%} {weighted_overall['f1_score']:>10.1%}"
+    )
     print("=" * 90)
 
 
@@ -951,15 +1099,15 @@ def print_weighted_combined_table(results_list):
 def main():
     # CHANGE 2: Capture the return values (summary, overall, file_count) from each folder
     result1 = run_tests_for_folder(
-        folder_path="ground_truth_syllabus",
-        ground_truth_json="ground_truth.json",
-        output_json="test_results.json"
+        folder_path="Team_Alpha_Fall_2025_syllabus",
+        ground_truth_json="Team_Alpha_Fall_2025.json",
+        output_json="Team_Alpha_test_results.json",
     )
 
     result2 = run_tests_for_folder(
-        folder_path="new_ground_truth_syllabus",
-        ground_truth_json="new_ground_truth.json",
-        output_json="new_test_results.json"
+        folder_path="Team_Nexus_Spring_2026_syllabus",
+        ground_truth_json="Team_Nexus_Spring_2026.json",
+        output_json="Team_Nexus_test_results.json",
     )
 
     # Print one combined table weighted by file count of each folder

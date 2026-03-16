@@ -15,6 +15,7 @@ instead of remaking it, and never got a chance to clean up the file fully.
 
 from __future__ import annotations
 
+from fileinput import filename
 import os
 import re
 from unittest import result
@@ -53,10 +54,13 @@ from detectors.grading_process_detection import GradingProcessDetector
 from detectors.response_time_detector import ResponseTimeDetector
 from detectors.class_location_detector import ClassLocationDetector
 
+# Global variable to store the last uploaded filename (for template generation)
+last_uploaded_filename = None
 
 # -----------------------------------------------------------------------------
 # Helpers
 # -----------------------------------------------------------------------------
+
 
 def detect_slos_with_regex(text: str) -> tuple[bool, str | None]:
     """
@@ -157,6 +161,8 @@ def _massage_modality_card(card: dict, meta: dict) -> dict:
 
 def _process_single_file(file, temp_dir: str) -> dict:
     filename = file.filename
+    global last_uploaded_filename
+    last_uploaded_filename = filename
     file_path = os.path.join(temp_dir, filename)
     file.save(file_path)
 
@@ -580,14 +586,14 @@ def create_routes(app):
 
     @app.route('/submit_preferred_contact', methods=['POST'])
     def submit_preferred_contact():
-
+        global last_uploaded_filename
         data = request.get_json()
         preferred_contact_method = data.get("preferred_contact_method")
-        filename = data.get("filename")
 
         if not preferred_contact_method:
             return jsonify({"error": "Preferred contact method is required"}), 400
-
+        
+        filename = last_uploaded_filename or "Uploaded_syllabus"
         template_text = generate_template(preferred_contact_method, filename)
 
         return Response(

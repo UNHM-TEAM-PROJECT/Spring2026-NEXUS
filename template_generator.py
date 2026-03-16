@@ -16,6 +16,6 @@ def generate_template(preferred_contact_method, filename):
         "{{preferred_contact_method}}",
         preferred_contact_method
     )
-    filled_template = template.replace("{{filename}}", filename)
+    filled_template = filled_template.replace("{{filename}}", filename)
 
     return filled_template

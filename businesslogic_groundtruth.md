@@ -47,9 +47,11 @@ During improving the f1 score of detectors, and testing, some differences were f
 - The ground truth was updated so that each entry includes the correct instructor name and title whenever they are available in the syllabus. The department field was also corrected to contain only the academic department name.
 
 ### Office Information Detection
-- The office information fields represent the instructor’s office hours, office location, and office phone number listed in the syllabus.
-
-- These fields were marked as `AVAILABLE` only when the syllabus explicitly mentioned the corresponding information such as office hours, office address/office, or a phone number provided as the professor’s contact. If the syllabus did not contain a specific office hours section, office location, or instructor phone number, the corresponding field was labeled as `Missing`.
+- `office hours`: Checked for explicit mention of office hours in the file. If such header is found the value of that field is populated in the office hours detector. If no such header is found, checked for links provided to schedule appointments to meet in person or virtually, and phrases like by-appointment or specific day and time or a schedule that lasted over multiple days and observed if those phrases could be considered as office hours. In some cases after class help sessions were considered as office hours, these are marked as `Missing`. 
+ 
+- `office phone`:  Checked for cellphone labels with NH number formats to narrow down the searching process, then checked for phone numbers explicitly mentioned under the instructor header, if present, added them to the office phone fields. In some cases if no contact number is mentioned under the instructor header or in the beginning of the file or pdf, the next available number that qualifies to be a phone number regardless of its positioning in the file or the context was populated as office phone. Now all such fields are labeled as `Missing`.
+ 
+- `office address`: Checked for explicit mention of office address field in the file, if found, the value is populated in the office address field. Made sure to not include locations like class locations which mostly have the same format and building address.
 
 ### Modality Detector (online_detection)
 - The modality detector identifies the course delivery format, such as `in‑person, online, hybrid`, or `asynchronous online`, based on how the syllabus describes course meetings and instruction. It was observed that the label `hybrid` was often used inconsistently. Some courses labeled as hybrid were actually fully online with no in‑person meetings, while others were fully in‑person with optional online resources.

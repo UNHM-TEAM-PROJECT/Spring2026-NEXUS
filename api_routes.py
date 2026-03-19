@@ -15,14 +15,17 @@ instead of remaking it, and never got a chance to clean up the file fully.
 
 from __future__ import annotations
 
+from fileinput import filename
 import os
 import re
+from unittest import result
 from detectors.instructor_detector import InstructorDetector
 import logging
 import tempfile
 import shutil
 import zipfile
-from flask import request, jsonify, render_template
+from flask import request, jsonify, render_template, Response
+from template_generator import generate_template
 
 from document_processing import extract_text_from_pdf, extract_text_from_docx
 
@@ -51,10 +54,13 @@ from detectors.grading_process_detection import GradingProcessDetector
 from detectors.response_time_detector import ResponseTimeDetector
 from detectors.class_location_detector import ClassLocationDetector
 
+# Global variable to store the last uploaded filename (for template generation)
+last_uploaded_filename = None
 
 # -----------------------------------------------------------------------------
 # Helpers
 # -----------------------------------------------------------------------------
+
 
 def detect_slos_with_regex(text: str) -> tuple[bool, str | None]:
     """
@@ -155,6 +161,8 @@ def _massage_modality_card(card: dict, meta: dict) -> dict:
 
 def _process_single_file(file, temp_dir: str) -> dict:
     filename = file.filename
+    global last_uploaded_filename
+    last_uploaded_filename = filename
     file_path = os.path.join(temp_dir, filename)
     file.save(file_path)
 
@@ -290,7 +298,7 @@ def _process_single_file(file, temp_dir: str) -> dict:
                 "confidence": 0.0
             }
 
-        # --- Email detection ---
+        # --- Preferred Contact Method detection ---
         if PreferredDetector:
             preferred_detector = PreferredDetector()
             preferred_info = preferred_detector.detect(extracted_text)
@@ -305,6 +313,14 @@ def _process_single_file(file, temp_dir: str) -> dict:
                 "found": False,
                 "confidence": 0.0
             }
+
+        # ---Check if preferred_contact is missing(AI chat template feature)---
+        preferred_method = result["preferred_information"].get("preferred")
+
+        if not preferred_method:
+            result["preferred_contact_missing"] = True
+        else:
+            result["preferred_contact_missing"] = False
 
         # --- Late detection ---
         if LateDetector:
@@ -567,3 +583,23 @@ def create_routes(app):
         except Exception as e:
             logging.exception("Error in /ask")
             return jsonify({"response": f"Server error: {e}"}), 500
+
+    @app.route('/submit_preferred_contact', methods=['POST'])
+    def submit_preferred_contact():
+        global last_uploaded_filename
+        data = request.get_json()
+        preferred_contact_method = data.get("preferred_contact_method")
+
+        if not preferred_contact_method:
+            return jsonify({"error": "Preferred contact method is required"}), 400
+        
+        filename = last_uploaded_filename or "Uploaded_syllabus"
+        template_text = generate_template(preferred_contact_method, filename)
+
+        return Response(
+            template_text,
+            mimetype="text/plain",
+            headers={
+                "Content-Disposition": "attachment; filename=syllabus_template.txt"
+            }
+        )

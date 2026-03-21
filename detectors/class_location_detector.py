@@ -170,6 +170,8 @@ class ClassLocationDetector:
             r'meeting\s+time\s+and\s+place',
             r'location\s+and\s+time',
             r'time\s+and\s+location',
+            r'time\s*&\s*room',
+            r'time\s+and\s+room',
             r'where\s+we\s+meet',
             r'where\s+the\s+class\s+meets',
             r'course\s+location',

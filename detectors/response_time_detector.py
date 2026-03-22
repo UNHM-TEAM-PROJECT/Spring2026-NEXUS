@@ -30,7 +30,8 @@ class ResponseTimeDetector:
         # COMPREHENSIVE REGEX PATTERNS
         # Organized by phrase type for better maintainability
         # ================================================================
-        
+        _TU = r'\d+(?:-\d+)?[-\u2013]?\s*(?:hour|hr|day|business\s+day)s?'
+        _TU_BASIC = r'\d+(?:-\d+)?[-\u2013]?\s*(?:hour|hr|day)s?'
         self.time_patterns = [
             # Group 1: Direct "Response Time" mentions
             r'(?i)response\s+time\s*:?\s*([^\n.;]{0,100}?(?:\d+(?:-\d+)?\s*(?:hour|hr|day|business\s+day)s?[^\n.;]{0,50}?))',
@@ -44,6 +45,8 @@ class ResponseTimeDetector:
             r'(?i)(within\s+24-48\s*hours?)',
             r'(?i)(within\s+24\s*hours?)',
             r'(?i)(within\s+48\s*hours?)',
+            r'(?i)(within\s+24[-\u2013]?\s*hours?)',
+            r'(?i)(within\s+48[-\u2013]?\s*hours?)',
             
             # Group 3: "I respond/reply within..." patterns
             r'(?i)I\s+(?:will\s+)?(?:respond|reply|get\s+back|answer)\s+(within\s+\d+(?:-\d+)?\s*(?:hour|hr|day|business\s+day)s?)',
@@ -69,14 +72,15 @@ class ResponseTimeDetector:
             r'(?i)you\s+(?:can\s+)?expect\s+to\s+hear\s+(?:from\s+me\s+)?(within\s+\d+(?:-\d+)?\s*(?:hour|hr|day)s?)',
             
             # Group 7: "Expect" patterns (without "you")
-            r'(?i)expect\s+(?:a\s+)?(?:response|reply)\s+(within\s+\d+(?:-\d+)?\s*(?:hour|hr|day)s?)',
-            r'(?i)expect\s+(?:a\s+)?(?:response|reply)\s+(in\s+\d+(?:-\d+)?\s*(?:hour|hr|day)s?)',
+            r'(?i)(?:anticipate|expect)\s+(?:a\s+)?(?:response|reply)\s+(within\s+' + _TU_BASIC + r'(?:[^.;\n]{0,80})?)',
+            r'(?i)(?:anticipate|expect)\s+(?:a\s+)?(?:response|reply)\s+(in\s+' + _TU_BASIC + r')',
             
             # Group 8: "No later than" patterns
             r'(?i)(?:respond|reply|get\s+back|answer)\s+no\s+later\s+than\s+(next\s+(?:business\s+)?(?:day|weekday))',
             r'(?i)(?:respond|reply|get\s+back|answer)\s+no\s+later\s+than\s+(\d+(?:-\d+)?\s*(?:hour|hr|day)s?)',
             r'(?i)I\'ll\s+(?:respond|reply|get\s+back|answer)\s+no\s+later\s+than\s+(next\s+(?:business\s+)?(?:day|weekday))',
             r'(?i)I\'ll\s+(?:respond|reply|get\s+back|answer)\s+no\s+later\s+than\s+(\d+(?:-\d+)?\s*(?:hour|hr|day)s?)',
+            r'(?i)(?:you\'ll\s+)?get\s+a\s+reply\s+no\s+later\s+than\s+(next\s+(?:business\s+)?(?:day|weekday))',
             
             # Group 9: "By" patterns
             r'(?i)(?:respond|reply|get\s+back|answer)\s+(by\s+(?:the\s+)?next\s+(?:business\s+)?(?:day|weekday))',
@@ -106,7 +110,7 @@ class ResponseTimeDetector:
         self.contact_keywords = [
             'contact', 'email', 'office hour', 'communication',
             'preferred contact', 'reach me', 'get in touch',
-            'response time', 'availability', 'questions'
+            'response time', 'availability', 'questions', 'anticipate', 'forum', 'inquir', 'message'
         ]
 
     def _find_contact_windows(self, text: str) -> List[Tuple[int, int]]:
@@ -177,7 +181,7 @@ class ResponseTimeDetector:
         text_lower = text.lower()
         
         # Check for time units
-        has_time_unit = bool(re.search(r'\d+\s*(?:hour|hr|day|business\s+day)s?', text_lower))
+        has_time_unit = bool(re.search(r'\d+[-\u2013]?\s*(?:hour|hr|day|business\s+day)s?', text_lower))
         if not has_time_unit:
             has_time_unit = bool(re.search(r'next\s+(?:business\s+)?(?:day|weekday)', text_lower))
         if not has_time_unit:

@@ -15,10 +15,8 @@ instead of remaking it, and never got a chance to clean up the file fully.
 
 from __future__ import annotations
 
-from fileinput import filename
 import os
 import re
-from unittest import result
 from detectors.instructor_detector import InstructorDetector
 import logging
 import tempfile
@@ -28,6 +26,7 @@ from flask import request, jsonify, render_template, Response
 from template_generator import generate_template
 
 from document_processing import extract_text_from_pdf, extract_text_from_docx
+from ai_detector import detect_preferred_contact_ai
 
 # SLO regex detector (your existing detector)
 from detectors.slo_detector import SLODetector
@@ -300,16 +299,17 @@ def _process_single_file(file, temp_dir: str) -> dict:
 
         # --- Preferred Contact Method detection ---
         if PreferredDetector:
-            preferred_detector = PreferredDetector()
-            preferred_info = preferred_detector.detect(extracted_text)
+            preferred_info = detect_preferred_contact_ai(extracted_text)
+            # if not preferred_info.get("found"):
+            # preferred_info = PreferredDetector().detect(extracted_text)
             result["preferred_information"] = {
-                "preferred": preferred_info.get("content"),
+                "preferred": preferred_info.get("preferred") or "Missing",
                 "found": preferred_info.get("found", False),
                 "confidence": preferred_info.get("confidence", 0.0)
             }
         else:
             result["preferred_information"] = {
-                "preferred": None,
+                "preferred": "Missing",
                 "found": False,
                 "confidence": 0.0
             }
@@ -317,7 +317,7 @@ def _process_single_file(file, temp_dir: str) -> dict:
         # ---Check if preferred_contact is missing(AI chat template feature)---
         preferred_method = result["preferred_information"].get("preferred")
 
-        if not preferred_method:
+        if preferred_method in (None, "", "Missing"):
             result["preferred_contact_missing"] = True
         else:
             result["preferred_contact_missing"] = False

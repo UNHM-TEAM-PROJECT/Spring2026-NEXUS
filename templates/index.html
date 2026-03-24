@@ -889,7 +889,391 @@ I'll analyze your uploaded files and show you detailed results for each complian
         tabs += '</div></div>';
 
         addHTMLMessage(tabs, false);
+
+        if (!preferred.found) {
+          injectPreferredContactPrompt(data);
+        }
       }
+
+    // ---------- Preferred Contact Prompt (chat-injected) ----------
+    if (typeof window._pcpLastValue === 'undefined') window._pcpLastValue = '';
+
+    function showPcpToast(msg) {
+      let toast = document.getElementById('pcp-toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'pcp-toast';
+        toast.className = 'pcp-toast';
+        document.body.appendChild(toast);
+      }
+      toast.innerHTML = '<i class="fas fa-check-circle"></i> ' + msg;
+      if (toast._timer) clearTimeout(toast._timer);
+      toast.classList.add('pcp-toast-show');
+      toast._timer = setTimeout(function() { toast.classList.remove('pcp-toast-show'); }, 2000);
+    }
+
+    function injectPreferredContactPrompt(data) {
+      const cid = 'pcpChat-' + Date.now();
+
+      // ── chip configuration ──────────────────────────────────────────
+      const CHIPS = [
+        { key: 'email',  label: 'Email' },
+        { key: 'phone',  label: 'Phone' },
+        { key: 'office', label: 'Office Hours' },
+      ];
+
+      function getChipData(key) {
+        if (key === 'email') {
+          const e = data.email_information;
+          return (e && e.found && e.email) ? { found: true, value: e.email } : { found: false };
+        }
+        if (key === 'phone') {
+          const p = data.office_information && data.office_information.phone;
+          return p ? { found: true, value: p } : { found: false };
+        }
+        if (key === 'teams') {
+          const p = data.preferred_information && data.preferred_information.preferred;
+          return (p && p.toLowerCase().includes('teams')) ? { found: true, value: p } : { found: false };
+        }
+        if (key === 'canvas') {
+          const p = data.preferred_information && data.preferred_information.preferred;
+          return (p && p.toLowerCase().includes('canvas')) ? { found: true, value: p } : { found: false };
+        }
+        if (key === 'office') {
+          const h = data.office_information && data.office_information.hours;
+          return h ? { found: true, value: h } : { found: false };
+        }
+        return { found: false };
+      }
+
+      function buildChipsHTML() {
+        let html = '<div class="pcp-chips-row" id="' + cid + '-chips">';
+        CHIPS.forEach(function(chip) {
+          const cd = getChipData(chip.key);
+          const cls = cd.found ? 'pcp-chip pcp-chip-found' : 'pcp-chip pcp-chip-notfound';
+          const safePrev = cd.found
+            ? (cd.value.length > 30 ? cd.value.slice(0, 30) + '\u2026' : cd.value)
+                .replace(/</g,'&lt;').replace(/>/g,'&gt;')
+            : 'Not found';
+          const safeAttr = (cd.found ? cd.value : chip.key).replace(/"/g,'&quot;');
+          html += '<div class="' + cls + '" data-chip-key="' + chip.key + '"'
+            + ' data-chip-found="' + (cd.found ? '1' : '0') + '"'
+            + ' data-chip-value="' + safeAttr + '">'
+            + chip.label
+            + '<span class="pcp-chip-preview">' + safePrev + '</span>'
+            + '</div>';
+        });
+        html += '</div>';
+        html += '<p class="pcp-chips-hint"><i class="fas fa-info-circle"></i> For other contact methods (Teams, Canvas, etc.) type directly above.</p>';
+        html += '<div id="' + cid + '-chip-info" class="pcp-chip-info" style="display:none;"></div>';
+        return html;
+      }
+
+      function buildHistoryHint() {
+        if (!window._pcpLastValue) return '';
+        const safe = window._pcpLastValue.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return '<div class="pcp-history-hint" id="' + cid + '-hist">'
+          + 'Last used: <strong>' + safe + '</strong>'
+          + '<button class="pcp-history-btn" id="' + cid + '-hist-btn">Use again</button>'
+          + '</div>';
+      }
+
+      // ── validation helpers ───────────────────────────────────────────
+      function detectInputType(val) {
+        const v = val.toLowerCase().trim();
+        if (v.includes('@')) return 'email';
+        if (/^[\d\s\-\+\(\)]+$/.test(v) && v.replace(/\D/g,'').length > 0) return 'phone';
+        if (v === 'email') return 'email-kw';
+        if (v === 'phone') return 'phone-kw';
+        if (v.includes('teams')) return 'teams-kw';
+        if (v.includes('canvas')) return 'canvas-kw';
+        if (v.includes('office')) return 'office-kw';
+        return 'other';
+      }
+
+      // Returns null (OK, use raw), {resolved:str} (OK, use resolved), or "error string"
+      function resolveVal(raw) {
+        const v = raw.trim();
+        const type = detectInputType(v);
+        if (type === 'email') {
+          if (!v.toLowerCase().endsWith('@unh.edu'))
+            return 'Please enter your UNH school email ending in @unh.edu';
+          return null;
+        }
+        if (type === 'phone') {
+          const digits = v.replace(/[\s\-\+\(\)]/g,'');
+          if (digits.length !== 10) return 'Please enter a valid 10-digit phone number';
+          return null;
+        }
+        if (type === 'email-kw') {
+          const cd = getChipData('email');
+          if (cd.found) return { resolved: cd.value };
+          return 'Email not found in your syllabus. Please enter the actual value.';
+        }
+        if (type === 'phone-kw') {
+          const cd = getChipData('phone');
+          if (cd.found) return { resolved: cd.value };
+          return 'Phone not found in your syllabus. Please enter the actual value.';
+        }
+        if (type === 'office-kw') {
+          const cd = getChipData('office');
+          if (cd.found) return { resolved: cd.value };
+          if (/\d/.test(v)) return null;
+          return 'Please enter your office hours with time (e.g. Mon/Wed 2:00PM\u20134:00PM)';
+        }
+        return null;
+      }
+
+      function wireChips(inputEl, errorEl) {
+        const chipsRow = document.getElementById(cid + '-chips');
+        if (!chipsRow) return;
+        chipsRow.querySelectorAll('.pcp-chip').forEach(function(chip) {
+          chip.addEventListener('click', function() {
+            chipsRow.querySelectorAll('.pcp-chip').forEach(function(c) { c.classList.remove('pcp-chip-active'); });
+            this.classList.add('pcp-chip-active');
+            const found = this.dataset.chipFound === '1';
+            inputEl.value = this.dataset.chipValue;
+            inputEl.classList.remove('pcp-input-error','pcp-input-valid');
+            const chipInfoEl = document.getElementById(cid + '-chip-info');
+            if (chipInfoEl) {
+              chipInfoEl.textContent = found ? 'Fetched from syllabus' : 'Not found in syllabus \u2014 enter value manually';
+              chipInfoEl.style.display = 'block';
+            }
+            if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
+            inputEl.focus();
+          });
+        });
+      }
+
+      function wireHistoryHint(inputEl) {
+        const histBtn = document.getElementById(cid + '-hist-btn');
+        if (!histBtn) return;
+        histBtn.addEventListener('click', function() {
+          inputEl.value = window._pcpLastValue;
+          const hint = document.getElementById(cid + '-hist');
+          if (hint) hint.style.display = 'none';
+          inputEl.focus();
+        });
+      }
+
+      function wireInputValidation(inputEl) {
+        inputEl.addEventListener('input', function() {
+          const v = this.value.trim();
+          if (!v) { this.classList.remove('pcp-input-error','pcp-input-valid'); return; }
+          const type = detectInputType(v);
+          if (type === 'email') {
+            const ok = v.toLowerCase().endsWith('@unh.edu');
+            this.classList.toggle('pcp-input-error', !ok);
+            this.classList.toggle('pcp-input-valid', ok);
+          } else if (type === 'phone') {
+            const ok = v.replace(/[\s\-\+\(\)]/g,'').length === 10;
+            this.classList.toggle('pcp-input-error', !ok);
+            this.classList.toggle('pcp-input-valid', ok);
+          } else if (type === 'office-kw') {
+            const ok = /\d/.test(v);
+            this.classList.toggle('pcp-input-error', !ok);
+            this.classList.toggle('pcp-input-valid', ok);
+          } else {
+            this.classList.remove('pcp-input-error','pcp-input-valid');
+          }
+        });
+      }
+
+      // ── submit handler shared by initial view and showInputView ──────
+      function handleSubmit(inputEl, errorEl) {
+        const raw = inputEl.value.trim();
+        errorEl.style.display = 'none'; errorEl.textContent = '';
+        if (!raw) {
+          errorEl.textContent = 'Please enter a preferred contact method before submitting.';
+          errorEl.style.display = 'block'; inputEl.focus(); return;
+        }
+        const result = resolveVal(raw);
+        if (result === null) {
+          showConfirmView(raw, null);
+        } else if (typeof result === 'object' && result.resolved) {
+          showConfirmView(result.resolved, 'Found in your syllabus: ' + result.resolved);
+        } else {
+          errorEl.textContent = result;
+          errorEl.style.display = 'block'; inputEl.focus();
+        }
+      }
+
+      // ── initial card HTML ────────────────────────────────────────────
+      const cardHTML = `
+        <div class="pcp-card" id="${cid}">
+          <div class="pcp-card-header">
+            <div class="pcp-card-header-icon">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <div class="pcp-card-header-text">
+              <strong>Missing Information Detected</strong>
+              <span>Action required to generate your template</span>
+            </div>
+          </div>
+          <div class="pcp-card-body" id="${cid}-body">
+            <p class="pcp-card-subtitle">
+              Preferred contact method was not found in your syllabus. Please provide it below
+              so we can generate your updated syllabus template.
+            </p>
+            <input type="text" id="${cid}-input" class="pcp-input"
+              placeholder="e.g. email, Teams, Canvas messages, office hours..." autocomplete="off"/>
+            <div id="${cid}-error" class="pcp-error"></div>
+            ${buildChipsHTML()}
+            ${buildHistoryHint()}
+            <button id="${cid}-btn" class="pcp-submit-btn">
+              <i class="fas fa-paper-plane"></i> Submit
+            </button>
+          </div>
+        </div>`;
+
+      addHTMLMessage(cardHTML, false);
+
+      const btn   = document.getElementById(cid + '-btn');
+      const input = document.getElementById(cid + '-input');
+      const errEl = document.getElementById(cid + '-error');
+      const body  = document.getElementById(cid + '-body');
+
+      wireChips(input, errEl);
+      wireHistoryHint(input);
+      wireInputValidation(input);
+      input.addEventListener('keydown', function(e) { if (e.key === 'Enter') btn.click(); });
+      btn.addEventListener('click', function() { handleSubmit(input, errEl); });
+
+      // ── views ────────────────────────────────────────────────────────
+      function showConfirmView(val, foundNote) {
+        const safeDisplay = val.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const noteHTML = foundNote
+          ? '<p class="pcp-found-info" style="display:block;">' + foundNote.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>'
+          : '';
+        body.innerHTML = `
+          <div class="pcp-confirm-view">
+            <p class="pcp-confirm-label">You entered:</p>
+            ${noteHTML}
+            <span class="pcp-success-badge" style="background:#fef3c7;color:#92400e;border-color:#fde68a;align-self:flex-start;">${safeDisplay}</span>
+            <div class="pcp-confirm-actions">
+              <button id="${cid}-confirm" class="pcp-submit-btn">
+                <i class="fas fa-check"></i> Confirm &amp; Submit
+              </button>
+              <button id="${cid}-edit" class="pcp-edit-btn">
+                <i class="fas fa-pencil-alt"></i> Edit
+              </button>
+            </div>
+            <div id="${cid}-post-error" class="pcp-error"></div>
+          </div>`;
+        document.getElementById(cid + '-edit').addEventListener('click', function() { showInputView(val); });
+        document.getElementById(cid + '-confirm').addEventListener('click', function() { doPost(val); });
+      }
+
+      function showInputView(prefill) {
+        body.innerHTML = `
+          <p class="pcp-card-subtitle">
+            Preferred contact method was not found in your syllabus. Please provide it below
+            so we can generate your updated syllabus template.
+          </p>
+          <input type="text" id="${cid}-input" class="pcp-input"
+            placeholder="e.g. email, Teams, Canvas messages, office hours..." autocomplete="off"/>
+          <div id="${cid}-error" class="pcp-error"></div>
+          ${buildChipsHTML()}
+          ${buildHistoryHint()}
+          <button id="${cid}-btn" class="pcp-submit-btn">
+            <i class="fas fa-paper-plane"></i> Submit
+          </button>`;
+        const ni = document.getElementById(cid + '-input');
+        const ne = document.getElementById(cid + '-error');
+        const nb = document.getElementById(cid + '-btn');
+        ni.value = prefill || '';
+        ni.focus();
+        wireChips(ni, ne);
+        wireHistoryHint(ni);
+        wireInputValidation(ni);
+        ni.addEventListener('keydown', function(e) { if (e.key === 'Enter') nb.click(); });
+        nb.addEventListener('click', function() { handleSubmit(ni, ne); });
+      }
+
+      async function doPost(val) {
+        const confirmBtn = document.getElementById(cid + '-confirm');
+        const editBtn    = document.getElementById(cid + '-edit');
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="width:14px;height:14px;border-width:2px;"></span> Generating\u2026';
+        editBtn.disabled = true;
+
+        try {
+          const response = await fetch('/submit_preferred_contact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ preferred_contact_method: val, filename: data.filename })
+          });
+
+          if (!response.ok) {
+            const errData = await response.json().catch(function() { return {}; });
+            throw new Error(errData.error || 'Server error. Please try again.');
+          }
+
+          const blob = await response.blob();
+          const fileText = await blob.text();
+          const blobUrl = URL.createObjectURL(blob);
+          const dlFilename = (data.filename ? data.filename.replace(/\.[^/.]+$/, '') : 'syllabus') + '_updated.txt';
+          const safeValue = val.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+          // Feature 7 — save to session memory
+          window._pcpLastValue = val;
+
+          // Feature 8 — preview lines (first 20)
+          const previewLines = fileText.split('\n').slice(0, 20);
+          const previewHTML = previewLines.map(function(line, i) {
+            const safeLine = line.replace(/</g,'&lt;').replace(/>/g,'&gt;') || '&nbsp;';
+            return '<div style="animation-delay:' + (i * 50) + 'ms">' + safeLine + '</div>';
+          }).join('');
+
+          body.innerHTML = `
+            <div class="pcp-success-state">
+              <div class="pcp-checkmark"><i class="fas fa-check"></i></div>
+              <p class="pcp-success-title">Your syllabus template is ready!</p>
+              <p class="pcp-success-sub">Preferred contact method added: <strong>${safeValue}</strong></p>
+              <div class="pcp-preview-panel">
+                <div class="pcp-preview-label"><i class="fas fa-file-alt"></i> File Preview</div>
+                <div class="pcp-preview-content" id="${cid}-preview">${previewHTML}</div>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;justify-content:center;">
+                <button id="${cid}-dl" class="pcp-download-btn">
+                  <i class="fas fa-download"></i> Download Updated Syllabus
+                </button>
+                <button id="${cid}-copy" class="pcp-copy-btn">
+                  <i class="fas fa-copy"></i> Copy
+                </button>
+              </div>
+              <button class="pcp-reenter-btn" id="${cid}-reenter">
+                <i class="fas fa-pencil-alt"></i> Re-enter value
+              </button>
+            </div>`;
+
+          document.getElementById(cid + '-dl').addEventListener('click', function() {
+            const anchor = document.createElement('a');
+            anchor.href = blobUrl; anchor.download = dlFilename;
+            document.body.appendChild(anchor); anchor.click(); document.body.removeChild(anchor);
+            URL.revokeObjectURL(blobUrl);
+            this.disabled = true; this.innerHTML = '<i class="fas fa-check"></i> Downloaded!';
+          });
+
+          document.getElementById(cid + '-copy').addEventListener('click', function() {
+            navigator.clipboard.writeText(fileText).then(function() { showPcpToast('Copied to clipboard!'); });
+          });
+
+          document.getElementById(cid + '-reenter').addEventListener('click', function() {
+            URL.revokeObjectURL(blobUrl);
+            showInputView('');
+          });
+
+        } catch (err) {
+          confirmBtn.disabled = false;
+          confirmBtn.innerHTML = '<i class="fas fa-check"></i> Confirm &amp; Submit';
+          editBtn.disabled = false;
+          const postErrEl = document.getElementById(cid + '-post-error');
+          postErrEl.textContent = err.message || 'An unexpected error occurred. Please try again.';
+          postErrEl.style.display = 'block';
+        }
+      }
+    }
 
     // ---------- Upload handlers ----------
     function displaySelectedFile(file){ addMessage(`Selected document: ${file.name}`, true); }
@@ -1086,3 +1470,5 @@ I'll analyze your uploaded files and show you detailed results for each complian
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
 </body>
 </html>
+
+

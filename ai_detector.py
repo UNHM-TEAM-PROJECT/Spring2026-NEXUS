@@ -6,6 +6,7 @@ import re
 client = None
 HARDCODED_GROQ_API_KEY = "your key"  # paste key here if env var is not working
 MODEL_NAME = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+REASONING_DEBUG_FILE = "preferred_contact_reasoning.json"
 
 
 def _has_strong_preference_signal(text: str) -> bool:
@@ -18,19 +19,31 @@ def _has_strong_preference_signal(text: str) -> bool:
     return any(s in low for s in signals)
 
 
-def _is_ambiguous_multi_method(text: str) -> bool:
+def _post_filter_analysis(text: str) -> dict:
     low = (text or "").lower()
     has_email = any(k in low for k in ["email", "e-mail", "@"])
     has_phone = any(k in low for k in ["phone", "sms", "text", "mobile", "call"])
     has_equal_language = any(k in low for k in ["acceptable", "can", "may", "also", "other contact methods"])
+    strong_preference_signal = _has_strong_preference_signal(low)
 
     # If response-time language clearly emphasizes one method, do not mark ambiguous.
     email_emphasis = bool(re.search(r"email[^\n\.]{0,100}(response|within|check)", low) or re.search(r"(response|within)\s+[^\n\.]{0,100}email", low))
     phone_emphasis = bool(re.search(r"(phone|sms|text)[^\n\.]{0,100}(response|within|check)", low) or re.search(r"(response|within)\s+[^\n\.]{0,100}(phone|sms|text)", low))
-    if email_emphasis ^ phone_emphasis:
-        return False
+    response_time_tie_break = bool(email_emphasis ^ phone_emphasis)
+    ambiguous_multi_method = (
+        has_email and has_phone and has_equal_language and not strong_preference_signal and not response_time_tie_break
+    )
 
-    return has_email and has_phone and has_equal_language and not _has_strong_preference_signal(low)
+    return {
+        "has_email": has_email,
+        "has_phone_or_sms": has_phone,
+        "has_equal_language": has_equal_language,
+        "strong_preference_signal": strong_preference_signal,
+        "email_emphasis": email_emphasis,
+        "phone_emphasis": phone_emphasis,
+        "response_time_tie_break": response_time_tie_break,
+        "ambiguous_multi_method": ambiguous_multi_method,
+    }
 
 
 def _normalize_preferred_contact(result: str):
@@ -57,7 +70,11 @@ def _normalize_preferred_contact(result: str):
 def _parse_ai_json(raw: str) -> dict:
     text = (raw or "").strip()
     if not text:
-        return {"found": False, "preferred": None}
+        return {
+            "explicit_preferred": None,
+            "inferred_preferred": None,
+            "reasoning": "No model output.",
+        }
 
     try:
         obj = json.loads(text)
@@ -75,7 +92,19 @@ def _parse_ai_json(raw: str) -> dict:
         except Exception:
             pass
 
-    return {"found": False, "preferred": None}
+    return {
+        "explicit_preferred": None,
+        "inferred_preferred": None,
+        "reasoning": "Could not parse model JSON output.",
+    }
+
+
+def _write_reasoning_record(record: dict) -> None:
+    try:
+        with open(REASONING_DEBUG_FILE, "w", encoding="utf-8") as f:
+            json.dump(record, f, indent=2, ensure_ascii=False)
+    except Exception:
+        pass
 
 
 def detect_preferred_contact_ai(text: str) -> dict:
@@ -116,8 +145,12 @@ def detect_preferred_contact_ai(text: str) -> dict:
     When found=true, return the EXACT value from the syllabus (email address, phone number,
     office-hours phrase, Canvas phrase, etc.), not a generic label.
 
-    Return JSON ONLY in this exact shape:
-    {{"found": true/false, "preferred": "exact value from syllabus or null"}}
+        Return JSON only in this exact shape:
+        {{
+            "explicit_preferred": "value or null",
+            "inferred_preferred": "value or null",
+            "reasoning": "One sentence explaining your inference."
+        }}
 
     Text:
     {text[:12000]}
@@ -133,17 +166,54 @@ def detect_preferred_contact_ai(text: str) -> dict:
 
         result = response.choices[0].message.content.strip()
         parsed = _parse_ai_json(result)
-        preferred = _normalize_preferred_contact(parsed.get("preferred"))
-        found = bool(parsed.get("found")) and preferred is not None
+        explicit_preferred = _normalize_preferred_contact(parsed.get("explicit_preferred"))
+        inferred_preferred = _normalize_preferred_contact(parsed.get("inferred_preferred"))
+        reasoning = (parsed.get("reasoning") or "").strip() or "No reasoning provided."
 
-        if found and _is_ambiguous_multi_method(text):
+        preferred = explicit_preferred or inferred_preferred
+        found = preferred is not None
+        analysis = _post_filter_analysis(text)
+        post_filter_applied = False
+        post_filter_reason = "Not applied"
+
+        if found and analysis.get("ambiguous_multi_method"):
             preferred = None
             found = False
+            post_filter_applied = True
+            post_filter_reason = (
+                "Rejected as ambiguous: both email and phone/SMS appear acceptable without clear priority."
+            )
+
+        _write_reasoning_record(
+            {
+                "model": MODEL_NAME,
+                "llm_output": {
+                    "explicit_preferred": explicit_preferred,
+                    "inferred_preferred": inferred_preferred,
+                    "reasoning": reasoning,
+                },
+                "post_filter_checks": analysis,
+                "post_filter_applied": post_filter_applied,
+                "post_filter_reason": post_filter_reason,
+                "final_decision": {
+                    "preferred": preferred,
+                    "found": found,
+                    "confidence": 0.9 if found else 0.0,
+                },
+                "human_summary": (
+                    f"Model suggested explicit='{explicit_preferred}' inferred='{inferred_preferred}'. "
+                    f"Post-filter applied={post_filter_applied}. Final preferred='{preferred}' found={found}."
+                ),
+            }
+        )
 
         return {
             "preferred": preferred,
             "found": found,
-            "confidence": 0.9 if found else 0.0
+            "confidence": 0.9 if found else 0.0,
+            "reasoning": reasoning,
+            "explicit_preferred": explicit_preferred,
+            "inferred_preferred": inferred_preferred,
         }
 
     except Exception as e:

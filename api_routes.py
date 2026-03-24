@@ -301,9 +301,9 @@ def _process_single_file(file, temp_dir: str) -> dict:
 
         # --- Preferred Contact Method detection ---
         if PreferredDetector:
-            preferred_info = detect_preferred_contact_ai(extracted_text)
-            # if not preferred_info.get("found"):
-            # preferred_info = PreferredDetector().detect(extracted_text)
+            preferred_info = PreferredDetector().detect(extracted_text)
+            if not preferred_info.get("found"):
+                preferred_info = detect_preferred_contact_ai(extracted_text)
             result["preferred_information"] = {
                 "preferred": preferred_info.get("preferred") or "Missing",
                 "found": preferred_info.get("found", False),

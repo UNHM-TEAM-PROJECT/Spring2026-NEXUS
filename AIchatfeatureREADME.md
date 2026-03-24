@@ -4,7 +4,7 @@ Created by: Swathi Danturi, Team NEXUS Spring 2026
 ### Introduction
 - Sometimes a syllabus does not include the all the necessary information and this information is important because it tells students how to understand the syllabus and course better.
 
-- To handle this situation, the backend checks whether the necessary information exists in the uploaded syllabus. If it is missing, the system asks the user to provide it. The backend then generates a template document containing the provided information.
+- To handle this situation, the backend uses AI based detection using GROQ model to check whether the necessary information exists in the uploaded syllabus. If it is missing, the system asks the user to provide it. The backend then generates a template document containing the provided information.
 
 - As a proof of concept, this feature is implemented for now by taking into consideration on the best performing checker, which is `preferred_contact_method`.
 
@@ -14,13 +14,21 @@ Created by: Swathi Danturi, Team NEXUS Spring 2026
     - The file name is captured using file.filename
     - The document text is extracted
     - Multiple detectors run to find syllabus information
-- One of the detectors used is PreferredDetector from `detectors/preferred_contact_detector.py`.
-- This detector checks whether the syllabus mentions the instructor’s preferred contact method.
+- One of the detectors used is an AI-based detector implemented in `detectors/ai_detector.py`
+- This uses a `Groq LLM (LLaMA 3)` to extract the preferred contact method from the syllabus text
+- A fallback rule-based detector (`PreferredDetector`) is used if AI does not return a result
 
 ### Detecting Missing Preferred Contact Method
+- The preferred contact method is first extracted using the AI detector before checking if it is missing
 - After the detector runs, the backend checks the result stored in `["preferred_information"]`
 - If the preferred contact method is not found, the system sets `preferred_contact_missing = True`
 - This value is returned in the response from the `/upload` endpoint, so the frontend knows that the user must provide the missing information.
+
+### AI-Based Detection (New)
+- The system uses a Large Language Model (LLM) through Groq API to analyze syllabus text
+- The AI reads unstructured text and extracts the preferred contact method based on context
+- Unlike rule-based detection, this approach handles different writing styles and formats
+- The AI returns: extracted value (e.g., Email, Canvas) or `Not found` if missing
 
 ### Storing Uploaded Filename
 - When the syllabus is uploaded, the filename is stored in a variable called `last_uploaded_filename`
@@ -59,7 +67,7 @@ This script tests the `/submit_preferred_contact` endpoint by sending the prefer
 ### Testing with Postman
 #### Step 1 - Upload Syllabus
 - A `POST` request is sent to `/upload`
-- This runs `_process_single_file()` and the PreferredDetector.
+- This runs `_process_single_file()` and the AI based detector `GROQ LLM` on preferred contact.
 - If the preferred contact method is missing, the response contains `preferred_contact_missing = true`
 
 #### Step 2 - Submit preferred_contact_method

@@ -203,6 +203,151 @@ https://fontawesome.com/v4/icons/
         max-height: 5.5em;
       }
     }
+
+    /* ===== Preferred Contact Prompt — Chat Card ===== */
+    @keyframes pcpFadeSlide {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes popScale {
+      0%   { transform: scale(0); opacity: 0; }
+      60%  { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+    .pcp-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 18px rgba(0,0,0,.13);
+      overflow: hidden;
+      max-width: 520px;
+      width: 100%;
+      animation: pcpFadeSlide .38s ease both;
+      border-left: 4px solid #f59e0b;
+    }
+    .pcp-card-header {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .pcp-card-header-icon {
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,.22);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .pcp-card-header-text { color: #fff; }
+    .pcp-card-header-text strong { font-size: 15px; display: block; line-height: 1.2; }
+    .pcp-card-header-text span { font-size: 12px; opacity: .88; }
+    .pcp-card-body { padding: 18px 18px 16px; }
+    .pcp-card-subtitle {
+      font-size: 13.5px; color: #555; margin-bottom: 14px; line-height: 1.5;
+    }
+    .pcp-input {
+      width: 100%; padding: 10px 14px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      box-sizing: border-box;
+    }
+    .pcp-input:focus {
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 3px rgba(245,158,11,.28);
+    }
+    .pcp-error {
+      color: #dc2626; font-size: 12.5px; margin-top: 6px; display: none;
+    }
+    .pcp-submit-btn {
+      margin-top: 12px;
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #fff; border: none;
+      padding: 10px 22px; border-radius: 8px;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer;
+      display: inline-flex; align-items: center; gap: 8px;
+      transition: opacity .2s, transform .15s;
+      box-shadow: 0 2px 8px rgba(217,119,6,.35);
+    }
+    .pcp-submit-btn:hover:not(:disabled) { opacity: .88; transform: translateY(-1px); }
+    .pcp-submit-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+    .pcp-confirm-view {
+      display: flex; flex-direction: column; gap: 10px;
+      animation: pcpFadeSlide .25s ease both;
+    }
+    .pcp-confirm-label { font-size: 13px; color: #6b7280; margin: 0; }
+    .pcp-confirm-actions { display: flex; gap: 8px; }
+    .pcp-edit-btn {
+      background: #f3f4f6; color: #374151;
+      border: 1px solid #d1d5db;
+      padding: 10px 22px; border-radius: 8px;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer;
+      display: inline-flex; align-items: center; gap: 8px;
+      transition: background .15s;
+    }
+    .pcp-edit-btn:hover { background: #e5e7eb; }
+    .pcp-success-state {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 22px 18px; text-align: center; gap: 10px;
+    }
+    .pcp-checkmark {
+      width: 52px; height: 52px;
+      background: #22c55e;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 24px;
+      animation: popScale .4s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    .pcp-success-title { font-size: 15px; font-weight: 700; color: #166534; margin: 0; }
+    .pcp-success-sub { font-size: 13px; color: #555; margin: 0; }
+    .pcp-success-badge {
+      background: #dcfce7; color: #166534;
+      border: 1px solid #bbf7d0;
+      border-radius: 6px; padding: 4px 12px;
+      font-size: 13px; font-weight: 600;
+    }
+    .pcp-download-btn {
+      margin-top: 10px;
+      background: #22c55e;
+      color: #fff; border: none;
+      padding: 10px 22px; border-radius: 8px;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer;
+      display: inline-flex; align-items: center; gap: 8px;
+      transition: opacity .2s, transform .15s;
+      box-shadow: 0 2px 8px rgba(34,197,94,.35);
+    }
+    .pcp-download-btn:hover:not(:disabled) { opacity: .88; transform: translateY(-1px); }
+    .pcp-download-btn:disabled { opacity: .7; cursor: not-allowed; transform: none; }
+    /* --- PCP Feature additions --- */
+    .pcp-input-error { border-color: #dc2626 !important; box-shadow: 0 0 0 3px rgba(220,38,38,.18) !important; }
+    .pcp-input-valid { border-color: #22c55e !important; box-shadow: 0 0 0 3px rgba(34,197,94,.18) !important; }
+    .pcp-chips-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+    .pcp-chip { display:flex; flex-direction:column; align-items:center; padding:6px 10px; border-radius:8px; border:1.5px solid; cursor:pointer; font-size:12px; font-weight:600; transition:outline .15s; min-width:70px; text-align:center; }
+    .pcp-chip.pcp-chip-found { background:#dcfce7; border-color:#22c55e; color:#166534; }
+    .pcp-chip.pcp-chip-notfound { background:#fee2e2; border-color:#dc2626; color:#991b1b; }
+    .pcp-chip.pcp-chip-active { outline:2px solid #f59e0b; outline-offset:2px; }
+    .pcp-chip-preview { font-size:10px; font-weight:400; margin-top:2px; opacity:.8; max-width:90px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .pcp-chip-info { font-size:12px; color:#6b7280; margin-top:6px; }
+    .pcp-chips-hint { font-size:12px; color:#9ca3af; margin-top:6px; margin-bottom:0; }
+    .pcp-found-info { font-size:12px; color:#166534; background:#dcfce7; border:1px solid #bbf7d0; border-radius:6px; padding:4px 10px; margin-top:6px; display:none; }
+    .pcp-reenter-btn { background:none; border:none; color:#6b7280; font-size:13px; cursor:pointer; text-decoration:underline; margin-top:6px; padding:0; }
+    .pcp-reenter-btn:hover { color:#374151; }
+    .pcp-history-hint { font-size:12px; color:#6b7280; margin-top:6px; display:flex; align-items:center; gap:6px; }
+    .pcp-history-btn { background:none; border:none; color:#f59e0b; font-size:12px; cursor:pointer; font-weight:600; text-decoration:underline; padding:0; }
+    .pcp-preview-panel { background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:12px; margin-top:10px; max-height:160px; overflow-y:auto; }
+    .pcp-preview-label { font-size:12px; font-weight:600; color:#6b7280; margin-bottom:8px; }
+    .pcp-preview-content div { font-size:12px; color:#374151; line-height:1.6; opacity:0; animation: pcpFadeSlide .3s ease both; }
+    .pcp-copy-btn { background:#f3f4f6; color:#374151; border:1px solid #d1d5db; padding:10px 16px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:background .15s; }
+    .pcp-copy-btn:hover { background:#e5e7eb; }
+    .pcp-toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:#166534; color:#fff; padding:10px 20px; border-radius:8px; font-size:14px; font-weight:600; box-shadow:0 4px 12px rgba(0,0,0,.15); opacity:0; transition:opacity .3s, transform .3s; z-index:9999; pointer-events:none; }
+    .pcp-toast.pcp-toast-show { opacity:1; transform:translateX(-50%) translateY(0); }
   </style>
 </head>
 <body>
@@ -576,7 +721,7 @@ I'll analyze your uploaded files and show you detailed results for each complian
 
           const preferred = data.preferred_information || {};
           const preferredStatus = preferred.found ? '<span class="status-pass"><i class="fas fa-check-circle"></i> FOUND</span>' : '<span class="status-fail"><i class="fas fa-times-circle"></i> NOT FOUND</span>';
-          const preferredPreview = preferred.preferred ? `<div style="margin-top:10px; padding:10px; background:#f5f5f5; border-radius:5px;"><strong>Preferred Contact:</strong> <pre style="white-space: pre-wrap; font-size:12px;">${preferred.preferred}</pre></div>` : '';
+          const preferredPreview = (preferred.preferred && preferred.preferred !== 'Missing') ? `<div style="margin-top:10px; padding:10px; background:#f5f5f5; border-radius:5px;"><strong>Preferred Contact:</strong> <pre style="white-space: pre-wrap; font-size:12px;">${preferred.preferred}</pre></div>` : '';
           const preferredHTML = `
             <div class="upload-result">
               <h3><i class="fas fa-envelope"></i> ${data.filename || 'Uploaded Document'}</h3>

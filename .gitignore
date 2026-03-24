@@ -60,6 +60,7 @@ gunicorn.log
 # Test results (generated)
 test_results.json
 new_test_results.json
+preferred_contact_reasoning.json
 
 # IDE
 .vscode/

@@ -55,6 +55,7 @@ from detectors.class_location_detector import ClassLocationDetector
 
 # Global variable to store the last uploaded filename (for template generation)
 last_uploaded_filename = None
+last_detected_email = None
 
 # -----------------------------------------------------------------------------
 # Helpers
@@ -160,7 +161,7 @@ def _massage_modality_card(card: dict, meta: dict) -> dict:
 
 def _process_single_file(file, temp_dir: str) -> dict:
     filename = file.filename
-    global last_uploaded_filename
+    global last_uploaded_filename, last_detected_email
     last_uploaded_filename = filename
     file_path = os.path.join(temp_dir, filename)
     file.save(file_path)
@@ -285,6 +286,7 @@ def _process_single_file(file, temp_dir: str) -> dict:
         if EmailDetector:
             email_detector = EmailDetector()
             email_info = email_detector.detect(extracted_text)
+            last_detected_email = email_info.get("content")
             result["email_information"] = {
                 "email": email_info.get("content"),
                 "found": email_info.get("found", False),
@@ -586,15 +588,19 @@ def create_routes(app):
 
     @app.route('/submit_preferred_contact', methods=['POST'])
     def submit_preferred_contact():
-        global last_uploaded_filename
+        global last_uploaded_filename, last_detected_email
         data = request.get_json()
         preferred_contact_method = data.get("preferred_contact_method")
 
         if not preferred_contact_method:
             return jsonify({"error": "Preferred contact method is required"}), 400
         
+        preferred_contact_value = str(preferred_contact_method).strip()
+        if preferred_contact_value.lower() == "email" and last_detected_email:
+            preferred_contact_value = last_detected_email
+
         filename = last_uploaded_filename or "Uploaded_syllabus"
-        template_text = generate_template(preferred_contact_method, filename)
+        template_text = generate_template(preferred_contact_value, filename)
 
         return Response(
             template_text,

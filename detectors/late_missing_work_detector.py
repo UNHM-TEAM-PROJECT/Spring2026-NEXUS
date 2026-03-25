@@ -18,7 +18,7 @@ import logging
 from typing import Dict, Any, Tuple
 
 # Detection Configuration Constants
-MAX_DOCUMENT_LENGTH = 20000
+MAX_DOCUMENT_LENGTH = 50000
 MAX_CONTENT_LINES = 10
 MAX_CONTENT_LENGTH = 500
 MAX_EXTRA_WORDS_HEADER = 2
@@ -38,7 +38,7 @@ LONG_LINE_THRESHOLD = 100
 # Section headers that indicate end of late work content
 SECTION_HEADERS = [
     'course description', 'course objectives', 'course goals',
-    'prerequisites', 'textbook', 'grading', 'schedule',
+    'prerequisites', 'textbook', 'schedule',
     'extra credit', 'attendance'
 ]
 
@@ -60,6 +60,9 @@ class LateDetector:
         # Approved titles for late missing work detection
         self.approved_titles = [
             # Removed generic "assignments" and "assessments" - too many false positives
+
+            "late assignment policy",
+            "summary/critique paper",
             "assignment deadlines",
             "assignments and grading",
             "attendance and late work",
@@ -70,6 +73,8 @@ class LateDetector:
             "late assignments",
             "late assignments and make-up exams",
             "late homework policy",
+            "late penalty",
+            "late penalty for quizzes",
             "late policy",
             "late submission policy",
             "late submissions",
@@ -91,9 +96,36 @@ class LateDetector:
             "policy on late work",
             "submission deadlines",
             "submission policy",
+            "quizzes and exams",
             "summary/critique paper (late policy)",
-            "experiments/demonstrations"
+            "experiments/demonstrations",
+            "course policies & expectations",
+            "assignments - 40%",
         ]
+
+        # Generic headers matched ONLY when late-work keywords appear within
+        # CONDITIONAL_WINDOW lines after the header.  They are added with a
+        # fixed LOW SCORE (CONDITIONAL_SCORE) so they always lose to any
+        # proper approved_title match (min score ≥ 5).  They only win when the
+        # document has no recognised approved_title header at all.
+        self.conditional_titles = [
+            "assignments",
+            "homework assignments",
+            "homework",
+            "course policies",
+            "course administration",
+            "quizzes",
+            "evaluation",
+        ]
+        # Score assigned to conditional-title matches.  Must be ≥ threshold
+        # but < the minimum approved-title score (~5) so they never override.
+        self._CONDITIONAL_SCORE = 2
+
+        self._conditional_kw = re.compile(
+            r'\b(late|penalty|deduction|not accepted|make.?up|grace period)\b',
+            re.IGNORECASE,
+        )
+        self._CONDITIONAL_WINDOW = 40  # lines after the header to scan
 
     @staticmethod
     def _normalize_text(text: str) -> str:
@@ -129,6 +161,9 @@ class LateDetector:
         normalized = normalized.replace("“", '"')   # Left double quote
         normalized = normalized.replace("”", '"')   # Right double quote
 
+
+        # Strip PDF ligature placeholders like (cid:415) so "Evalua(cid:415)on" → "evaluation"
+        normalized = re.sub(r'\(cid:\d+\)', '', normalized)
 
         # Normalize whitespace (multiple spaces -> single space)
         normalized = ' '.join(normalized.split())
@@ -238,7 +273,8 @@ class LateDetector:
             contains_approved_title = False
             for title in self.approved_titles:
                 normalized_title = self._normalize_text(title)
-                if normalized_title in line_without_punctuation:
+                title_clean = normalized_title.replace(':', '').replace('.', '').strip()
+                if normalized_title in line_without_punctuation or title_clean in line_without_punctuation:
                     # Additional check: line should be relatively short and not part of a long sentence
                     # or the title should be at the start/end of the line
                     line_words = line_without_punctuation.split()
@@ -260,8 +296,8 @@ class LateDetector:
 
                     # Case 2: Title at the very beginning of line (starts with title)
                     elif line_without_punctuation.startswith(normalized_title):
-                        # But only if it looks like a header (has colon or is short)
-                        if ':' in line or len(line_words) <= len(title_words) + MAX_EXTRA_WORDS_START:
+                        # Accept if: has colon, is short, OR title is 3+ words (specific enough to trust)
+                        if ':' in line or len(line_words) <= len(title_words) + MAX_EXTRA_WORDS_START or len(title_words) >= 3:
                             is_valid_header = True
 
                     # Case 3: Title at the very end of line (ends with title)
@@ -298,6 +334,40 @@ class LateDetector:
                         contains_approved_title = True
                         break
 
+            # ---- Conditional title check ---------------------------------
+            # For headers that are too generic for approved_titles, accept
+            # the line only when late-work keywords appear within the next
+            # CONDITIONAL_WINDOW lines (including the header line itself for
+            # long inline-content lines like "Assignments: ... late ...").
+            if not contains_approved_title and not exact_match_found:
+                for ctitle in self.conditional_titles:
+                    norm_ct = self._normalize_text(ctitle)
+                    # Must be an exact match (with or without trailing colon/dash)
+                    # or the line must START with the title on a short header-like line
+                    ct_words = norm_ct.split()
+                    lw = line_without_punctuation
+
+                    # Require an EXACT header match only (colon/dot already stripped
+                    # from line_without_punctuation, so "Assignments:" → "assignments").
+                    # No startswith/extra-words allowed — prevents "Homework (HW):" and
+                    # "Homework 30%" from matching the bare "homework" conditional title.
+                    is_ct_header = (lw == norm_ct)
+
+                    if not is_ct_header and lw.startswith(norm_ct):
+                        if self._conditional_kw.search(line_normalized):
+                            potential_matches.append((self._CONDITIONAL_SCORE, i, line))
+                        break
+
+                    if is_ct_header:
+                        # Gate: require late keyword within the next window lines
+                        window_text = '\n'.join(lines[i: i + self._CONDITIONAL_WINDOW + 1])
+                        if self._conditional_kw.search(window_text):
+                            # Add directly with fixed low score — conditional matches
+                            # never override a proper approved_title match (min ~5).
+                            potential_matches.append((self._CONDITIONAL_SCORE, i, line))
+                        break
+            # ---- end conditional title check ----------------------------
+
             if contains_approved_title:
                 # Score this match based on how likely it is to be a section header
                 score = 0
@@ -311,11 +381,13 @@ class LateDetector:
                     normalized_title_case = self._normalize_text(title_case_version)
                     
                     for check_title in [normalized_title, normalized_title_case]:
-                        if (check_title == line_without_punctuation or 
+                        check_title_clean = check_title.replace(':', '').replace('.', '').strip()
+                        if (check_title == line_without_punctuation or
+                            check_title_clean == line_without_punctuation or
                             check_title + ':' == line_without_punctuation or
                             check_title == line_without_punctuation.rstrip(':') or
                             # Check if line starts with the title and has reasonable continuation
-                            (line_without_punctuation.startswith(check_title) and 
+                            (line_without_punctuation.startswith(check_title) and
                              len(line_without_punctuation) <= len(check_title) + 100)):
                             exact_match = True
                             break
@@ -359,8 +431,21 @@ class LateDetector:
 
             # Only accept matches with a reasonable score (likely section headers)
             # Lower threshold to catch more legitimate titles
-            if best_score < 3:  # Reduced from MIN_SCORE_THRESHOLD (5) to 3
+            if best_score < 2:  # 2 = conditional-title floor; approved titles score ≥5
                 return False, ""
+
+            # Validate: pick first match whose section has late keywords
+            validated_match = None
+            for score, idx, match_line in potential_matches:
+                if score < 2:
+                    break
+                window = '\n'.join(lines[idx: idx + self._CONDITIONAL_WINDOW + 1])
+                if self._conditional_kw.search(window):
+                    validated_match = (score, idx, match_line)
+                    break
+            if validated_match is None:
+                return False, ""
+            best_score, best_i, best_line = validated_match
 
             # Extract content from the best match
             title = best_line.strip()
@@ -436,7 +521,13 @@ class LateDetector:
             # Conservative patterns for simple statements  
             r"(?:homework|assignments).*?submitted late.*?(?:deduct|reduce|lose).*?\d+",  # Must have penalty amount
             r"(?:one|1).*?late.*?(?:homework|assignment).*?(?:allowed|accepted)",
-            
+            r"late assignments? will not be accepted",
+            r"late assignments? will be (?:reduced|penalized)",
+            r"work not handed in.*?will not be accepted",
+            r"(?:late|considered late).*?subject to.*?\d+%",
+            r"(?:homework|assignment).*?turned in after solutions? (?:are )?posted",
+            r"late assignments? will be accepted.*?(?:one.?week|days?|beyond)",
+
             # Additional patterns for assignment-specific policies
             r"assignment.*?not turned in.*?(?:midnight|due date).*?(?:late|penalty)",
             r"(?:assignment|homework).*?(?:due date|deadline).*?(?:penalty|deduction|zero|0)",
@@ -458,14 +549,15 @@ class LateDetector:
             
             # Check if this line matches any content pattern
             for pattern in content_patterns:
-                if re.search(pattern, line_lower, re.IGNORECASE | re.DOTALL):
+                m = re.search(pattern, line_lower, re.IGNORECASE | re.DOTALL)
+                if m:
                     # Found a content pattern, extract surrounding context
                     
                     # Balanced content extraction - focused but not too restrictive
                     content_lines = []
                     
                     # Start with the current line that matched the pattern
-                    current_line = line.strip()
+                    current_line = line[m.start():].strip()
                     if current_line:
                         content_lines.append(current_line)
                     
@@ -483,7 +575,7 @@ class LateDetector:
                                 break
                             
                             content_lines.append(next_line)
-                            
+
                             # Stop if content is getting too long
                             total_length = sum(len(cl) for cl in content_lines)
                             if total_length > 300:  # More reasonable limit
@@ -508,13 +600,14 @@ class LateDetector:
             r"(?:10|ten)%.*?per day.*?for.*?(?:work submitted late|late work).*?(?:up to|for up to)",
             r"late work is.*?(?:submitted|turned in|handed in).*?after.*?(?:due|deadline).*?(?:penalty|deduction|lose)",
             r"(?:penalty|deduction).*?\d+.*?(?:percent|%).*?per day.*?(?:late|tardy)",
+            r"late\s+assignments?\s+will\s+not\s+be\s+accepted\s+unless\s+previously\s+arranged",
         ]
         
         for pattern in multiline_patterns:
             match = re.search(pattern, full_text_lower, re.IGNORECASE | re.DOTALL)
             if match:
-                # Extract just the matched content with minimal padding
-                start_pos = max(0, match.start() - 20)  # Much less padding
+                # Extract just the matched content with no leading padding
+                start_pos = match.start()
                 end_pos = min(len(text), match.end() + 20)
                 
                 content = text[start_pos:end_pos].strip()
@@ -530,4 +623,3 @@ class LateDetector:
                         return True, content
         
         return False, ""
-

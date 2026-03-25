@@ -17,8 +17,7 @@ The **Syllabus Field Detector** is a web application that automatically analyzes
 - Supports batch processing via ZIP uploads or folder selection
 - Achieves **91.6% F1 Score** across all detectors (tested on 161 syllabi)
 - Uses AI-based detection (Groq LLaMA 3) to extract fields that pattern matching cannot reliably handle
-- Prompts users to provide missing information and generates a completed template document
-
+- Guides users through filling missing fields via an interactive chat card with input validation, confirmation step, and downloadable output *(currently implemented for `preferred_contact_method`)*
 
 ---
 
@@ -121,6 +120,7 @@ The application follows a modular pipeline architecture:
 3. **Detect** — Text is passed to all 19 detectors in parallel
 4. **Respond** — Each detector returns `{field_name, found, content, confidence}`
 5. **Display** — Results rendered in UI with FOUND/MISSING status and evidence
+6. **Prompt** — If a field is missing, frontend displays a chat card; user submits value, backend generates and returns a completed template as a downloadable file
 
 ### Detector Pattern
 

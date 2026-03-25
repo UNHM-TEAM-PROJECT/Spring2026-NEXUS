@@ -6,6 +6,7 @@ __pycache__/
 
 # secrets & runtime files
 .env
+.env.prod
 chat_history.json
 conversation_memory.json
 *.db

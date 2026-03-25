@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-The **Syllabus Field Detector** is a web application that automatically analyzes academic syllabi to extract and validate 19 different course information fields. Built for university administrators, department chairs, and academic compliance teams, the system helps ensure syllabi meet institutional standards and accreditation requirements.
+The **Syllabus Field Detector** is a web application that automatically analyzes academic syllabi to extract and validate 19 different course information fields. Built for university administrators, department chairs, and academic compliance teams, the system helps ensure syllabi meet institutional standards and accreditation requirements. When required information is missing, the system prompts the user to provide it, and generates a completed syllabus template with the provided information as a downloadable document.
 
 **Who It Serves:**
 - **Academic Departments** — Verify syllabus compliance with accreditation standards (e.g., presence of Student Learning Outcomes)
@@ -12,11 +12,12 @@ The **Syllabus Field Detector** is a web application that automatically analyzes
 
 **Key Features:**
 - Detects 19 fields including SLOs, instructor info, grading policies, and course modality
-- Uses lightweight pattern matching—no AI/LLM required
+- Uses lightweight pattern matching for fast, explainable results with confidence scores
 - Provides instant, explainable results with confidence scores
 - Supports batch processing via ZIP uploads or folder selection
 - Achieves **91.6% F1 Score** across all detectors (tested on 161 syllabi)
-
+- Uses AI-based detection (Groq LLaMA 3) to extract fields that pattern matching cannot reliably handle
+- Guides users through filling missing fields via an interactive chat card with input validation, confirmation step, and downloadable output *(currently implemented for `preferred_contact_method`)*
 
 ---
 
@@ -29,6 +30,8 @@ Fall2025-Team-Alpha/
 ├── config.py                   # Server configuration (host, port, logging)
 ├── api_routes.py               # HTTP request handlers, orchestrates all detectors
 ├── document_processing.py      # PDF/DOCX text extraction engine
+|__ ai_detector.py              # Groq LLM-based extraction for preferred contact method
+├── template_generator.py       # Generates filled template documents from user-provided values
 │
 ├── detectors/                  # 19 specialized field detection modules
 │   ├── __init__.py
@@ -50,7 +53,8 @@ Fall2025-Team-Alpha/
 │
 ├── templates/
 │   └── index.html              # Web UI with drag-and-drop file upload
-│
+│   ├── syllabus_template.txt   # Template with placeholders (filename, preferred_contact_method)
+|
 ├── static/
 │   ├── architecture.png        # System architecture diagram
 │   ├── logo3.png              # Application logo
@@ -69,6 +73,8 @@ Fall2025-Team-Alpha/
 ├── DockerREADME.md             # Docker deployment guide
 ├── DEVELOPER_GUIDE.md          # How to add new detectors
 └── README.md                   # This file
+├── AI_GROQ_README.md           # Setup and usage guide for Groq integration
+└── AIchatfeatureREADME.md      # Full documentation for the AI chat feature
 ```
 
 ---
@@ -104,6 +110,8 @@ The application follows a modular pipeline architecture:
 | **Text Extraction** | `document_processing.py` | Extracts text from PDF (pdfplumber) and DOCX (python-docx) |
 | **Detectors** | `detectors/*.py` | 19 independent modules, each detecting one field |
 | **Frontend** | `templates/index.html` | Drag-and-drop interface, displays results |
+| **AI Detector** | `ai_detector.py` | Uses Groq LLaMA 3 to extract preferred contact method from unstructured text |
+| **Template Generator** | `template_generator.py` | Fills `syllabus_template.txt` with filename and user-provided values |
 
 ### Data Flow
 
@@ -112,6 +120,7 @@ The application follows a modular pipeline architecture:
 3. **Detect** — Text is passed to all 19 detectors in parallel
 4. **Respond** — Each detector returns `{field_name, found, content, confidence}`
 5. **Display** — Results rendered in UI with FOUND/MISSING status and evidence
+6. **Prompt** — If a field is missing, frontend displays a chat card; user submits value, backend generates and returns a completed template as a downloadable file
 
 ### Detector Pattern
 
@@ -199,6 +208,7 @@ python main.py
 - `python-docx==1.1.0` — Word document processing
 - `python-dotenv==1.0.1` — Environment configuration
 - `lxml>=4.9.0` — XML parsing for DOCX
+- `groq` — Groq API client for LLaMA 3 AI-based field extraction
 
 ### Production Deployment (Docker on VM)
 
@@ -383,7 +393,7 @@ OVERALL                           85.1%      93.2%     82.2%      87.3%
 - **PDF Processing:** pdfplumber 0.11.4
 - **DOCX Processing:** python-docx 1.1.0
 - **Deployment:** Docker
-- **No external APIs or LLMs required**
+- **AI/LLM:** Groq API (LLaMA 3) — free tier, up to 8192 tokens per request
 
 ---
 

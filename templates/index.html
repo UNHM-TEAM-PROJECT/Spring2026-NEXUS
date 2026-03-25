@@ -203,6 +203,151 @@ https://fontawesome.com/v4/icons/
         max-height: 5.5em;
       }
     }
+
+    /* ===== Preferred Contact Prompt — Chat Card ===== */
+    @keyframes pcpFadeSlide {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes popScale {
+      0%   { transform: scale(0); opacity: 0; }
+      60%  { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+    .pcp-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 18px rgba(0,0,0,.13);
+      overflow: hidden;
+      max-width: 520px;
+      width: 100%;
+      animation: pcpFadeSlide .38s ease both;
+      border-left: 4px solid #f59e0b;
+    }
+    .pcp-card-header {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .pcp-card-header-icon {
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,.22);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .pcp-card-header-text { color: #fff; }
+    .pcp-card-header-text strong { font-size: 15px; display: block; line-height: 1.2; }
+    .pcp-card-header-text span { font-size: 12px; opacity: .88; }
+    .pcp-card-body { padding: 18px 18px 16px; }
+    .pcp-card-subtitle {
+      font-size: 13.5px; color: #555; margin-bottom: 14px; line-height: 1.5;
+    }
+    .pcp-input {
+      width: 100%; padding: 10px 14px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      box-sizing: border-box;
+    }
+    .pcp-input:focus {
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 3px rgba(245,158,11,.28);
+    }
+    .pcp-error {
+      color: #dc2626; font-size: 12.5px; margin-top: 6px; display: none;
+    }
+    .pcp-submit-btn {
+      margin-top: 12px;
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #fff; border: none;
+      padding: 10px 22px; border-radius: 8px;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer;
+      display: inline-flex; align-items: center; gap: 8px;
+      transition: opacity .2s, transform .15s;
+      box-shadow: 0 2px 8px rgba(217,119,6,.35);
+    }
+    .pcp-submit-btn:hover:not(:disabled) { opacity: .88; transform: translateY(-1px); }
+    .pcp-submit-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+    .pcp-confirm-view {
+      display: flex; flex-direction: column; gap: 10px;
+      animation: pcpFadeSlide .25s ease both;
+    }
+    .pcp-confirm-label { font-size: 13px; color: #6b7280; margin: 0; }
+    .pcp-confirm-actions { display: flex; gap: 8px; }
+    .pcp-edit-btn {
+      background: #f3f4f6; color: #374151;
+      border: 1px solid #d1d5db;
+      padding: 10px 22px; border-radius: 8px;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer;
+      display: inline-flex; align-items: center; gap: 8px;
+      transition: background .15s;
+    }
+    .pcp-edit-btn:hover { background: #e5e7eb; }
+    .pcp-success-state {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 22px 18px; text-align: center; gap: 10px;
+    }
+    .pcp-checkmark {
+      width: 52px; height: 52px;
+      background: #22c55e;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 24px;
+      animation: popScale .4s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    .pcp-success-title { font-size: 15px; font-weight: 700; color: #166534; margin: 0; }
+    .pcp-success-sub { font-size: 13px; color: #555; margin: 0; }
+    .pcp-success-badge {
+      background: #dcfce7; color: #166534;
+      border: 1px solid #bbf7d0;
+      border-radius: 6px; padding: 4px 12px;
+      font-size: 13px; font-weight: 600;
+    }
+    .pcp-download-btn {
+      margin-top: 10px;
+      background: #22c55e;
+      color: #fff; border: none;
+      padding: 10px 22px; border-radius: 8px;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer;
+      display: inline-flex; align-items: center; gap: 8px;
+      transition: opacity .2s, transform .15s;
+      box-shadow: 0 2px 8px rgba(34,197,94,.35);
+    }
+    .pcp-download-btn:hover:not(:disabled) { opacity: .88; transform: translateY(-1px); }
+    .pcp-download-btn:disabled { opacity: .7; cursor: not-allowed; transform: none; }
+    /* --- PCP Feature additions --- */
+    .pcp-input-error { border-color: #dc2626 !important; box-shadow: 0 0 0 3px rgba(220,38,38,.18) !important; }
+    .pcp-input-valid { border-color: #22c55e !important; box-shadow: 0 0 0 3px rgba(34,197,94,.18) !important; }
+    .pcp-chips-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+    .pcp-chip { display:flex; flex-direction:column; align-items:center; padding:6px 10px; border-radius:8px; border:1.5px solid; cursor:pointer; font-size:12px; font-weight:600; transition:outline .15s; min-width:70px; text-align:center; }
+    .pcp-chip.pcp-chip-found { background:#dcfce7; border-color:#22c55e; color:#166534; }
+    .pcp-chip.pcp-chip-notfound { background:#fee2e2; border-color:#dc2626; color:#991b1b; }
+    .pcp-chip.pcp-chip-active { outline:2px solid #f59e0b; outline-offset:2px; }
+    .pcp-chip-preview { font-size:10px; font-weight:400; margin-top:2px; opacity:.8; max-width:90px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .pcp-chip-info { font-size:12px; color:#6b7280; margin-top:6px; }
+    .pcp-chips-hint { font-size:12px; color:#9ca3af; margin-top:6px; margin-bottom:0; }
+    .pcp-found-info { font-size:12px; color:#166534; background:#dcfce7; border:1px solid #bbf7d0; border-radius:6px; padding:4px 10px; margin-top:6px; display:none; }
+    .pcp-reenter-btn { background:none; border:none; color:#6b7280; font-size:13px; cursor:pointer; text-decoration:underline; margin-top:6px; padding:0; }
+    .pcp-reenter-btn:hover { color:#374151; }
+    .pcp-history-hint { font-size:12px; color:#6b7280; margin-top:6px; display:flex; align-items:center; gap:6px; }
+    .pcp-history-btn { background:none; border:none; color:#f59e0b; font-size:12px; cursor:pointer; font-weight:600; text-decoration:underline; padding:0; }
+    .pcp-preview-panel { background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:12px; margin-top:10px; max-height:160px; overflow-y:auto; }
+    .pcp-preview-label { font-size:12px; font-weight:600; color:#6b7280; margin-bottom:8px; }
+    .pcp-preview-content div { font-size:12px; color:#374151; line-height:1.6; opacity:0; animation: pcpFadeSlide .3s ease both; }
+    .pcp-copy-btn { background:#f3f4f6; color:#374151; border:1px solid #d1d5db; padding:10px 16px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:background .15s; }
+    .pcp-copy-btn:hover { background:#e5e7eb; }
+    .pcp-toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:#166534; color:#fff; padding:10px 20px; border-radius:8px; font-size:14px; font-weight:600; box-shadow:0 4px 12px rgba(0,0,0,.15); opacity:0; transition:opacity .3s, transform .3s; z-index:9999; pointer-events:none; }
+    .pcp-toast.pcp-toast-show { opacity:1; transform:translateX(-50%) translateY(0); }
   </style>
 </head>
 <body>
@@ -576,7 +721,7 @@ I'll analyze your uploaded files and show you detailed results for each complian
 
           const preferred = data.preferred_information || {};
           const preferredStatus = preferred.found ? '<span class="status-pass"><i class="fas fa-check-circle"></i> FOUND</span>' : '<span class="status-fail"><i class="fas fa-times-circle"></i> NOT FOUND</span>';
-          const preferredPreview = preferred.preferred ? `<div style="margin-top:10px; padding:10px; background:#f5f5f5; border-radius:5px;"><strong>Preferred Contact:</strong> <pre style="white-space: pre-wrap; font-size:12px;">${preferred.preferred}</pre></div>` : '';
+          const preferredPreview = (preferred.preferred && preferred.preferred !== 'Missing') ? `<div style="margin-top:10px; padding:10px; background:#f5f5f5; border-radius:5px;"><strong>Preferred Contact:</strong> <pre style="white-space: pre-wrap; font-size:12px;">${preferred.preferred}</pre></div>` : '';
           const preferredHTML = `
             <div class="upload-result">
               <h3><i class="fas fa-envelope"></i> ${data.filename || 'Uploaded Document'}</h3>
@@ -744,7 +889,391 @@ I'll analyze your uploaded files and show you detailed results for each complian
         tabs += '</div></div>';
 
         addHTMLMessage(tabs, false);
+
+        if (!preferred.found) {
+          injectPreferredContactPrompt(data);
+        }
       }
+
+    // ---------- Preferred Contact Prompt (chat-injected) ----------
+    if (typeof window._pcpLastValue === 'undefined') window._pcpLastValue = '';
+
+    function showPcpToast(msg) {
+      let toast = document.getElementById('pcp-toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'pcp-toast';
+        toast.className = 'pcp-toast';
+        document.body.appendChild(toast);
+      }
+      toast.innerHTML = '<i class="fas fa-check-circle"></i> ' + msg;
+      if (toast._timer) clearTimeout(toast._timer);
+      toast.classList.add('pcp-toast-show');
+      toast._timer = setTimeout(function() { toast.classList.remove('pcp-toast-show'); }, 2000);
+    }
+
+    function injectPreferredContactPrompt(data) {
+      const cid = 'pcpChat-' + Date.now();
+
+      // ── chip configuration ──────────────────────────────────────────
+      const CHIPS = [
+        { key: 'email',  label: 'Email' },
+        { key: 'phone',  label: 'Phone' },
+        { key: 'office', label: 'Office Hours' },
+      ];
+
+      function getChipData(key) {
+        if (key === 'email') {
+          const e = data.email_information;
+          return (e && e.found && e.email) ? { found: true, value: e.email } : { found: false };
+        }
+        if (key === 'phone') {
+          const p = data.office_information && data.office_information.phone;
+          return p ? { found: true, value: p } : { found: false };
+        }
+        if (key === 'teams') {
+          const p = data.preferred_information && data.preferred_information.preferred;
+          return (p && p.toLowerCase().includes('teams')) ? { found: true, value: p } : { found: false };
+        }
+        if (key === 'canvas') {
+          const p = data.preferred_information && data.preferred_information.preferred;
+          return (p && p.toLowerCase().includes('canvas')) ? { found: true, value: p } : { found: false };
+        }
+        if (key === 'office') {
+          const h = data.office_information && data.office_information.hours;
+          return h ? { found: true, value: h } : { found: false };
+        }
+        return { found: false };
+      }
+
+      function buildChipsHTML() {
+        let html = '<div class="pcp-chips-row" id="' + cid + '-chips">';
+        CHIPS.forEach(function(chip) {
+          const cd = getChipData(chip.key);
+          const cls = cd.found ? 'pcp-chip pcp-chip-found' : 'pcp-chip pcp-chip-notfound';
+          const safePrev = cd.found
+            ? (cd.value.length > 30 ? cd.value.slice(0, 30) + '\u2026' : cd.value)
+                .replace(/</g,'&lt;').replace(/>/g,'&gt;')
+            : 'Not found';
+          const safeAttr = (cd.found ? cd.value : chip.key).replace(/"/g,'&quot;');
+          html += '<div class="' + cls + '" data-chip-key="' + chip.key + '"'
+            + ' data-chip-found="' + (cd.found ? '1' : '0') + '"'
+            + ' data-chip-value="' + safeAttr + '">'
+            + chip.label
+            + '<span class="pcp-chip-preview">' + safePrev + '</span>'
+            + '</div>';
+        });
+        html += '</div>';
+        html += '<p class="pcp-chips-hint"><i class="fas fa-info-circle"></i> For other contact methods (Teams, Canvas, etc.) type directly above.</p>';
+        html += '<div id="' + cid + '-chip-info" class="pcp-chip-info" style="display:none;"></div>';
+        return html;
+      }
+
+      function buildHistoryHint() {
+        if (!window._pcpLastValue) return '';
+        const safe = window._pcpLastValue.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return '<div class="pcp-history-hint" id="' + cid + '-hist">'
+          + 'Last used: <strong>' + safe + '</strong>'
+          + '<button class="pcp-history-btn" id="' + cid + '-hist-btn">Use again</button>'
+          + '</div>';
+      }
+
+      // ── validation helpers ───────────────────────────────────────────
+      function detectInputType(val) {
+        const v = val.toLowerCase().trim();
+        if (v.includes('@')) return 'email';
+        if (/^[\d\s\-\+\(\)]+$/.test(v) && v.replace(/\D/g,'').length > 0) return 'phone';
+        if (v === 'email') return 'email-kw';
+        if (v === 'phone') return 'phone-kw';
+        if (v.includes('teams')) return 'teams-kw';
+        if (v.includes('canvas')) return 'canvas-kw';
+        if (v.includes('office')) return 'office-kw';
+        return 'other';
+      }
+
+      // Returns null (OK, use raw), {resolved:str} (OK, use resolved), or "error string"
+      function resolveVal(raw) {
+        const v = raw.trim();
+        const type = detectInputType(v);
+        if (type === 'email') {
+          if (!v.toLowerCase().endsWith('@unh.edu'))
+            return 'Please enter your UNH school email ending in @unh.edu';
+          return null;
+        }
+        if (type === 'phone') {
+          const digits = v.replace(/[\s\-\+\(\)]/g,'');
+          if (digits.length !== 10) return 'Please enter a valid 10-digit phone number';
+          return null;
+        }
+        if (type === 'email-kw') {
+          const cd = getChipData('email');
+          if (cd.found) return { resolved: cd.value };
+          return 'Email not found in your syllabus. Please enter the actual value.';
+        }
+        if (type === 'phone-kw') {
+          const cd = getChipData('phone');
+          if (cd.found) return { resolved: cd.value };
+          return 'Phone not found in your syllabus. Please enter the actual value.';
+        }
+        if (type === 'office-kw') {
+          const cd = getChipData('office');
+          if (cd.found) return { resolved: cd.value };
+          if (/\d/.test(v)) return null;
+          return 'Please enter your office hours with time (e.g. Mon/Wed 2:00PM\u20134:00PM)';
+        }
+        return null;
+      }
+
+      function wireChips(inputEl, errorEl) {
+        const chipsRow = document.getElementById(cid + '-chips');
+        if (!chipsRow) return;
+        chipsRow.querySelectorAll('.pcp-chip').forEach(function(chip) {
+          chip.addEventListener('click', function() {
+            chipsRow.querySelectorAll('.pcp-chip').forEach(function(c) { c.classList.remove('pcp-chip-active'); });
+            this.classList.add('pcp-chip-active');
+            const found = this.dataset.chipFound === '1';
+            inputEl.value = this.dataset.chipValue;
+            inputEl.classList.remove('pcp-input-error','pcp-input-valid');
+            const chipInfoEl = document.getElementById(cid + '-chip-info');
+            if (chipInfoEl) {
+              chipInfoEl.textContent = found ? 'Fetched from syllabus' : 'Not found in syllabus \u2014 enter value manually';
+              chipInfoEl.style.display = 'block';
+            }
+            if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
+            inputEl.focus();
+          });
+        });
+      }
+
+      function wireHistoryHint(inputEl) {
+        const histBtn = document.getElementById(cid + '-hist-btn');
+        if (!histBtn) return;
+        histBtn.addEventListener('click', function() {
+          inputEl.value = window._pcpLastValue;
+          const hint = document.getElementById(cid + '-hist');
+          if (hint) hint.style.display = 'none';
+          inputEl.focus();
+        });
+      }
+
+      function wireInputValidation(inputEl) {
+        inputEl.addEventListener('input', function() {
+          const v = this.value.trim();
+          if (!v) { this.classList.remove('pcp-input-error','pcp-input-valid'); return; }
+          const type = detectInputType(v);
+          if (type === 'email') {
+            const ok = v.toLowerCase().endsWith('@unh.edu');
+            this.classList.toggle('pcp-input-error', !ok);
+            this.classList.toggle('pcp-input-valid', ok);
+          } else if (type === 'phone') {
+            const ok = v.replace(/[\s\-\+\(\)]/g,'').length === 10;
+            this.classList.toggle('pcp-input-error', !ok);
+            this.classList.toggle('pcp-input-valid', ok);
+          } else if (type === 'office-kw') {
+            const ok = /\d/.test(v);
+            this.classList.toggle('pcp-input-error', !ok);
+            this.classList.toggle('pcp-input-valid', ok);
+          } else {
+            this.classList.remove('pcp-input-error','pcp-input-valid');
+          }
+        });
+      }
+
+      // ── submit handler shared by initial view and showInputView ──────
+      function handleSubmit(inputEl, errorEl) {
+        const raw = inputEl.value.trim();
+        errorEl.style.display = 'none'; errorEl.textContent = '';
+        if (!raw) {
+          errorEl.textContent = 'Please enter a preferred contact method before submitting.';
+          errorEl.style.display = 'block'; inputEl.focus(); return;
+        }
+        const result = resolveVal(raw);
+        if (result === null) {
+          showConfirmView(raw, null);
+        } else if (typeof result === 'object' && result.resolved) {
+          showConfirmView(result.resolved, 'Found in your syllabus: ' + result.resolved);
+        } else {
+          errorEl.textContent = result;
+          errorEl.style.display = 'block'; inputEl.focus();
+        }
+      }
+
+      // ── initial card HTML ────────────────────────────────────────────
+      const cardHTML = `
+        <div class="pcp-card" id="${cid}">
+          <div class="pcp-card-header">
+            <div class="pcp-card-header-icon">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <div class="pcp-card-header-text">
+              <strong>Missing Information Detected</strong>
+              <span>Action required to generate your template</span>
+            </div>
+          </div>
+          <div class="pcp-card-body" id="${cid}-body">
+            <p class="pcp-card-subtitle">
+              Preferred contact method was not found in your syllabus. Please provide it below
+              so we can generate your updated syllabus template.
+            </p>
+            <input type="text" id="${cid}-input" class="pcp-input"
+              placeholder="e.g. email, Teams, Canvas messages, office hours..." autocomplete="off"/>
+            <div id="${cid}-error" class="pcp-error"></div>
+            ${buildChipsHTML()}
+            ${buildHistoryHint()}
+            <button id="${cid}-btn" class="pcp-submit-btn">
+              <i class="fas fa-paper-plane"></i> Submit
+            </button>
+          </div>
+        </div>`;
+
+      addHTMLMessage(cardHTML, false);
+
+      const btn   = document.getElementById(cid + '-btn');
+      const input = document.getElementById(cid + '-input');
+      const errEl = document.getElementById(cid + '-error');
+      const body  = document.getElementById(cid + '-body');
+
+      wireChips(input, errEl);
+      wireHistoryHint(input);
+      wireInputValidation(input);
+      input.addEventListener('keydown', function(e) { if (e.key === 'Enter') btn.click(); });
+      btn.addEventListener('click', function() { handleSubmit(input, errEl); });
+
+      // ── views ────────────────────────────────────────────────────────
+      function showConfirmView(val, foundNote) {
+        const safeDisplay = val.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const noteHTML = foundNote
+          ? '<p class="pcp-found-info" style="display:block;">' + foundNote.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>'
+          : '';
+        body.innerHTML = `
+          <div class="pcp-confirm-view">
+            <p class="pcp-confirm-label">You entered:</p>
+            ${noteHTML}
+            <span class="pcp-success-badge" style="background:#fef3c7;color:#92400e;border-color:#fde68a;align-self:flex-start;">${safeDisplay}</span>
+            <div class="pcp-confirm-actions">
+              <button id="${cid}-confirm" class="pcp-submit-btn">
+                <i class="fas fa-check"></i> Confirm &amp; Submit
+              </button>
+              <button id="${cid}-edit" class="pcp-edit-btn">
+                <i class="fas fa-pencil-alt"></i> Edit
+              </button>
+            </div>
+            <div id="${cid}-post-error" class="pcp-error"></div>
+          </div>`;
+        document.getElementById(cid + '-edit').addEventListener('click', function() { showInputView(val); });
+        document.getElementById(cid + '-confirm').addEventListener('click', function() { doPost(val); });
+      }
+
+      function showInputView(prefill) {
+        body.innerHTML = `
+          <p class="pcp-card-subtitle">
+            Preferred contact method was not found in your syllabus. Please provide it below
+            so we can generate your updated syllabus template.
+          </p>
+          <input type="text" id="${cid}-input" class="pcp-input"
+            placeholder="e.g. email, Teams, Canvas messages, office hours..." autocomplete="off"/>
+          <div id="${cid}-error" class="pcp-error"></div>
+          ${buildChipsHTML()}
+          ${buildHistoryHint()}
+          <button id="${cid}-btn" class="pcp-submit-btn">
+            <i class="fas fa-paper-plane"></i> Submit
+          </button>`;
+        const ni = document.getElementById(cid + '-input');
+        const ne = document.getElementById(cid + '-error');
+        const nb = document.getElementById(cid + '-btn');
+        ni.value = prefill || '';
+        ni.focus();
+        wireChips(ni, ne);
+        wireHistoryHint(ni);
+        wireInputValidation(ni);
+        ni.addEventListener('keydown', function(e) { if (e.key === 'Enter') nb.click(); });
+        nb.addEventListener('click', function() { handleSubmit(ni, ne); });
+      }
+
+      async function doPost(val) {
+        const confirmBtn = document.getElementById(cid + '-confirm');
+        const editBtn    = document.getElementById(cid + '-edit');
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="width:14px;height:14px;border-width:2px;"></span> Generating\u2026';
+        editBtn.disabled = true;
+
+        try {
+          const response = await fetch('/submit_preferred_contact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ preferred_contact_method: val, filename: data.filename })
+          });
+
+          if (!response.ok) {
+            const errData = await response.json().catch(function() { return {}; });
+            throw new Error(errData.error || 'Server error. Please try again.');
+          }
+
+          const blob = await response.blob();
+          const fileText = await blob.text();
+          const blobUrl = URL.createObjectURL(blob);
+          const dlFilename = (data.filename ? data.filename.replace(/\.[^/.]+$/, '') : 'syllabus') + '_updated.txt';
+          const safeValue = val.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+          // Feature 7 — save to session memory
+          window._pcpLastValue = val;
+
+          // Feature 8 — preview lines (first 20)
+          const previewLines = fileText.split('\n').slice(0, 20);
+          const previewHTML = previewLines.map(function(line, i) {
+            const safeLine = line.replace(/</g,'&lt;').replace(/>/g,'&gt;') || '&nbsp;';
+            return '<div style="animation-delay:' + (i * 50) + 'ms">' + safeLine + '</div>';
+          }).join('');
+
+          body.innerHTML = `
+            <div class="pcp-success-state">
+              <div class="pcp-checkmark"><i class="fas fa-check"></i></div>
+              <p class="pcp-success-title">Your syllabus template is ready!</p>
+              <p class="pcp-success-sub">Preferred contact method added: <strong>${safeValue}</strong></p>
+              <div class="pcp-preview-panel">
+                <div class="pcp-preview-label"><i class="fas fa-file-alt"></i> File Preview</div>
+                <div class="pcp-preview-content" id="${cid}-preview">${previewHTML}</div>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;justify-content:center;">
+                <button id="${cid}-dl" class="pcp-download-btn">
+                  <i class="fas fa-download"></i> Download Updated Syllabus
+                </button>
+                <button id="${cid}-copy" class="pcp-copy-btn">
+                  <i class="fas fa-copy"></i> Copy
+                </button>
+              </div>
+              <button class="pcp-reenter-btn" id="${cid}-reenter">
+                <i class="fas fa-pencil-alt"></i> Re-enter value
+              </button>
+            </div>`;
+
+          document.getElementById(cid + '-dl').addEventListener('click', function() {
+            const anchor = document.createElement('a');
+            anchor.href = blobUrl; anchor.download = dlFilename;
+            document.body.appendChild(anchor); anchor.click(); document.body.removeChild(anchor);
+            URL.revokeObjectURL(blobUrl);
+            this.disabled = true; this.innerHTML = '<i class="fas fa-check"></i> Downloaded!';
+          });
+
+          document.getElementById(cid + '-copy').addEventListener('click', function() {
+            navigator.clipboard.writeText(fileText).then(function() { showPcpToast('Copied to clipboard!'); });
+          });
+
+          document.getElementById(cid + '-reenter').addEventListener('click', function() {
+            URL.revokeObjectURL(blobUrl);
+            showInputView('');
+          });
+
+        } catch (err) {
+          confirmBtn.disabled = false;
+          confirmBtn.innerHTML = '<i class="fas fa-check"></i> Confirm &amp; Submit';
+          editBtn.disabled = false;
+          const postErrEl = document.getElementById(cid + '-post-error');
+          postErrEl.textContent = err.message || 'An unexpected error occurred. Please try again.';
+          postErrEl.style.display = 'block';
+        }
+      }
+    }
 
     // ---------- Upload handlers ----------
     function displaySelectedFile(file){ addMessage(`Selected document: ${file.name}`, true); }
@@ -941,3 +1470,5 @@ I'll analyze your uploaded files and show you detailed results for each complian
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
 </body>
 </html>
+
+

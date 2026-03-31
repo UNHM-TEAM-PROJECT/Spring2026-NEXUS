@@ -318,6 +318,30 @@ class ResponseTimeDetector:
                 if not re.search(r'email|respond|reply|contact', combined, re.IGNORECASE):
                     return True
         
+        # Email frequency instructions to students (not instructor response time)
+        # e.g. "check your email at least once a day"
+        email_frequency_patterns = [
+            r'check\s+(?:your\s+)?(?:e-?mail|canvas|portal).*once\s+a\s+(?:day|week)',
+            r'at\s+least\s+once\s+a\s+(?:day|week)',
+            r'once\s+(?:per|a)\s+(?:day|week).*(?:e-?mail|canvas)',
+        ]
+        for pattern in email_frequency_patterns:
+            if re.search(pattern, combined, re.IGNORECASE):
+                return True
+
+        # Writing center / OWL / tutoring service (not instructor response)
+        writing_center_patterns = [
+            r'writing\s+assistant',
+            r'\bOWL\b.*(?:feedback|writing|submit)',
+            r'writing\s+center.*(?:within|hours?)',
+            r'(?:within|in)\s+\d+\s*hours?.*writing\s+(?:assistant|center|lab)',
+            r'writing\s+(?:assistant|center|lab).*(?:within|in)\s+\d+\s*hours?',
+            r'tutor(?:ing)?\s+(?:center|service).*(?:within|in)\s+\d+\s*hours?',
+        ]
+        for pattern in writing_center_patterns:
+            if re.search(pattern, combined, re.IGNORECASE):
+                return True
+
         # Tech support patterns
         tech_support_patterns = [
             r'tech(?:nical)?\s+(?:help|support).*(?:\d+\s*hours?|24/7)',

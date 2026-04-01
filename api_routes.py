@@ -17,16 +17,16 @@ from __future__ import annotations
 
 import os
 import re
+from pathlib import Path
 from detectors.instructor_detector import InstructorDetector
 import logging
 import tempfile
 import shutil
 import zipfile
 from flask import request, jsonify, render_template, Response
-from template_generator import generate_template
+from docx_template_updater import fill_docx_template_from_detector_result
 
 from document_processing import extract_text_from_pdf, extract_text_from_docx
-from ai_detector import detect_preferred_contact_ai
 
 # SLO regex detector (your existing detector)
 from detectors.slo_detector import SLODetector
@@ -56,6 +56,7 @@ from detectors.class_location_detector import ClassLocationDetector
 # Global variable to store the last uploaded filename (for template generation)
 last_uploaded_filename = None
 last_detected_email = None
+last_upload_result = None
 
 # -----------------------------------------------------------------------------
 # Helpers
@@ -302,8 +303,6 @@ def _process_single_file(file, temp_dir: str) -> dict:
         # --- Preferred Contact Method detection ---
         if PreferredDetector:
             preferred_info = PreferredDetector().detect(extracted_text)
-            if not preferred_info.get("found"):
-                preferred_info = detect_preferred_contact_ai(extracted_text)
             result["preferred_information"] = {
                 "preferred": preferred_info.get("preferred") or "Missing",
                 "found": preferred_info.get("found", False),
@@ -525,6 +524,7 @@ def create_routes(app):
         else:
             return jsonify({'error': 'No files provided'}), 400
 
+        global last_upload_result
         temp_dir = tempfile.mkdtemp()
         results: list[dict] = []
 
@@ -553,8 +553,11 @@ def create_routes(app):
                 return jsonify({'error': 'No valid files processed.'}), 400
 
             if len(results) == 1:
+                last_upload_result = results[0]
                 return jsonify(results[0])
             else:
+                # Keep the first result available for template generation flows.
+                last_upload_result = results[0]
                 return jsonify({'results': results})
 
         finally:
@@ -564,7 +567,7 @@ def create_routes(app):
     def ask():
         """
         Optional chat endpoint to keep your frontend happy.
-        We don’t do retrieval/LLM here—just a helpful message.
+        This endpoint returns a helpful static message.
         """
         try:
             data = request.get_json(silent=True) or {}
@@ -588,7 +591,7 @@ def create_routes(app):
 
     @app.route('/submit_preferred_contact', methods=['POST'])
     def submit_preferred_contact():
-        global last_uploaded_filename, last_detected_email
+        global last_uploaded_filename, last_detected_email, last_upload_result
         data = request.get_json()
         preferred_contact_method = data.get("preferred_contact_method")
 
@@ -599,13 +602,38 @@ def create_routes(app):
         if preferred_contact_value.lower() == "email" and last_detected_email:
             preferred_contact_value = last_detected_email
 
-        filename = last_uploaded_filename or "Uploaded_syllabus"
-        template_text = generate_template(preferred_contact_value, filename)
+        if not isinstance(last_upload_result, dict):
+            return jsonify({"error": "No uploaded syllabus context found. Please upload a syllabus first."}), 400
+
+        filename = last_uploaded_filename or data.get("filename") or "Uploaded_syllabus"
+        detector_payload = dict(last_upload_result)
+        detector_payload["filename"] = filename
+
+        preferred_info = dict(detector_payload.get("preferred_information") or {})
+        preferred_info["preferred"] = preferred_contact_value or "Missing"
+        preferred_info["found"] = bool(preferred_contact_value and preferred_contact_value.strip())
+        detector_payload["preferred_information"] = preferred_info
+
+        template_path = Path("updated_syllabus_detector_common_template.docx")
+        if not template_path.exists():
+            return jsonify({"error": "DOCX template not found in workspace."}), 500
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
+            temp_output_path = Path(tmp.name)
+
+        try:
+            fill_docx_template_from_detector_result(template_path, detector_payload, temp_output_path)
+            file_bytes = temp_output_path.read_bytes()
+        finally:
+            try:
+                temp_output_path.unlink(missing_ok=True)
+            except Exception:
+                pass
 
         return Response(
-            template_text,
-            mimetype="text/plain",
+            file_bytes,
+            mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             headers={
-                "Content-Disposition": "attachment; filename=syllabus_template.txt"
+                "Content-Disposition": f"attachment; filename={Path(filename).stem}_updated.docx"
             }
         )

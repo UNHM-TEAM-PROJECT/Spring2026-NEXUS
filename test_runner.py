@@ -686,7 +686,7 @@ def run_tests_for_folder(folder_path, ground_truth_json, output_json):
 
     # CHANGE 1: Store file count so main() can use it for weighted combining
     file_count = len(gt_data)
-    print(f"\nFound {file_count} records in ground truth.")
+    print(f"\nFound {file_count} records in {folder_path}.")
 
     # Track TP, FP, FN, TN for F1 score calculation
     # TP = True Positive: GT has value, Pred has value, Match correct

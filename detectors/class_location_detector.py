@@ -231,18 +231,22 @@ class ClassLocationDetector:
         # Format: (compiled_pattern, confidence_level)
         self.room_patterns = [
             # Pattern 0: Explicit class meeting formats "in ROOM" or "Section X: ... Room Y"
-            (re.compile(r'\b(?:class\s+meetings?|section\s+\w+).*?\b((?:in|room|rm\.?)\s+[A-Za-z]?\d{2,4})\b', re.IGNORECASE | re.DOTALL),
+            (re.compile(r'\b(?:class\s+meetings?|section\s+\w+).*?\b((?:in|room|rm\.?)\s+[A-Za-z]?\d{2,4}[A-Z]*)\b', re.IGNORECASE | re.DOTALL),
              HIGH_CONFIDENCE + 0.01),  # Slightly higher than other high confidence
 
             # Pattern 0b: "Course Room Number: X" format
-            (re.compile(r'\bcourse\s+room\s+(?:number)?[\s:]+([A-Za-z]?\d{2,4})\b', re.IGNORECASE),
+            (re.compile(r'\bcourse\s+room\s+(?:number)?[\s:]+([A-Za-z]?\d{2,4}[A-Z]*)\b', re.IGNORECASE),
              HIGH_CONFIDENCE + 0.01),
 
             # Pattern 1: "Room/Rm [Number]" possibly followed by building
             (re.compile(r'\b((?:room|rm\.?)\s+[A-Za-z]?\d{2,4}(?:\s*[,\-]?\s*[\w\s]+?(?:hall|building|bldg|mill|lab))?)\b', re.IGNORECASE),
              HIGH_CONFIDENCE),
 
-            # Pattern 2: Known building name followed by room number
+            # Pattern 1b: UNHM PANDRA format (e.g., "UNHM PANDRA P102")
+            (re.compile(r'\b((?:unhm|unh)\s+pandra(?:a)?(?:\s+mill)?(?:\s*\([^)]*\))?\s*p\s*\d{3,4}[A-Z]*)\b', re.IGNORECASE),
+             HIGH_CONFIDENCE + 0.01),
+
+            # Pattern 2: Known building name followed by room number  
             # Allow parenthetical content like "(UNHM)" between building and room
             (re.compile(r'\b((?:pandora|pandra|hamilton\s+smith|dimond|parsons|kingsbury|morse|rudman|murkland)'
                        r'(?:\s+mill|\s+hall|\s+building|\s+lab)?(?:\s*\([^)]+\))?\s*[,\-]?\s*(?:room|rm\.?)?\s*[A-Za-z]?\d{2,4}[A-Z]*)\b', re.IGNORECASE),
@@ -261,7 +265,7 @@ class ClassLocationDetector:
              MEDIUM_CONFIDENCE),
 
             # Pattern 5b: Uppercase "RM" format (e.g., "RM 354", "RM 345")
-            (re.compile(r'\b(RM\s+\d{2,4})\b'),
+            (re.compile(r'\b(RM\s+\d{2,4}[A-Z]*)\b', re.IGNORECASE),
              MEDIUM_CONFIDENCE),
 
             # Pattern 6: Single letter + 3-4 digits with optional letter suffix (like P380, P345EC, R540)
@@ -290,9 +294,13 @@ class ClassLocationDetector:
             (re.compile(r'\blab\s*\(\s*(rm\.?\s*\d{3,4}[A-Z]*)\s*\)', re.IGNORECASE),
              MEDIUM_CONFIDENCE),
 
-            # Pattern 11: Multi-section format "M1: Room X | M2: Room Y" - take first room
+            # Pattern 11: Multi-section format "M1: Room X | M2: Room Y" or "M1: P### | M2: P###" - take first room
             (re.compile(r'(?:M\d|Section\s+\w+|L\d)\s*[:\.]\s*(?:room\s+)?([A-Za-z]?\d{2,4}[A-Z]*)\b', re.IGNORECASE),
              MEDIUM_CONFIDENCE),
+
+            # Pattern 12: Bare room patterns like "280" when in location context
+            (re.compile(r'(?:location|where|room)\s*[:=]\s*(\d{3,4}[A-Z]*)\b', re.IGNORECASE),
+             LOW_CONFIDENCE),
         ]
 
         # PRE-COMPILED patterns for context checking
@@ -395,8 +403,16 @@ class ClassLocationDetector:
         Examples:
             - "COMP 405" -> True
             - "BIOL 413A" -> True
+            - "RM 354" -> False (room abbreviation)
             - "Room 405" -> False
         """
+        # First check if it's a known room/non-course abbreviation
+        non_course_abbrev = ['rm', 'rm.', 'room', 'p', 'p.']
+        text_lower = text.lower().strip()
+        for abbrev in non_course_abbrev:
+            if text_lower.startswith(abbrev + ' ') or text_lower.startswith(abbrev + '.'):
+                return False
+        
         for pattern in self.course_code_patterns:
             if pattern.search(text):
                 return True
@@ -440,7 +456,7 @@ class ClassLocationDetector:
                     continue  # Skip product models
 
                 # For pattern6 (single letter + digits), only accept if NOT a course code context
-                if pattern == self.room_patterns[8][0] or pattern == self.room_patterns[9][0]:  # Pattern 6 or 6b
+                if pattern == self.room_patterns[9][0] or pattern == self.room_patterns[10][0]:  # Pattern 6 or 6b (single letter patterns)
                     # Check if this is in a course code context (e.g., "COMP 405")
                     context_check = text[max(0, match.start()-10):match.start()]
                     if self.course_code_context_pattern.search(context_check):
@@ -649,8 +665,9 @@ class ClassLocationDetector:
             re.compile(r'class\s+time\s*[&]\s*location\s*:[^\n]*\b((?:pandora|pandra)?\s*(?:building)?\s*(?:\([^)]+\))?\s*P\s*\d{3,4}[A-Z]*)\b', re.IGNORECASE),
             re.compile(r'class\s+time\s*[&]\s*location\s*:[^\n]*\b(room\s*\d{2,4})\b', re.IGNORECASE),
             # "Class meetings: Tuesday, 9:00 - 11:50 AM. P149" or "Class meetings: ... Room 105"
-            re.compile(r'class\s+meetings?\s*[:\s][^P\n]*\b(P\d{3,4}[A-Z]*)\b', re.IGNORECASE),
-            re.compile(r'class\s+meetings?\s*[:\s][^\n]*\b(room\s*\d{2,4})\b', re.IGNORECASE),
+            # Use non-greedy matching to capture first room only
+            re.compile(r'class\s+meetings?\s*[:\s][^:\n]{0,100}?\b(P\d{3,4}[A-Z]*)\b', re.IGNORECASE),
+            re.compile(r'class\s+meetings?\s*[:\s][^:\n]{0,100}?\b(room\s*\d{2,4})\b', re.IGNORECASE),
             # "Class Meeting Room 341" or "Class meets in Room 105"
             re.compile(r'class\s+meeting\s+room\s*[:\s]*([A-Za-z]?\d{2,4}[A-Z]*)', re.IGNORECASE),
             re.compile(r'class\s+meets?\s+(?:in\s+)?((?:room\s+)?[A-Za-z]?\d{2,4}[A-Z]*)', re.IGNORECASE),

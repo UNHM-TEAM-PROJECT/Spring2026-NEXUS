@@ -100,6 +100,10 @@ class ClassLocationDetector:
             (re.compile(r'\b(asynchronous\s+online)\b', re.IGNORECASE), 0.98),
             # Pattern 1e: "As an online class/course" format
             (re.compile(r'(?:as|is)\s+an?\s+(online\s+(?:class|course))', re.IGNORECASE), 0.98),
+            # Pattern 1e2: "online, asynchronous course" phrasing
+            (re.compile(r'(?:as|is)\s+an?\s+(online)[,\s]+asynchronous\s+course', re.IGNORECASE), 0.98),
+            # Pattern 1f: "Online Writing Intensive (Synchronous)" style modality labels
+            (re.compile(r'\b(online\s+writing\s+intensive(?:\s*\([^)]{0,40}\))?)\b', re.IGNORECASE), 0.98),
 
             # Pattern 2: "Online" with context in parentheses
             (re.compile(r'(?:time\s+and\s+location|location\s+and\s+time|class\s+location|meeting\s+location|where|^location)[\s:]+[^\n]{0,50}?\b(online\s*\([^)]{0,100}\))',
@@ -165,6 +169,7 @@ class ClassLocationDetector:
             r'class\s+location',
             r'class\s+meets?',
             r'class\s+meeting',
+            r'lecture\s*\(',
             r'meeting\s+location',
             r'meeting\s+place',
             r'meeting\s+time\s+and\s+place',
@@ -196,6 +201,7 @@ class ClassLocationDetector:
             r'instructor\s+location',
             r'contact\s+information',
             r'contact\s+info',
+            r'physically\s+located',
             r'tutoring\s+center',
             r'writing\s+center',
             r'help\s+center',
@@ -218,6 +224,13 @@ class ClassLocationDetector:
             r'advisors?\s+office',
             r'loan.*laptop',
             r'borrow.*laptop',
+            # Campus support/service locations (not class meeting locations)
+            r'food\s+pantry',
+            r'wildcat\s+cupboard',
+            r'wildcat\s+wardrobe',
+            r'mental\s+health\s+center',
+            r'connors\s+writing\s+center',
+            r'sharpp',
         ]
 
         # PRE-COMPILED regex patterns for performance (compiled once at init)
@@ -693,7 +706,10 @@ class ClassLocationDetector:
 
         # Select best candidate (only physical locations)
         if candidates:
-            return self._select_best_candidate(candidates)
+            best = self._select_best_candidate(candidates)
+            if best:
+                location, confidence = best
+                return (location, confidence)
 
         # PRIORITY 2: Check for online/remote/virtual/appointment locations (only if NO physical rooms found)
         online_result = self._find_online_or_remote_location(text)

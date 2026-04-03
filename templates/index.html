@@ -1210,36 +1210,22 @@ I'll analyze your uploaded files and show you detailed results for each complian
           }
 
           const blob = await response.blob();
-          const fileText = await blob.text();
           const blobUrl = URL.createObjectURL(blob);
-          const dlFilename = (data.filename ? data.filename.replace(/\.[^/.]+$/, '') : 'syllabus') + '_updated.txt';
+          const dlFilename = (data.filename ? data.filename.replace(/\.[^/.]+$/, '') : 'syllabus') + '_updated.docx';
           const safeValue = val.replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
           // Feature 7 — save to session memory
           window._pcpLastValue = val;
-
-          // Feature 8 — preview lines (first 20)
-          const previewLines = fileText.split('\n').slice(0, 20);
-          const previewHTML = previewLines.map(function(line, i) {
-            const safeLine = line.replace(/</g,'&lt;').replace(/>/g,'&gt;') || '&nbsp;';
-            return '<div style="animation-delay:' + (i * 50) + 'ms">' + safeLine + '</div>';
-          }).join('');
 
           body.innerHTML = `
             <div class="pcp-success-state">
               <div class="pcp-checkmark"><i class="fas fa-check"></i></div>
               <p class="pcp-success-title">Your syllabus template is ready!</p>
               <p class="pcp-success-sub">Preferred contact method added: <strong>${safeValue}</strong></p>
-              <div class="pcp-preview-panel">
-                <div class="pcp-preview-label"><i class="fas fa-file-alt"></i> File Preview</div>
-                <div class="pcp-preview-content" id="${cid}-preview">${previewHTML}</div>
-              </div>
+              <p class="pcp-success-sub">The updated DOCX template is generated from detector results.</p>
               <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;justify-content:center;">
                 <button id="${cid}-dl" class="pcp-download-btn">
                   <i class="fas fa-download"></i> Download Updated Syllabus
-                </button>
-                <button id="${cid}-copy" class="pcp-copy-btn">
-                  <i class="fas fa-copy"></i> Copy
                 </button>
               </div>
               <button class="pcp-reenter-btn" id="${cid}-reenter">
@@ -1253,10 +1239,6 @@ I'll analyze your uploaded files and show you detailed results for each complian
             document.body.appendChild(anchor); anchor.click(); document.body.removeChild(anchor);
             URL.revokeObjectURL(blobUrl);
             this.disabled = true; this.innerHTML = '<i class="fas fa-check"></i> Downloaded!';
-          });
-
-          document.getElementById(cid + '-copy').addEventListener('click', function() {
-            navigator.clipboard.writeText(fileText).then(function() { showPcpToast('Copied to clipboard!'); });
           });
 
           document.getElementById(cid + '-reenter').addEventListener('click', function() {

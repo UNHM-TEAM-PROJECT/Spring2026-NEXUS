@@ -20,9 +20,29 @@ from typing import Dict, Any, Optional, List
 MAX_HEADING_SCAN_LINES = 150
 MAX_HEADER_CHARS = 1200
 EMAIL_CONFIDENCE_SCORE = 0.95
+HEADING_LOOKAHEAD_LINES = 5  # lines after a heading to scan for email
 
 EMAIL_RX = re.compile(
-    r"[A-Za-z0-9]+(?:\.[A-Za-z0-9]+)*@(?:unh|usnh)\.edu"
+    r"[A-Za-z0-9]+(?:[.\-][A-Za-z0-9]+)*@(?:wildcats\.)?(?:unh|usnh)\.edu",
+    re.IGNORECASE
+)
+
+# Regex patterns that identify department/service email local parts.
+_DEPT_EMAIL_RE = re.compile(
+    r'^unhm\.'
+    r'|^unh\.'
+    r'|\.(?:office|library|advising|services|support|development)@'
+    r'|^[a-z]{2,4}@',
+    re.IGNORECASE
+)
+
+# Keywords that indicate surrounding text belongs to a support service, not an instructor.
+# Used to skip emails that appear inside boilerplate sections (e.g. disability, food pantry).
+_DEPT_CONTEXT_RE = re.compile(
+    r'accessibility|disability|accommodation|student\s+success|dean\s+of\s+student'
+    r'|food\s+pantry|sas\s+office|title\s+ix|mental\s+health|counseling'
+    r'|academic\s+advising',
+    re.IGNORECASE
 )
 
 # Heading keywords to look for (will be normalized during search)
@@ -65,60 +85,87 @@ class EmailDetector:
 
         return normalized
 
+    def _is_excluded(self, email: str) -> bool:
+        """Return True if the email matches a known department/service pattern."""
+        local = email.split("@")[0]
+        return bool(_DEPT_EMAIL_RE.search(local + "@"))
+
+    @staticmethod
+    def _is_in_dept_context(lines: List[str], line_idx: int) -> bool:
+        """Return True if the lines surrounding line_idx indicate a dept/service section."""
+        start = max(0, line_idx - 3)
+        end = min(len(lines), line_idx + 2)
+        window = " ".join(lines[start:end])
+        return bool(_DEPT_CONTEXT_RE.search(window))
+
     def detect(self, text: str) -> Dict[str, Any]:
         self.logger.info("Starting detection for field: email")
 
         if not text:
             return self._not_found()
 
-        # 1) Try: scan first N lines for heading + email on the same/next line
+        # 1) Try: scan all lines for a label/heading near an email.
+        #    The _is_label_line guard prevents prose sentences from triggering,
+        #    so scanning the full document is safe.
         lines = text.splitlines()
-        window_lines = lines[:MAX_HEADING_SCAN_LINES] if len(lines) > MAX_HEADING_SCAN_LINES else lines
-        candidate = self._find_near_heading(window_lines)
+        candidate = self._find_near_heading(lines)
         if candidate:
             email = candidate
             method = "heading_window"
         else:
-            # 2) Try: any valid email in the first N chars (header area)
-            header = text[:MAX_HEADER_CHARS]
-            header_emails = EMAIL_RX.findall(header)
-            if header_emails:
-                email = header_emails[0]
+            # 2) Try: first valid email in header area (with context check)
+            email = self._find_any_email(lines, end=50)
+            if email:
                 method = "header_any"
             else:
                 # 3) Fallback: first valid email anywhere in the doc
-                all_emails = EMAIL_RX.findall(text)
-                if all_emails:
-                    email = all_emails[0]
+                email = self._find_any_email(lines)
+                if email:
                     method = "fallback_any"
                 else:
                     return self._not_found()
 
-        # Exclude specific emails at the very end
-        if email in {"Janessa.zurek@unh.edu", "sas.office@unh.edu", "unhm.studentdevelopment@unh.edu"}:
-            return self._not_found()
         return self._found(email, method=method)
 
     # ---------------- helpers ----------------
 
+    @staticmethod
+    def _is_label_line(normalized_line: str) -> bool:
+        """Return True if the line looks like a label/heading rather than prose.
+
+        A label line is short (≤ 80 chars) OR the clue word starts within the
+        first 30 characters — catching both standalone headings ("Instructor:")
+        and table-style rows ("Email:   prof@unh.edu").  Long prose sentences
+        that happen to contain the word "email" are excluded.
+        """
+        return len(normalized_line) <= 80
+
     def _find_near_heading(self, lines: List[str]) -> Optional[str]:
-        """Find an email on a line that contains a clue word, or the next line."""
+        """Find a non-excluded email on a label/heading line or within
+        HEADING_LOOKAHEAD_LINES after it."""
         for i, raw in enumerate(lines):
             line = raw.strip()
-            # Normalize the line for comparison
             normalized_line = self._normalize_text(line)
 
-            # Check if any heading clue appears in the normalized line
-            if any(self._normalize_text(clue) in normalized_line for clue in HEADING_CLUES):
-                # same line (search in original, not normalized)
-                m = EMAIL_RX.search(line)
-                if m:
-                    return m.group(0)
-                # next line
-                if i + 1 < len(lines):
-                    m2 = EMAIL_RX.search(lines[i+1])
-                    if m2:
-                        return m2.group(0)
+            clue_match = any(self._normalize_text(clue) in normalized_line for clue in HEADING_CLUES)
+            if clue_match and self._is_label_line(normalized_line):
+                for j in range(i, min(i + 1 + HEADING_LOOKAHEAD_LINES, len(lines))):
+                    m = EMAIL_RX.search(lines[j].strip())
+                    if not m or self._is_excluded(m.group(0)):
+                        continue
+                    if not self._is_in_dept_context(lines, j):
+                        return m.group(0)
+        return None
+
+    def _find_any_email(self, lines: List[str], end: int = None) -> Optional[str]:
+        """Return first non-excluded, non-dept-context email from lines[0:end]."""
+        search_lines = lines[:end] if end else lines
+        for i, line in enumerate(search_lines):
+            m = EMAIL_RX.search(line.strip())
+            if m:
+                email = m.group(0)
+                if not self._is_excluded(email) and not self._is_in_dept_context(lines, i):
+                    return email
         return None
 
     def _found(self, content: str, method: str) -> Dict[str, Any]:
@@ -141,6 +188,7 @@ class EmailDetector:
             "confidence": 0.0,
             "metadata": {}
         }
+
 
 if __name__ == "__main__":
     # Test cases (avoiding Unicode in console output for Windows compatibility)

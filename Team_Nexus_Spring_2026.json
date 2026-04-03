@@ -1,6 +1,5 @@
 [
-   {
-
+  {
     "filename": "Kilcrease Spring 2019.docx",
     "instructor_name": "Kelly Kilcrease",
     "instructor_title": "Associate Professor of Business",
@@ -21,9 +20,9 @@
     "deadline_expectations_title": "Course Outline and Assignments",
     "assignment_delivery": "All work associated with the case studies and application assignments should be uploaded to Canvas",
     "final_grade_scale": "A+ = 97-100 B+ = 87-89 C+ = 77-79 D+ = 67-69 F = below 60 A = 93-96 B = 83-86 C = 73-76 D = 63-66 A- = 90-92 B- = 80-82 C- = 70-72 D- = 60-62",
-    "grading_process": "Solve the Dilemma (4): 16%, Exams (2) –Mid-term & Final: 30%, See for Yourself Case (4): 16%, Business Plan: 23%, Participation (in class & online): 10%, Peregrine Online Test: 5%"
- },
- {
+    "grading_process": "Discussion Questions (3): 15%, Exams (2) Mid-term & Final: 30%, Managing People (3): 15%, HR Project: 30%, Participation: 10%"
+  },
+  {
     "filename": "Jensen CPRM 860 Fall 2024.pdf",
     "instructor_name": "Nate Jensen",
     "instructor_title": "Adjunct Professor",
@@ -67,9 +66,9 @@
     "deadline_expectations_title": "Policy on Late Submissions",
     "assignment_delivery": "Canvas",
     "final_grade_scale": "A 100 % to 94 % A- < 94 % to 90 % B+ < 90 % to 87 % B < 87 % to 84 % B- < 84 % to 80 % C+ < 80 % to 77 % C < 77 % to 74 % C- < 74 % to 70 % D+ < 70 % to 67 % D < 67 % to 64 % D- < 64 % to 60 % F < 60 % to 0 %",
-    "grading_process": "The course grade is based on 200 points and is developed from a variety of assignments and tests."
-   },
-   {
+    "grading_process": "Missing"
+  },
+  {
     "filename": "Grindal CPRM 870 Fall 2024.pdf",
     "instructor_name": "Dr. Karl Grindal",
     "instructor_title": "Assistant Professor of Security Studies",
@@ -90,286 +89,285 @@
     "deadline_expectations_title": "Policy on Late Submissions",
     "assignment_delivery": "Canvas",
     "final_grade_scale": "A 100 % to 94 % A- < 94 % to 90 % B+ < 90 % to 87 % B < 87 % to 84 % B- < 84 % to 80 % C+ < 80 % to 77 % C < 77 % to 74 % C- < 74 % to 70 % D+ < 70 % to 67 % D < 67 % to 64 % D- < 64 % to 60 % F < 60 % to 0 %",
-    "grading_process": "The course grade is based on 200 points and is developed from a variety of assignments and tests."
-   },
-{
-        "filename": "Clay CPRM 830 Fall 2024.pdf",
-        "instructor_name": "Greg Clay",
-        "instructor_title": "Adjunct Professor in MS CPRM",
-        "instructor_department": "Department of Security Studies",
-        "preferred_contact_method": "Questions related to assignments or learning should first be asked in the Course Questions & Discussions board (this way all students can benefit from the questions and answers). The use of email is reserved for questions of a private nature, or if you would like to schedule a time during my office hours.",
-        "email": "gregory.clay@unh.edu",
-        "response_time": "Missing",
-        "office_address": "Missing",
-        "office_phone": "(210) 526-1593",
-        "office_hours": "By appointment Sunday - Tuesday, and Thursday - Saturday 7pm - 9pm (Central time).",
-        "class_location": "Online",
-        "modality": "Asynchronous online modality",
-        "SLOs": "Identify common technological and organizational measures for cybersecurity (focus: protection & preparedness concepts). Explain and give examples of the roles of best practices and standards in the design and implementation of such security measures. Explain the functional and organizational advantages and disadvantages of these measures, including impacts from their interaction. Assess the limitations of these security measures in the contexts of organizational change and dynamic threats, flawed technology, and flawed organizational policies and practices.",
-        "credit_hour": "3",
-        "workload": "A three credit course is expected to involve a minimum of 135 hours of student work effort (reading/viewing materials, making notes, doing research, fulfilling assignments, etc.)",
-        "assignment_types_title": "Introductions (video)",
-        "grading_procedures_title": "Rubric and Evaluation Methods",
-        "deadline_expectations_title": "Late submissions will receive a zero unless there are exigent circumstances.",
-        "assignment_delivery": "Canvas",
-        "final_grade_scale": "A 100 % to 94 % A- < 94 % to 90 % B+ < 90 % to 87 % B < 87 % to 84 % B- < 84 % to 80 % C+ < 80 % to 77 % C < 77 % to 74 % C- < 74 % to 70 % D+ < 70 % to 67 % D < 67 % to 64 % D- < 64 % to 60 % F < 60 % to 0 %",
-        "grading_process": "The course grade is based on 200 points and is developed from a variety of assignments and tests."
-     },
-     {
-        "filename": "Condello CPRM 810 Fall 2024.pdf",
-        "instructor_name": "Kathryn Condello",
-        "instructor_title": "Adjunct Professor in MS CPRM",
-        "instructor_department": "Department of Security Studies",
-        "preferred_contact_method": "Questions related to assignments or learning should first be asked in the Course Questions & Discussions board (this way all students can benefit from the questions and answers). The use of email or text is reserved for questions of a private nature, or if you would like to schedule for discussion.",
-        "email": "kathryn.condello@unh.edu",
-        "response_time": "Missing",
-        "office_address": "Missing",
-        "office_phone": "703-314-5076",
-        "office_hours": "By appointment Monday - Friday (East Coast time).",
-        "class_location": "Online",
-        "modality": "Asynchronous online modality",
-        "SLOs": "Identify and explain significant cybersecurity policy concerns within the historical context of computing, the internet, and globalization. Explain and give examples of the cybersecurity impact of interconnections and dependencies within organizations, industries/sectors, and the homeland security enterprise. Describe the breadth of the communities of interest focused on detecting vulnerabilities and threats and mitigating cybersecurity risks. Articulate the value of cybersecurity to an organization's success (functionality/efficiency, competitive advantage, fulfillment of mission, etc.) as well as challenges to implementation. Express common vulnerabilities and threats innon-technical language that conveys the organizational complexity of cybersecurity risk management.",
-        "credit_hour": "3",
-        "workload": "A three credit course is expected to involve a minimum of 135 hours of student work effort (reading/viewing materials, making notes, doing research, fulfilling assignments, etc.)",
-        "assignment_types_title": "Introductions.",
-        "grading_procedures_title": "Rubric and Evaluation Methods",
-        "deadline_expectations_title": "Late submissions will receive a zero unless there are exigent circumstances.",
-        "assignment_delivery": "Canvas",
-        "final_grade_scale": "A 100 % to 94 % A- < 94 % to 90 % B+ < 90 % to 87 % B < 87 % to 84 % B- < 84 % to 80 % C+ < 80 % to 77 % C < 77 % to 74 % C- < 74 % to 70 % D+ < 70 % to 67 % D < 67 % to 64 % D- < 64 % to 60 % F < 60 % to 0 %",
-        "grading_process": "The course grade is based on 200 points and is developed from a variety of assignments and tests."
-     },
-     {
-        "filename": "Dion CPRM 840 Fall 2024.pdf",
-        "instructor_name": "Maeve Dion",
-        "instructor_title": "Associate Professor of Security Studies, founder and faculty advisor in MS CPRM",
-        "instructor_department": "Department of Security Studies",
-        "preferred_contact_method": "Questions related to assignments or learning should first be asked in the Course Questions & Discussions board (this way all students can benefit from the questions and answers). The use of email is reserved for questions of a private nature. If you want to contact me directly, please use the Canvas \"Inbox\" functionality rather than sending an email to my UNH account. As a last resort, you can email me at maeve.dion@unh.edu.",
-        "email": "maeve.dion@unh.edu",
-        "response_time": "Missing",
-        "office_address": "Missing",
-        "office_phone": "(603) 641-4157",
-        "office_hours": "Wednesdays 8am - 1pm EDT/EST Thursdays 4pm-8pm EDT/EST",
-        "class_location": "Online",
-        "modality": "Asynchronous online modality",
-        "SLOs": "Explain the legal and regulatory approach to cybersecurity in the United States. Identify and describe cybersecurity concerns and regulatory authorities particular to various U.S. industries and sectors. Compare and contrast U.S. and E.U. legal perspectives on data protection. Debate the advantages and disadvantages of regulatory solutions and market solutions. Identify common sources of cybersecurity standards. Describe processes for incorporating regulatory concerns and security standards into systems and organizations, and for maintaining currency of best practices through auditing and reassessment.",
-        "credit_hour": "3",
-        "workload": "A three credit course is expected to involve a minimum of 135 hours of student work effort (reading/viewing materials, making notes, doing research, fulfilling assignments, etc.)",
-        "assignment_types_title": "Introductions (video)",
-        "grading_procedures_title": "Rubric and Evaluation Methods",
-        "deadline_expectations_title": "Late submissions will receive a zero unless there are exigent circumstances.",
-        "assignment_delivery": "Canvas",
-        "final_grade_scale": "A 100 % to 94 % A- < 94 % to 90 % B+ < 90 % to 87 % B < 87 % to 84 % B- < 84 % to 80 % C+ < 80 % to 77 % C < 77 % to 74 % C- < 74 % to 70 % D+ < 70 % to 67 % D < 67 % to 64 % D- < 64 % to 60 % F < 60 % to 0 %",
-        "grading_process": "The course grade is based on 200 points and is developed from a variety of assignments and tests."
-     },
-     {
-        "filename": "Dion CPRM 880 Fall 2024 (1).pdf",
-        "instructor_name": "Maeve Dion",
-        "instructor_title": "Associate Professor of Security Studies, founder and faculty advisor in MS CPRM",
-        "instructor_department": "Department of Security Studies",
-        "preferred_contact_method": "Questions related to assignments or learning should first be asked in the Course Questions & Discussions board or the APA chat board (this way all students can benefit from the questions and answers). The use of email is reserved for questions of a private nature.",
-        "email": "maeve.dion@unh.edu",
-        "response_time": "Missing",
-        "office_address": "Missing",
-        "office_phone": "(603) 641-4157",
-        "office_hours": "Drop-in Sessions: Each week, a one-hour window from 6pm - 7pm Eastern Time (ET). One-on-one Appointments: Tuesdays 6pm - 7pm ET and Wednesdays 8am - 1pm ET.",
-        "class_location": "Online",
-        "modality": "Asynchronous online modality",
-        "SLOs": "Describe methods for the measurement and documentation of cybersecurity. Assess the validity of these methods in various contexts. Explain how future change (organizational and external) may impact such evaluations. Use the concepts of these measurement and documentation methods to help evaluate proposals for new cybersecurity investments.",
-        "credit_hour": "3",
-        "workload": "A three credit course is expected to involve a minimum of 135 hours of student work effort (reading/viewing materials, making notes, doing research, fulfilling assignments, etc.)",
-        "assignment_types_title": "Introductory research (video)",
-        "grading_procedures_title": "Rubric and Evaluation Methods",
-        "deadline_expectations_title": "Late submissions will receive a zero unless there are exigent circumstances.",
-        "assignment_delivery": "Canvas",
-        "final_grade_scale": "A 100 % to 94 % A- < 94 % to 90 % B+ < 90 % to 87 % B < 87 % to 84 % B- < 84 % to 80 % C+ < 80 % to 77 % C < 77 % to 74 % C- < 74 % to 70 % D+ < 70 % to 67 % D < 67 % to 64 % D- < 64 % to 60 % F < 60 % to 0 %",
-        "grading_process": "The course grade is based on 200 points and is developed from a variety of assignments and tests."
-     },
-   {
-
-      "filename": "Donnelly Spring 2023 1.docx",
-      "instructor_name": "Dr. Samantha Donnelly",
-      "instructor_title": "Missing",
-      "instructor_department": "Missing",
-      "preferred_contact_method": "Missing",
-      "email": "Samantha.Donnelly@unh.edu",
-      "response_time": "I will respond to email inquiries within 24 hours during the week and will check my email once per day during the weekend.",
-      "office_address": "Online; Zoom Room Title: Dr. Donnelly's Office Hours Link:https://unh.zoom.us/j/92249483928?pwd=KzFFNnpmU1gwMXU5SkNWNzJadlppZz09 Password: 952981",
-      "office_phone": "Missing",
-      "office_hours": "Wednesdays, 4pm-6pm and by appointment",
-      "class_location": "Online; Zoom Room Title: ENGL 602 & ET 625 with Dr. Donnelly Link:https://unh.zoom.us/j/93986724447?pwd=WDF3ODVWdVpFMEV5ZzZQYzN2YlYzZz09 Password: 378735",
-      "modality": "Online Writing Intensive (Synchronous)",
-      "SLOs": "Demonstrate your understanding of key concepts in technical communication, such as context, purpose, audience, genre, tone. etc., by employing these principles appropriately in various writing situations. Write accurate, precise technical prose for academic, public, and professional audiences. Develop texts that use grammatical, stylistic, and genre conventions appropriate for writing in your field. Use online and library resources to identify and choose appropriate material for research writing. Evaluate and incorporate information from external sources (both library and web-based) into your own writing and document sources appropriately. Collaborate effectively as a member of a multidisciplinary writing team. Demonstrate audience and rhetorical awareness in visual design while creating professional and technical documents to visually appeal to appropriate audiences. Prepare and give professional oral presentations for a variety of audiences and purposes. Use critical feedback to inform revisions.",
-      "credit_hour": "Missing",
-      "workload": "Missing",
-      "assignment_types_title": "Small Writing Projects/Discussion Board Responses (Individual) (10%).",
-      "grading_procedures_title": "Grading.",
-      "deadline_expectations_title": "Major assignments will be docked one full letter grade for each day that they are late. Late Small Writing Projects will not be accepted, responded to, or evaluated.",
-      "assignment_delivery": "Missing",
-      "final_grade_scale": "A [94-100] A- [90-93] B+ [87-89] B [84-86] B- [80-83%] C+ [77-79] C [74-76] C- [70-73] D+ [67-69] D [64-66] D- [60-63] F [below 60]",
-      "grading_process": "Small Writing Projects/Discussion Board Responses (Individual) (10%). Writing Community Membership (Collaborative) (5%). Professional Development Packet (Individual) (20%). Innovation Research Report (Individual) (20%). Technical Description and Instructions(Individual or Collaborative) (20%). Final Project (Collaborative) (25%)."
-     },
-     {
-      "filename": "Grindal CPRM 820 Fall 2024.pdf",
-      "instructor_name": "Dr. Karl Grindal",
-      "instructor_title": "Assistant Professor of Security Studies",
-      "instructor_department": "Department of Security Studies",
-      "preferred_contact_method": "Canvas messages is preferred for individual questions about assignments, grades, etc. Questions related to assignments or learning should first be asked in the Course Questions & Discussions board. The use of email is reserved for questions of a private nature, or if you would like to schedule a time outside of office hours.",
-      "email": "Karl.Grindal@unh.edu",
-      "response_time": "Missing",
-      "office_address": "Missing",
-      "office_phone": "(603) 641-4102",
-      "office_hours": "A weekly \"drop in\" Zoom session is available this Thursdays at 5pm EST. You are also welcome to schedule an appointment to meet with me for office hours, assuming availability, on Tuesday, Thursday or Friday 10am-5pm EST.",
-      "class_location": "Online",
-      "modality": "Asynchronous online modality",
-      "SLOs": "Identify and explain the purposes for organizational policymaking. Identify common problems in the development, communication, and implementation of policy. Develop policy based on an organization's mission, values, and priorities (for both internal and external communications). Draft and present written and oral communications to support the implementation of policy within an organization.",
-      "credit_hour": "3",
-      "workload": "A three credit course is expected to involve a minimum of 135 hours of student work effort (reading/viewing materials, making notes, doing research, fulfilling assignments, etc.)",
-      "assignment_types_title": "Introductions (video & post).",
-      "grading_procedures_title": "Rubric and Evaluation Methods",
-      "deadline_expectations_title": "Late submissions will receive a zero unless there are exigent circumstances.",
-      "assignment_delivery": "Canvas",
-      "final_grade_scale": "A 100 % to 94 % A- < 94 % to 90 % B+ < 90 % to 87 % B < 87 % to 84 % B- < 84 % to 80 % C+ < 80 % to 77 % C < 77 % to 74 % C- < 74 % to 70 % D+ < 70 % to 67 % D < 67 % to 64 % D- < 64 % to 60 % F < 60 % to 0 %",
-      "grading_process": "The course grade is based on 200 points and is developed from a variety of assignments and tests."
-     },
-     {
-      "filename": "Sabin Spring 2026.pdf",
-      "instructor_name": "Mihaela Sabin",
-      "instructor_title": "Ph.D., Professor of Computer Science",
-      "instructor_department": "Applied Engineering and Sciences",
-      "preferred_contact_method": "For personal questions or concerns, the best way to communicate with me is in-person or using a Discord Meeting Room or a Teams conferencing session.",
-      "email": "mihaela.sabin@unh.edu",
-      "response_time": "Missing",
-      "office_address": "P121",
-      "office_phone": "603 641 4144",
-      "office_hours": "Thursday, 1-2 pm",
-      "class_location": "Room 149",
-      "modality": "Weekly in-person class sessions are scheduled on Thursday, 9:10 AM – 12 PM, room 149.",
-      "SLOs": "Identify and select appropriate programming concepts to solve computational problems. Apply programming patterns and techniques for solving computational problems. Practice debugging and test-driven programming. Design and implement data and functional abstractions. Use problem decomposition to cope with complex problems. Communicate and collaborate with others to achieve a common goal or solution. Reflect on your learning experiences.",
-      "credit_hour": "4",
-      "workload": "This means that the student's weekly workload, including class time, is estimated at 12 hours per week.",
-      "assignment_types_title": "Participation (5%)",
-      "grading_procedures_title": "ASSESSMENT",
-      "deadline_expectations_title": "No assignment will be accepted after the deadline and a no credit will be given for late work.",
-      "assignment_delivery": "GitHub",
-      "final_grade_scale": "A: 93 A-: 90 B+: 87 B: 83 B-: 80 C+: 77 C: 73 C-: 70 D+: 67 D: 63 D-: 60 F: < 60",
-      "grading_process": "Participation (5%) Active Reading (5%) Reflections (5%) Collaborative Projects (10%) Homework Problems (15%) Personal Project (20%) In-class Assessments (30%) Final Exam (10%)"
-     },
-     {
-      "filename": "Walsh Spring 2023 1.docx",
-      "instructor_name": "Dr. Susan Walsh",
-      "instructor_title": "Missing",
-      "instructor_department": "Missing",
-      "preferred_contact_method": "Missing",
-      "email": "Susan.Walsh@unh.edu",
-      "response_time": "Missing",
-      "office_address": "office #445",
-      "office_phone": "Missing",
-      "office_hours": "M.W. 2:30-3:30 with Zoom mtgs by appointment",
-      "class_location": "Room P531",
-      "modality": "In-Person",
-      "SLOs": "Missing",
-      "credit_hour": "Missing",
-      "workload": "English 514 requires a moderate amount of reading and a significant amount of writing.",
-      "assignment_types_title": "Two Take-Home Examinations and one Essay (25% each)",
-      "grading_procedures_title": "GRADING",
-      "deadline_expectations_title": "Missing",
-      "assignment_delivery": "myCourses",
-      "final_grade_scale": "97-100 = A+; 94-96 = A; 90-93 = A-; 87-89 = B+; 84-86 = B; 80-83 = B-; 77-79 = C+; 74-76 = C; 70-73 = C-; 67-69 = D+; 64-66 = D; 60-63 = D-; 59 and below, F.",
-      "grading_process": "75% Two Take-Home Examinations and one Essay (25% each) 15% Short Writing Assignments 10% Class Participation (attendance, contributions to discussion)"
-     },
-   {
-        "filename": "Luczko Fall 2018.pdf",
-        "instructor_name": "Kate Luczko",
-        "instructor_title": "Missing",
-        "instructor_department": "Missing",
-        "preferred_contact_method": "kateluczko@gmail.com, cell (603) 661-7822 (if you text me, please identify yourself); Available to meet before/after class or by appointment.",
-        "email": "kateluczko@gmail.com",
-        "response_time": "Missing",
-        "office_address": "Missing",
-        "office_phone": "(603) 661-7822",
-        "office_hours": "before/after class or by appointment",
-        "class_location": "Pandora, P514",
-        "modality": "In-Person",
-        "SLOs": "Missing",
-        "credit_hour": "Missing",
-        "workload": "Missing",
-        "assignment_types_title": "Homework",
-        "grading_procedures_title": "GRADING POLICY & EVAULATION",
-        "deadline_expectations_title": "Late work will not be accepted.",
-        "assignment_delivery": "hard-copy (printed) format and uploaded to the corresponding assignment in Canvas",
-        "final_grade_scale": "A 95-100 A- 90-95 B+ 87-90 B 83-87 B- 80-83 C+ 77-80 C 73-77 C- 70-73 D+ 67-70 D 63-67 D- 60-63 F <60",
-        "grading_process": "Homework 45% Interview 15% Business Plan 25% Participation (attendance & value added) 15% TOTAL 100% 660 points"
-     },
-     {
-        "filename": "Gerard Fall 2019.doc",
-        "instructor_name": "Jeanne Gerard",
-        "instructor_title": "Professor",
-        "instructor_department": "Missing",
-        "preferred_contact_method": "email is preferable",
-        "email": "Jeanne.gerard@UNH.edu",
-        "response_time": "Missing",
-        "office_address": "508",
-        "office_phone": "603-641-4161",
-        "office_hours": "Monday, 11am-noon; Tuesday&Wednesday 4pm-5pm or by appointment",
-        "class_location": "P501",
-        "modality": "In-Person",
-        "SLOs": "Missing",
-        "credit_hour": "4",
-        "workload": "Missing",
-        "assignment_types_title": "Homework",
-        "grading_procedures_title": "Grading:",
-        "deadline_expectations_title": "No Extensions, No Make Ups",
-        "assignment_delivery": "McGraw Hill CONNECT",
-        "final_grade_scale": "A 93-100 A- 90-92 B+ 87-89 B 83-86 B- 80-82 C+ 77-79 C 73-76 C- 70-72 D+ 67-69 D 63-66 D- 60-62 F Below 60",
-        "grading_process": "Participation/classwork 25% Attendance 15% Homework 30% Final Tax Return 30% Total 100%"
-     },
-     {
-        "filename": "Gerard Fall 2021.doc",
-        "instructor_name": "Jeanne Gerard",
-        "instructor_title": "Professor",
-        "instructor_department": "Missing",
-        "preferred_contact_method": "email is preferable",
-        "email": "Jeanne.gerard@UNH.edu",
-        "response_time": "Missing",
-        "office_address": "Missing",
-        "office_phone": "603-641-4161",
-        "office_hours": "Missing",
-        "class_location": "ONLINE Wed 2-3:30pm Zoom link: 932 8105 3928",
-        "modality": "Online (Synchronous)",
-        "SLOs": "Missing",
-        "credit_hour": "4",
-        "workload": "Missing",
-        "assignment_types_title": "Homework",
-        "grading_procedures_title": "Grading:",
-        "deadline_expectations_title": "No Extensions, No Make Ups",
-        "assignment_delivery": "McGraw Hill CONNECT",
-        "final_grade_scale": "A 93-100 A- 90-92 B+ 87-89 B 83-86 B- 80-82 C+ 77-79 C 73-76 C- 70-72 D+ 67-69 D 63-66 D- 60-62 F Below 60",
-        "grading_process": "Participation/classwork 5% Attendance 5% Assignments 60% Exams including Final Exam &Tax Return 30% Total 100%"
-     },
-     {
-        "filename": "Gerard Fall 2023.doc",
-        "instructor_name": "Jeanne Gerard",
-        "instructor_title": "Professor",
-        "instructor_department": "Missing",
-        "preferred_contact_method": "email is preferable",
-        "email": "Jeanne.gerard@UNH.edu",
-        "response_time": "Missing",
-        "office_address": "508 Pandora",
-        "office_phone": "603-641-4161",
-        "office_hours": "Mondays 3:45-5pm",
-        "class_location": "Room 514 Pandora",
-        "modality": "In-Person",
-        "SLOs": "Missing",
-        "credit_hour": "4",
-        "workload": "Missing",
-        "assignment_types_title": "Homework",
-        "grading_procedures_title": "Grading:",
-        "deadline_expectations_title": "No Extensions, No Make Ups",
-        "assignment_delivery": "McGraw Hill CONNECT",
-        "final_grade_scale": "A 93-100 A- 90-92 B+ 87-89 B 83-86 B- 80-82 C+ 77-79 C 73-76 C- 70-72 D+ 67-69 D 63-66 D- 60-62 F Below 60",
-        "grading_process": "Participation/classwork 5% Attendance 5% Assignments 60% Exams including Final Tax Return 30% Total 100%"
-     },
-   {
+    "grading_process": "Missing"
+  },
+  {
+    "filename": "Clay CPRM 830 Fall 2024.pdf",
+    "instructor_name": "Greg Clay",
+    "instructor_title": "Adjunct Professor in MS CPRM",
+    "instructor_department": "Department of Security Studies",
+    "preferred_contact_method": "Questions related to assignments or learning should first be asked in the Course Questions & Discussions board (this way all students can benefit from the questions and answers). The use of email is reserved for questions of a private nature, or if you would like to schedule a time during my office hours.",
+    "email": "gregory.clay@unh.edu",
+    "response_time": "Missing",
+    "office_address": "Missing",
+    "office_phone": "(210) 526-1593",
+    "office_hours": "By appointment Sunday - Tuesday, and Thursday - Saturday 7pm - 9pm (Central time).",
+    "class_location": "Online",
+    "modality": "Asynchronous online modality",
+    "SLOs": "Identify common technological and organizational measures for cybersecurity (focus: protection & preparedness concepts). Explain and give examples of the roles of best practices and standards in the design and implementation of such security measures. Explain the functional and organizational advantages and disadvantages of these measures, including impacts from their interaction. Assess the limitations of these security measures in the contexts of organizational change and dynamic threats, flawed technology, and flawed organizational policies and practices.",
+    "credit_hour": "3",
+    "workload": "A three credit course is expected to involve a minimum of 135 hours of student work effort (reading/viewing materials, making notes, doing research, fulfilling assignments, etc.)",
+    "assignment_types_title": "Introductions (video)",
+    "grading_procedures_title": "Rubric and Evaluation Methods",
+    "deadline_expectations_title": "Late submissions will receive a zero unless there are exigent circumstances.",
+    "assignment_delivery": "Canvas",
+    "final_grade_scale": "A 100 % to 94 % A- < 94 % to 90 % B+ < 90 % to 87 % B < 87 % to 84 % B- < 84 % to 80 % C+ < 80 % to 77 % C < 77 % to 74 % C- < 74 % to 70 % D+ < 70 % to 67 % D < 67 % to 64 % D- < 64 % to 60 % F < 60 % to 0 %",
+    "grading_process": "Missing"
+  },
+  {
+    "filename": "Condello CPRM 810 Fall 2024.pdf",
+    "instructor_name": "Kathryn Condello",
+    "instructor_title": "Adjunct Professor in MS CPRM",
+    "instructor_department": "Department of Security Studies",
+    "preferred_contact_method": "Questions related to assignments or learning should first be asked in the Course Questions & Discussions board (this way all students can benefit from the questions and answers). The use of email or text is reserved for questions of a private nature, or if you would like to schedule for discussion.",
+    "email": "kathryn.condello@unh.edu",
+    "response_time": "Missing",
+    "office_address": "Missing",
+    "office_phone": "703-314-5076",
+    "office_hours": "By appointment Monday - Friday (East Coast time).",
+    "class_location": "Online",
+    "modality": "Asynchronous online modality",
+    "SLOs": "Identify and explain significant cybersecurity policy concerns within the historical context of computing, the internet, and globalization. Explain and give examples of the cybersecurity impact of interconnections and dependencies within organizations, industries/sectors, and the homeland security enterprise. Describe the breadth of the communities of interest focused on detecting vulnerabilities and threats and mitigating cybersecurity risks. Articulate the value of cybersecurity to an organization's success (functionality/efficiency, competitive advantage, fulfillment of mission, etc.) as well as challenges to implementation. Express common vulnerabilities and threats innon-technical language that conveys the organizational complexity of cybersecurity risk management.",
+    "credit_hour": "3",
+    "workload": "A three credit course is expected to involve a minimum of 135 hours of student work effort (reading/viewing materials, making notes, doing research, fulfilling assignments, etc.)",
+    "assignment_types_title": "Introductions.",
+    "grading_procedures_title": "Rubric and Evaluation Methods",
+    "deadline_expectations_title": "Late submissions will receive a zero unless there are exigent circumstances.",
+    "assignment_delivery": "Canvas",
+    "final_grade_scale": "A 100 % to 94 % A- < 94 % to 90 % B+ < 90 % to 87 % B < 87 % to 84 % B- < 84 % to 80 % C+ < 80 % to 77 % C < 77 % to 74 % C- < 74 % to 70 % D+ < 70 % to 67 % D < 67 % to 64 % D- < 64 % to 60 % F < 60 % to 0 %",
+    "grading_process": "Missing"
+  },
+  {
+    "filename": "Dion CPRM 840 Fall 2024.pdf",
+    "instructor_name": "Maeve Dion",
+    "instructor_title": "Associate Professor of Security Studies, founder and faculty advisor in MS CPRM",
+    "instructor_department": "Department of Security Studies",
+    "preferred_contact_method": "Questions related to assignments or learning should first be asked in the Course Questions & Discussions board (this way all students can benefit from the questions and answers). The use of email is reserved for questions of a private nature. If you want to contact me directly, please use the Canvas \"Inbox\" functionality rather than sending an email to my UNH account. As a last resort, you can email me at maeve.dion@unh.edu.",
+    "email": "maeve.dion@unh.edu",
+    "response_time": "Missing",
+    "office_address": "Missing",
+    "office_phone": "(603) 641-4157",
+    "office_hours": "Wednesdays 8am - 1pm EDT/EST Thursdays 4pm-8pm EDT/EST",
+    "class_location": "Online",
+    "modality": "Asynchronous online modality",
+    "SLOs": "Explain the legal and regulatory approach to cybersecurity in the United States. Identify and describe cybersecurity concerns and regulatory authorities particular to various U.S. industries and sectors. Compare and contrast U.S. and E.U. legal perspectives on data protection. Debate the advantages and disadvantages of regulatory solutions and market solutions. Identify common sources of cybersecurity standards. Describe processes for incorporating regulatory concerns and security standards into systems and organizations, and for maintaining currency of best practices through auditing and reassessment.",
+    "credit_hour": "3",
+    "workload": "A three credit course is expected to involve a minimum of 135 hours of student work effort (reading/viewing materials, making notes, doing research, fulfilling assignments, etc.)",
+    "assignment_types_title": "Introductions (video)",
+    "grading_procedures_title": "Rubric and Evaluation Methods",
+    "deadline_expectations_title": "Late submissions will receive a zero unless there are exigent circumstances.",
+    "assignment_delivery": "Canvas",
+    "final_grade_scale": "A 100 % to 94 % A- < 94 % to 90 % B+ < 90 % to 87 % B < 87 % to 84 % B- < 84 % to 80 % C+ < 80 % to 77 % C < 77 % to 74 % C- < 74 % to 70 % D+ < 70 % to 67 % D < 67 % to 64 % D- < 64 % to 60 % F < 60 % to 0 %",
+    "grading_process": "Missing"
+  },
+  {
+    "filename": "Dion CPRM 880 Fall 2024 (1).pdf",
+    "instructor_name": "Maeve Dion",
+    "instructor_title": "Associate Professor of Security Studies, founder and faculty advisor in MS CPRM",
+    "instructor_department": "Department of Security Studies",
+    "preferred_contact_method": "Questions related to assignments or learning should first be asked in the Course Questions & Discussions board or the APA chat board (this way all students can benefit from the questions and answers). The use of email is reserved for questions of a private nature.",
+    "email": "maeve.dion@unh.edu",
+    "response_time": "Missing",
+    "office_address": "Missing",
+    "office_phone": "(603) 641-4157",
+    "office_hours": "Drop-in Sessions: Each week, a one-hour window from 6pm - 7pm Eastern Time (ET). One-on-one Appointments: Tuesdays 6pm - 7pm ET and Wednesdays 8am - 1pm ET.",
+    "class_location": "Online",
+    "modality": "Asynchronous online modality",
+    "SLOs": "Describe methods for the measurement and documentation of cybersecurity. Assess the validity of these methods in various contexts. Explain how future change (organizational and external) may impact such evaluations. Use the concepts of these measurement and documentation methods to help evaluate proposals for new cybersecurity investments.",
+    "credit_hour": "3",
+    "workload": "A three credit course is expected to involve a minimum of 135 hours of student work effort (reading/viewing materials, making notes, doing research, fulfilling assignments, etc.)",
+    "assignment_types_title": "Introductory research (video)",
+    "grading_procedures_title": "Rubric and Evaluation Methods",
+    "deadline_expectations_title": "Late submissions will receive a zero unless there are exigent circumstances.",
+    "assignment_delivery": "Canvas",
+    "final_grade_scale": "A 100 % to 94 % A- < 94 % to 90 % B+ < 90 % to 87 % B < 87 % to 84 % B- < 84 % to 80 % C+ < 80 % to 77 % C < 77 % to 74 % C- < 74 % to 70 % D+ < 70 % to 67 % D < 67 % to 64 % D- < 64 % to 60 % F < 60 % to 0 %",
+    "grading_process": "Missing"
+  },
+  {
+    "filename": "Donnelly Spring 2023 1.docx",
+    "instructor_name": "Dr. Samantha Donnelly",
+    "instructor_title": "Missing",
+    "instructor_department": "Missing",
+    "preferred_contact_method": "Missing",
+    "email": "Samantha.Donnelly@unh.edu",
+    "response_time": "I will respond to email inquiries within 24 hours during the week and will check my email once per day during the weekend.",
+    "office_address": "Online; Zoom Room Title: Dr. Donnelly's Office Hours Link:https://unh.zoom.us/j/92249483928?pwd=KzFFNnpmU1gwMXU5SkNWNzJadlppZz09 Password: 952981",
+    "office_phone": "Missing",
+    "office_hours": "Wednesdays, 4pm-6pm and by appointment",
+    "class_location": "Online; Zoom Room Title: ENGL 602 & ET 625 with Dr. Donnelly Link:https://unh.zoom.us/j/93986724447?pwd=WDF3ODVWdVpFMEV5ZzZQYzN2YlYzZz09 Password: 378735",
+    "modality": "Online Writing Intensive (Synchronous)",
+    "SLOs": "Demonstrate your understanding of key concepts in technical communication, such as context, purpose, audience, genre, tone. etc., by employing these principles appropriately in various writing situations. Write accurate, precise technical prose for academic, public, and professional audiences. Develop texts that use grammatical, stylistic, and genre conventions appropriate for writing in your field. Use online and library resources to identify and choose appropriate material for research writing. Evaluate and incorporate information from external sources (both library and web-based) into your own writing and document sources appropriately. Collaborate effectively as a member of a multidisciplinary writing team. Demonstrate audience and rhetorical awareness in visual design while creating professional and technical documents to visually appeal to appropriate audiences. Prepare and give professional oral presentations for a variety of audiences and purposes. Use critical feedback to inform revisions.",
+    "credit_hour": "Missing",
+    "workload": "Missing",
+    "assignment_types_title": "Small Writing Projects/Discussion Board Responses (Individual) (10%).",
+    "grading_procedures_title": "Grading.",
+    "deadline_expectations_title": "Major assignments will be docked one full letter grade for each day that they are late. Late Small Writing Projects will not be accepted, responded to, or evaluated.",
+    "assignment_delivery": "Missing",
+    "final_grade_scale": "A [94-100] A- [90-93] B+ [87-89] B [84-86] B- [80-83%] C+ [77-79] C [74-76] C- [70-73] D+ [67-69] D [64-66] D- [60-63] F [below 60]",
+    "grading_process": "Small Writing Projects/Discussion Board Responses (Individual) (10%). Writing Community Membership (Collaborative) (5%). Professional Development Packet (Individual) (20%). Innovation Research Report (Individual) (20%). Technical Description and Instructions(Individual or Collaborative) (20%). Final Project (Collaborative) (25%)."
+  },
+  {
+    "filename": "Grindal CPRM 820 Fall 2024.pdf",
+    "instructor_name": "Dr. Karl Grindal",
+    "instructor_title": "Assistant Professor of Security Studies",
+    "instructor_department": "Department of Security Studies",
+    "preferred_contact_method": "Canvas messages is preferred for individual questions about assignments, grades, etc. Questions related to assignments or learning should first be asked in the Course Questions & Discussions board. The use of email is reserved for questions of a private nature, or if you would like to schedule a time outside of office hours.",
+    "email": "Karl.Grindal@unh.edu",
+    "response_time": "Missing",
+    "office_address": "Missing",
+    "office_phone": "(603) 641-4102",
+    "office_hours": "A weekly \"drop in\" Zoom session is available this Thursdays at 5pm EST. You are also welcome to schedule an appointment to meet with me for office hours, assuming availability, on Tuesday, Thursday or Friday 10am-5pm EST.",
+    "class_location": "Online",
+    "modality": "Asynchronous online modality",
+    "SLOs": "Identify and explain the purposes for organizational policymaking. Identify common problems in the development, communication, and implementation of policy. Develop policy based on an organization's mission, values, and priorities (for both internal and external communications). Draft and present written and oral communications to support the implementation of policy within an organization.",
+    "credit_hour": "3",
+    "workload": "A three credit course is expected to involve a minimum of 135 hours of student work effort (reading/viewing materials, making notes, doing research, fulfilling assignments, etc.)",
+    "assignment_types_title": "Introductions (video & post).",
+    "grading_procedures_title": "Rubric and Evaluation Methods",
+    "deadline_expectations_title": "Late submissions will receive a zero unless there are exigent circumstances.",
+    "assignment_delivery": "Canvas",
+    "final_grade_scale": "A 100 % to 94 % A- < 94 % to 90 % B+ < 90 % to 87 % B < 87 % to 84 % B- < 84 % to 80 % C+ < 80 % to 77 % C < 77 % to 74 % C- < 74 % to 70 % D+ < 70 % to 67 % D < 67 % to 64 % D- < 64 % to 60 % F < 60 % to 0 %",
+    "grading_process": "Missing"
+  },
+  {
+    "filename": "Sabin Spring 2026.pdf",
+    "instructor_name": "Mihaela Sabin",
+    "instructor_title": "Ph.D., Professor of Computer Science",
+    "instructor_department": "Applied Engineering and Sciences",
+    "preferred_contact_method": "For personal questions or concerns, the best way to communicate with me is in-person or using a Discord Meeting Room or a Teams conferencing session.",
+    "email": "mihaela.sabin@unh.edu",
+    "response_time": "Missing",
+    "office_address": "P121",
+    "office_phone": "603 641 4144",
+    "office_hours": "Thursday, 1-2 pm",
+    "class_location": "Room 149",
+    "modality": "Weekly in-person class sessions are scheduled on Thursday, 9:10 AM – 12 PM, room 149.",
+    "SLOs": "Identify and select appropriate programming concepts to solve computational problems. Apply programming patterns and techniques for solving computational problems. Practice debugging and test-driven programming. Design and implement data and functional abstractions. Use problem decomposition to cope with complex problems. Communicate and collaborate with others to achieve a common goal or solution. Reflect on your learning experiences.",
+    "credit_hour": "4",
+    "workload": "This means that the student's weekly workload, including class time, is estimated at 12 hours per week.",
+    "assignment_types_title": "Participation (5%)",
+    "grading_procedures_title": "ASSESSMENT",
+    "deadline_expectations_title": "No assignment will be accepted after the deadline and a no credit will be given for late work.",
+    "assignment_delivery": "GitHub",
+    "final_grade_scale": "A: 93 A-: 90 B+: 87 B: 83 B-: 80 C+: 77 C: 73 C-: 70 D+: 67 D: 63 D-: 60 F: < 60",
+    "grading_process": "Participation (5%) Active Reading (5%) Reflections (5%) Collaborative Projects (10%) Homework Problems (15%) Personal Project (20%) In-class Assessments (30%) Final Exam (10%)"
+  },
+  {
+    "filename": "Walsh Spring 2023 1.docx",
+    "instructor_name": "Dr. Susan Walsh",
+    "instructor_title": "Missing",
+    "instructor_department": "Missing",
+    "preferred_contact_method": "Missing",
+    "email": "Susan.Walsh@unh.edu",
+    "response_time": "Missing",
+    "office_address": "office #445",
+    "office_phone": "Missing",
+    "office_hours": "M.W. 2:30-3:30 with Zoom mtgs by appointment",
+    "class_location": "Room P531",
+    "modality": "In-Person",
+    "SLOs": "Missing",
+    "credit_hour": "Missing",
+    "workload": "English 514 requires a moderate amount of reading and a significant amount of writing.",
+    "assignment_types_title": "Two Take-Home Examinations and one Essay (25% each)",
+    "grading_procedures_title": "GRADING",
+    "deadline_expectations_title": "Missing",
+    "assignment_delivery": "myCourses",
+    "final_grade_scale": "97-100 = A+; 94-96 = A; 90-93 = A-; 87-89 = B+; 84-86 = B; 80-83 = B-; 77-79 = C+; 74-76 = C; 70-73 = C-; 67-69 = D+; 64-66 = D; 60-63 = D-; 59 and below, F.",
+    "grading_process": "75% Two Take-Home Examinations and one Essay (25% each) 15% Short Writing Assignments 10% Class Participation (attendance, contributions to discussion)"
+  },
+  {
+    "filename": "Luczko Fall 2018.pdf",
+    "instructor_name": "Kate Luczko",
+    "instructor_title": "Missing",
+    "instructor_department": "Missing",
+    "preferred_contact_method": "kateluczko@gmail.com, cell (603) 661-7822 (if you text me, please identify yourself); Available to meet before/after class or by appointment.",
+    "email": "kateluczko@gmail.com",
+    "response_time": "Missing",
+    "office_address": "Missing",
+    "office_phone": "(603) 661-7822",
+    "office_hours": "before/after class or by appointment",
+    "class_location": "Pandora, P514",
+    "modality": "In-Person",
+    "SLOs": "Missing",
+    "credit_hour": "Missing",
+    "workload": "Missing",
+    "assignment_types_title": "Homework",
+    "grading_procedures_title": "GRADING POLICY & EVAULATION",
+    "deadline_expectations_title": "Late work will not be accepted.",
+    "assignment_delivery": "hard-copy (printed) format and uploaded to the corresponding assignment in Canvas",
+    "final_grade_scale": "A 95-100 A- 90-95 B+ 87-90 B 83-87 B- 80-83 C+ 77-80 C 73-77 C- 70-73 D+ 67-70 D 63-67 D- 60-63 F <60",
+    "grading_process": "Homework 45% Interview 15% Business Plan 25% Participation (attendance & value added) 15% TOTAL 100% 660 points"
+  },
+  {
+    "filename": "Gerard Fall 2019.doc",
+    "instructor_name": "Jeanne Gerard",
+    "instructor_title": "Professor",
+    "instructor_department": "Missing",
+    "preferred_contact_method": "email is preferable",
+    "email": "Jeanne.gerard@UNH.edu",
+    "response_time": "Missing",
+    "office_address": "508",
+    "office_phone": "603-641-4161",
+    "office_hours": "Monday, 11am-noon; Tuesday&Wednesday 4pm-5pm or by appointment",
+    "class_location": "P501",
+    "modality": "In-Person",
+    "SLOs": "Missing",
+    "credit_hour": "4",
+    "workload": "Missing",
+    "assignment_types_title": "Homework",
+    "grading_procedures_title": "Grading:",
+    "deadline_expectations_title": "No Extensions, No Make Ups",
+    "assignment_delivery": "McGraw Hill CONNECT",
+    "final_grade_scale": "A 93-100 A- 90-92 B+ 87-89 B 83-86 B- 80-82 C+ 77-79 C 73-76 C- 70-72 D+ 67-69 D 63-66 D- 60-62 F Below 60",
+    "grading_process": "Participation/classwork 25% Attendance 15% Homework 30% Final Tax Return 30% Total 100%"
+  },
+  {
+    "filename": "Gerard Fall 2021.doc",
+    "instructor_name": "Jeanne Gerard",
+    "instructor_title": "Professor",
+    "instructor_department": "Missing",
+    "preferred_contact_method": "email is preferable",
+    "email": "Jeanne.gerard@UNH.edu",
+    "response_time": "Missing",
+    "office_address": "Missing",
+    "office_phone": "603-641-4161",
+    "office_hours": "Missing",
+    "class_location": "ONLINE Wed 2-3:30pm Zoom link: 932 8105 3928",
+    "modality": "Online (Synchronous)",
+    "SLOs": "Missing",
+    "credit_hour": "4",
+    "workload": "Missing",
+    "assignment_types_title": "Homework",
+    "grading_procedures_title": "Grading:",
+    "deadline_expectations_title": "No Extensions, No Make Ups",
+    "assignment_delivery": "McGraw Hill CONNECT",
+    "final_grade_scale": "A 93-100 A- 90-92 B+ 87-89 B 83-86 B- 80-82 C+ 77-79 C 73-76 C- 70-72 D+ 67-69 D 63-66 D- 60-62 F Below 60",
+    "grading_process": "Participation/classwork 5% Attendance 5% Assignments 60% Exams including Final Exam &Tax Return 30% Total 100%"
+  },
+  {
+    "filename": "Gerard Fall 2023.doc",
+    "instructor_name": "Jeanne Gerard",
+    "instructor_title": "Professor",
+    "instructor_department": "Missing",
+    "preferred_contact_method": "email is preferable",
+    "email": "Jeanne.gerard@UNH.edu",
+    "response_time": "Missing",
+    "office_address": "508 Pandora",
+    "office_phone": "603-641-4161",
+    "office_hours": "Mondays 3:45-5pm",
+    "class_location": "Room 514 Pandora",
+    "modality": "In-Person",
+    "SLOs": "Missing",
+    "credit_hour": "4",
+    "workload": "Missing",
+    "assignment_types_title": "Homework",
+    "grading_procedures_title": "Grading:",
+    "deadline_expectations_title": "No Extensions, No Make Ups",
+    "assignment_delivery": "McGraw Hill CONNECT",
+    "final_grade_scale": "A 93-100 A- 90-92 B+ 87-89 B 83-86 B- 80-82 C+ 77-79 C 73-76 C- 70-72 D+ 67-69 D 63-66 D- 60-62 F Below 60",
+    "grading_process": "Participation/classwork 5% Attendance 5% Assignments 60% Exams including Final Tax Return 30% Total 100%"
+  },
+  {
     "filename": "Wells Fall 2025.pdf",
     "instructor_name": "Katrina Wells",
     "instructor_title": "Missing",
@@ -391,8 +389,8 @@
     "assignment_delivery": "Missing",
     "final_grade_scale": "Missing",
     "grading_process": "In-class Participation and Projects – 10% Weekly Quizzes – 10% First Hour Exam – 20% Second Hour Exam – 20% Third Hour Exam- 20% Final Exam – 20%"
- },
-   {
+  },
+  {
     "filename": "Tavares Spring 2026.pdf",
     "instructor_name": "T. Sean Tavares",
     "instructor_title": "Associate Professor",
@@ -414,8 +412,8 @@
     "assignment_delivery": "Canvas (unless instructed otherwise)",
     "final_grade_scale": "Letter Grade Range A 100% to 94% A- <94% to 90% B+ <90% to 87% B <87% to 84% B- <84% to 80% C+ <80% to 77% C <77% to 74% C- <74% to 70% D+ <70% to 67% D <67% to 64% D- <64% to 61% F <61% to 0%",
     "grading_process": "The course grade will be determined using the following weighting of assignment groups: Homework 32% Tests (2 planned) 30% Lab Projects 17% Final Exam 15% Practice Problems 6%"
-   },
-   {
+  },
+  {
     "filename": "Scimone Spring 2026 (853).docx",
     "instructor_name": "Mark T. Scimone",
     "instructor_title": "Missing",
@@ -428,7 +426,7 @@
     "office_hours": "Mondays 3-4pm ",
     "class_location": "P345EC",
     "modality": "In-Person",
-   "SLOs": "After completing the cell culture course (including the lab), students should be able to: 1.\tUnderstand the history, theory and biology behind the cell culture techniques and reagents utilized in the laboratory. 2.\tAseptically culture mammalian cells. 3.\tLearn to use equipment properly to carry out a variety of cell culture techniques, including cell subculturing, viability, cytotoxicity, cryopreservation, transfection, immunofluorescence, flow cytometry, etc. 4.\tCritically evaluate data from primary research articles to understand the application of classroom learning to current basic research fields. 5.\tAct like researchers by developing a project plan, writing a grant proposal, carrying out experiments, statistically analyzing data, using graphing software to display data appropriately, and present findings to an audience. ",
+    "SLOs": "After completing the cell culture course (including the lab), students should be able to: 1.\tUnderstand the history, theory and biology behind the cell culture techniques and reagents utilized in the laboratory. 2.\tAseptically culture mammalian cells. 3.\tLearn to use equipment properly to carry out a variety of cell culture techniques, including cell subculturing, viability, cytotoxicity, cryopreservation, transfection, immunofluorescence, flow cytometry, etc. 4.\tCritically evaluate data from primary research articles to understand the application of classroom learning to current basic research fields. 5.\tAct like researchers by developing a project plan, writing a grant proposal, carrying out experiments, statistically analyzing data, using graphing software to display data appropriately, and present findings to an audience. ",
     "credit_hour": "3",
     "workload": "The expected workload follows the University’s guideline of 45 hours of student academic work per credit per term.",
     "assignment_types_title": "Weekly Homework Questions / In-class Assignments:",
@@ -436,9 +434,9 @@
     "deadline_expectations_title": "For online assignments, questions are due each week by Sunday, 11:59 pm. Late assignments will not be accepted.",
     "assignment_delivery": "Canvas",
     "final_grade_scale": "93-100: ",
-    "grading_process": "Missing"
-   },
-   {
+    "grading_process": "the lecture and lab grades (50%/50%)"
+  },
+  {
     "filename": "Scimone Spring 2026 (753).docx",
     "instructor_name": "Mark T. Scimone",
     "instructor_title": "Missing",
@@ -460,8 +458,8 @@
     "assignment_delivery": "Canvas",
     "final_grade_scale": "93-100: A\n90-92: A-\n87-89: B+\n83-86: B\n80-82: B-\n77-79: C+\n73-76: C\n70-72: C-\n67-69: D+\n63-66: D\n60-62: D-\n< 60: F\n",
     "grading_process": "Missing"
-   },
-   {
+  },
+  {
     "filename": "Scimone Fall 2023 .pdf",
     "instructor_name": "Mark T. Scimone",
     "instructor_title": "Missing",
@@ -482,9 +480,9 @@
     "deadline_expectations_title": "For online assignments, questions are due each week by Sunday, 11:59 pm. Late assignments will not be accepted.",
     "assignment_delivery": "Missing",
     "final_grade_scale": "Missing",
-    "grading_process": "Missing"
-   },
-   {
+    "grading_process": "the lecture and lab grades (50%/50%)"
+  },
+  {
     "filename": "Maclea Fall 2022.docx",
     "instructor_name": "Kyle MacLea",
     "instructor_title": "Associate Professor",
@@ -506,8 +504,8 @@
     "assignment_delivery": "Missing",
     "final_grade_scale": "Missing",
     "grading_process": "Missing"
-   },
-   {
+  },
+  {
     "filename": "Laizure Fall 2024.pdf",
     "instructor_name": "Isabelle Laizure | Katrina Wells",
     "instructor_title": "Missing",
@@ -530,7 +528,7 @@
     "final_grade_scale": "Missing",
     "grading_process": "In-class Participation – 10% Weekly Quizzes – 10% First Hour Exam – 20% Second Hour Exam – 20% Third Hour Exam- 20% Final Exam – 20%"
   },
-   {
+  {
     "filename": "Johnson, Kristen Fall 2022.docx",
     "instructor_name": "Kristen Johnson",
     "instructor_title": "Dr.",
@@ -599,7 +597,7 @@
     "final_grade_scale": "SCALE A 100-94 A- <94-90 B+ <90-87 B <87-84 B- <84-80 C+ <80-77 C <77-74 C- <74-70 D+ <70-67 D <67-64 D- <64-60 F <60- 0",
     "grading_process": "Class Participation 10% E-Portfolio 45% Final Drafts 25% Process Grade 20%"
   },
-   {
+  {
     "filename": "Jin Fall 2021.pdf",
     "instructor_name": "Karen Jin",
     "instructor_title": "Missing",
@@ -691,7 +689,7 @@
     "final_grade_scale": "Missing",
     "grading_process": "10% Participation. Includes showing up to class on time, submitting assignments on their due dates. 30% Labs. Lab work is done during classroom time. Point total is 10 out of 11 at 3 points each. 30% Assignments. There will be 2 assignments at 15 points, with each assignment divided into: A design document worth 4 points. Presenting your work in class worth 1 point. Core elements of your assignments worth 10 points. 30% Exams. Two exams worth 15 points each"
   },
- {
+  {
     "filename": "Troy Fall 2025.docx",
     "instructor_name": "William Troy",
     "instructor_title": "Principal Lecturer",
@@ -713,8 +711,8 @@
     "assignment_delivery": "Missing",
     "final_grade_scale": "A 95-100% A- 90-94 B+ 86-89 B 83-85 B- 80-82 C+ 77-80 C 73-76 C- 70-72 D+ 67-69 D 63-66 D- 60-62 F < 60",
     "grading_process": "Missing"
-   },
- {
+  },
+  {
     "filename": "Shallow Spring 2018.pdf",
     "instructor_name": "Jon Shallow",
     "instructor_title": "Adjunct Professor",
@@ -736,8 +734,8 @@
     "assignment_delivery": "Missing",
     "final_grade_scale": "Missing",
     "grading_process": "Missing"
-   },
- {
+  },
+  {
     "filename": "Sabin Fall 2016.pdf",
     "instructor_name": "Mihaela Sabin",
     "instructor_title": "Associate Professor of Computer Science",
@@ -759,8 +757,8 @@
     "assignment_delivery": "Missing",
     "final_grade_scale": "Missing",
     "grading_process": "Missing"
-   },
- {
+  },
+  {
     "filename": "Pugh, Michael Fall 2018.docx",
     "instructor_name": "Michael Pugh",
     "instructor_title": "Missing",
@@ -782,8 +780,8 @@
     "assignment_delivery": "Missing",
     "final_grade_scale": "A = 92.5 – 100   (94)  ;     A- = 89.5 – 92.4  (90) ;   B+ = 86.5 – 89.4  (88) ;  B = 82.5 – 86.4 (84) ;B- = 79.5 – 82.4  (80) ;     C+ = 76.5 – 79.4  (78) ;   C = 72.5 – 76.4  (74)  ;  C-  = 96.5 – 72.4  (70) ;D+ = 66.5 – 69.4  (68);     D = 62.5 – 66.4 (64) ;  D- = 59.5 – 62.4",
     "grading_process": "Short Fiction Essay  -- 20 %    Additional exercises and commentaries are check-    Drama Essay –    20 %       graded:  Novel Essay –    15 %    Check (      ) – assignment completed Poem analyses –   10 %  Check plus (  )–assignment completed with Midterm Exercise –     15%      original and challenging contentFinal Exercise –    15 %     Check minus ( ) – assignment not completedClass Participation –   5 % (includes discussion-leading)"
- },
- {
+  },
+  {
     "filename": "Ohkami Fall 2025.pdf",
     "instructor_name": "Takahide Ohkami,",
     "instructor_title": "Lecturer",
@@ -805,8 +803,8 @@
     "assignment_delivery": "Canvas",
     "final_grade_scale": "A: 94 ≤ Score A-: 90 ≤ Score < 94B+: 87 ≤ Score < 90 B: 84 ≤ Score < 87 B-: 80 ≤ Score < 84C+: 77 ≤ Score < 80 C: 74 ≤ Score < 77 C-: 70 ≤ Score < 74D+: 67 ≤ Score < 70 D: 64 ≤ Score < 67 D-: 60 ≤ Score < 64F: Score < 60",
     "grading_process": "Excel Projects (W1, W2) 17%MATLAB Projects (W3, W4) 17%Instrument Projects (W5, W6, W7) 26%JPL Mars Landing Project (W8) 8%Ohm’s Law Projects (W9, W10) 17%LabVIEW Projects (W11, W12, W13) 15%"
- },
- {
+  },
+  {
     "filename": "Nickerson Fall 2017.pdf",
     "instructor_name": "Laura Nickerson",
     "instructor_title": "Missing",
@@ -828,8 +826,8 @@
     "assignment_delivery": "MyCourses",
     "final_grade_scale": "Missing",
     "grading_process": "Labs: (weekly assigned; 30% of total grade)Homework: (bi-weekly assigned; 20% of total grade)Web Project: (30% of total grade)Final Exam: (12% of total grade)Discussions: (weekly assigned; 8% of total grade)"
- },
- {
+  },
+  {
     "filename": "Murphy Spring 2021 M2.docx",
     "instructor_name": "Andrea Murphy",
     "instructor_title": "Missing",
@@ -851,8 +849,8 @@
     "assignment_delivery": "MyCourses",
     "final_grade_scale": "Missing",
     "grading_process": "Labs- (Assigned weekly: 25% of total grade), Homework- (Assigned weekly: 25% of total grade)Final Web Project- (Semester long project: 25% of total grade)Participation- (15% of total grade)Final Exam- (10% of total grade)"
- },
- {
+  },
+  {
     "filename": "Marcotte Fall 2025.pdf",
     "instructor_name": "Donald Marcotte",
     "instructor_title": "Adjunct professor",
@@ -874,8 +872,8 @@
     "assignment_delivery": "Missing",
     "final_grade_scale": "94-100 | A 4.0 Excellent 90-93 | A- 3.67 87-89 | B+ 3.33 84-86 | B 3.0 Superior 80-83 | B- 2.67 77-79 | C+ 2.33 74-76 | C 2.0 Satisfactory, Competent 70-73 | C- 1.67 67-69 | D+ 1.33 64-66 | D 1.0 Marginal 60-63 | D- 0.67 59-Below | F 0.0 Failure",
     "grading_process": "The grading for this course will be divided among the following categories:Homework 20%Tests (2) 30%Laboratory Exercises 30%Final Exam 20%"
- },
- {
+  },
+  {
     "filename": "Kilcrease Spring 2026.docx",
     "instructor_name": "Kelly Kilcrease",
     "instructor_title": "Associate Professor of Business",
@@ -897,8 +895,8 @@
     "assignment_delivery": "All work associated with the case studies and application assignments should be uploaded to Canvas",
     "final_grade_scale": "A+ = 97-100 B+ = 87-89 C+ = 77-79 D+ = 67-69 F = below 60 A = 93-96 B = 83-86 C = 73-76 D = 63-66 A- = 90-92 B- = 80-82 C- = 70-72 D- = 60-62",
     "grading_process": "Solve the Dilemma (4): 16%, Exams (2) –Mid-term & Final: 30%, See for Yourself Case (4): 16%, Business Plan: 23%, Participation (in class & online): 10%, Peregrine Online Test: 5%"
- },
- {
+  },
+  {
     "filename": "Kerman Fall 2019.docx",
     "instructor_name": "Sinehan Kerman",
     "instructor_title": "Adjunct Faculty",
@@ -920,8 +918,8 @@
     "assignment_delivery": "Canvas",
     "final_grade_scale": "A 95-100% A- 90-94% B+ 86-89% B 83-85% B- 80-82% C+ 77-80% C 73-76% C- 70-72% D+ 67-69% D 63-66% D- 60-62% F < 60%",
     "grading_process": "Exam 1: 9%, Exam 2: 9%, 11 HW + OL/F2F class participation @ 30 points per week: 60% Team Business Industry Analysis project: 18%, Class Participation: 4%"
- },
- {
+  },
+  {
     "filename": "Harvey Fall 2025.pdf",
     "instructor_name": "George Harvey",
     "instructor_title": "Adjunct",
@@ -943,8 +941,8 @@
     "assignment_delivery": "Missing",
     "final_grade_scale": "Missing",
     "grading_process": "Missing"
-   },
- {
+  },
+  {
     "filename": "Gitlitz Fall 2023.pdf",
     "instructor_name": "Howard Eglowstein | Ken Gitlitz",
     "instructor_title": "Missing",
@@ -966,8 +964,8 @@
     "assignment_delivery": "Missing",
     "final_grade_scale": "Missing",
     "grading_process": "Active Reading (10%), In-class Projects (10%), Reflections (10%), Homework Problems (20%), Examinations (50%)"
- },
- {
+  },
+  {
     "filename": "Forti Spring 2023.pdf",
     "instructor_name": "Marisa Forti",
     "instructor_title": "Adjunct Faculty",
@@ -989,8 +987,8 @@
     "assignment_delivery": "Canvas",
     "final_grade_scale": "A 520-550 A- 505-519 B+ 490-504 B 475-489 B- 460-474 C+ 445-459 C 430-444 C- 415-429 D+ 400-414 D 390-399 D- 375-389 F Below 374",
     "grading_process": "Exam 1: 11%, Exam 2: 11%, Assignments: 20%, Discussion Boards: 16%, Class Participation: 22%, Team Business Plan Project: 20%"
- },
- {
+  },
+  {
     "filename": "Fensom Fall 2017 M1.pdf",
     "instructor_name": "Gail Fensom",
     "instructor_title": "Missing",
@@ -1012,8 +1010,8 @@
     "assignment_delivery": "Missing",
     "final_grade_scale": "Missing",
     "grading_process": "Missing"
-   },
- {
+  },
+  {
     "filename": "Donovan Spring 2023 M1 (Millyard Scholars).docx",
     "instructor_name": "Kimberly Donovan",
     "instructor_title": "Missing",
@@ -1035,8 +1033,8 @@
     "assignment_delivery": "MyCourses",
     "final_grade_scale": "A   92.5 (94)   C+   76.5-79.4 (78)     D+   66.5-69.4 (68)A-  89.5-92.4 (90)     C   72.5-76.4 (74)     D   62.5-66.4 (64)   B+  86.5-89.4 (88)   C-    69.5-72.4 (70)   D-    59.5-62.4 (60)   B    82.5-86.4 (84)B-   79.5-82.4 (80)",
     "grading_process": "Participation: 10%, Text-based assignments and analyses: 15%, Writing Artifacts:  Rhetorical Analysis: 10%, Visual Rhetoric Project: 10%, Argumentative Research Paper: 10%, Drafts and Peer Reviews: 10%, Final portfolio: 25%, Final Reflective Essay: 10%"
- },
- {
+  },
+  {
     "filename": "CPRM 860 Syllabus.pdf",
     "instructor_name": "Missing",
     "instructor_title": "Missing",
@@ -1058,8 +1056,8 @@
     "assignment_delivery": "Missing",
     "final_grade_scale": "A 100 %to94 %A-< 94 %to90 %B+< 90 %to87 %B< 87 %to84 %B-< 84 %to80 %C+< 80 %to77 %C< 77 %to74 %C-< 74 %to70 %D+< 70 %to67 %D< 67 %to64 %D-< 64 %to60 %F< 60 %to0 %",
     "grading_process": "Missing"
- },
-    {
+  },
+  {
     "filename": "Capuz Spring 2023.docx",
     "instructor_name": "Carlo Capuz",
     "instructor_title": "Missing",
@@ -1081,8 +1079,8 @@
     "assignment_delivery": "MyCourses",
     "final_grade_scale": "Missing",
     "grading_process": "Participation (including conferences) 10%, Text-based assignments and analyses 15%, Writing Artifacts: Rhetorical Analysis 10%, Visual Rhetoric Project 10%, Argumentative Research Paper 10%, Drafts and Peer Reviews 10%, Final portfolio 25%, Final Reflective Essay 10%"
- },
-{
+  },
+  {
     "filename": "Bolton Fall 2023 M4.docx",
     "instructor_name": "Austin Bolton",
     "instructor_title": "Missing",
@@ -1104,14 +1102,14 @@
     "assignment_delivery": "All assignments should be posted on Canvas.",
     "final_grade_scale": "Grading Breakdown. You will receive a letter grade (along with my written feedback) for each of the major assignments. The grade for each essay will be assigned as follows:\n\n▪ A = Excellent. Your essay has a clear purpose and is well organized; it is original and focused, with fully developed ideas and/or very effective use of research. The paper demonstrates your full understanding of the assignment prompt and meets or exceeds all requirements. The style is effective. The strengths of the paper outweigh any weaknesses.\n\n▪ B = Very Good. Your essay has a relatively clear purpose and is organized logically. It is somewhat original and relatively focused. Your ideas are developed for the most part, and/or your use of research is effective. The paper demonstrates your understanding of the assignment prompt and meets or exceeds all requirements. The style is effective for the most part. The strengths of the paper outweigh the weaknesses.\n\n▪ C = Average. Your essay has a discernable purpose, and its organization generally makes sense. The style is somewhat effective. While the paper is not as original or focused as it could be, it demonstrates your understanding of several of the key points of the assignment and meets most, if not all, of the essay requirements.\n\n▪ D = Marginal. A clear purpose may be present in your paper, but the writing is not well organized, original, or focused. The style of the paper is ineffective. The essay demonstrates an understanding of only some of the key points of the assignment and meets very few of the requirements. Overall, the essay’s weaknesses exceed its strengths.\n\n▪ F = Failure. Your essay contains many errors. It is difficult to read and vague. Your essay lacks a purpose and does not meet the paper requirements. ",
     "grading_process": "Personal Essay: 20%, Analysis Essay: 20%, Researched Essay: 20%, Homework: 20%, Multimodal Composition: 10%, Participation: 10%"
- },
- {
+  },
+  {
     "filename": "Blumberg Spring 2018.pdf",
     "instructor_name": "John Blumberg",
     "instructor_title": "Missing",
     "instructor_department": "Computing Technology, Division of Science and Technology",
     "preferred_contact_method": "Missing",
-    "email": "meanoleprofessor@comcast.net",
+    "email": "Missing",
     "response_time": "email me at meanoleprofessor@comcast.net. I’ll reply no later than next weekday.",
     "office_address": "Missing",
     "office_phone": "via text 603 296 7880",
@@ -1127,8 +1125,8 @@
     "assignment_delivery": "Blackboard",
     "final_grade_scale": "Missing",
     "grading_process": "GRADING AND EVALUATION OF STUDENT WORK 8 homework assignments @ 3% each: 24%  Creative project @ 25  Presentation of creative project: 5% Mid-term exam and final exam @ 18% each: 36% Class participation 10 %."
- },
- {
+  },
+  {
     "filename": "Arredondo Fall 2023 Course Outline.pdf",
     "instructor_name": "Missing",
     "instructor_title": "Missing",
@@ -1150,5 +1148,5 @@
     "assignment_delivery": "Missing",
     "final_grade_scale": "Missing",
     "grading_process": "Missing"
- }
+  }
 ]

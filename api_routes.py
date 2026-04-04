@@ -489,6 +489,167 @@ def _process_zip_file(zip_file, temp_dir: str) -> list[dict]:
     return results
 
 
+def _empty(val) -> bool:
+    if val is None:
+        return True
+    if isinstance(val, str):
+        v = val.strip().lower()
+        return v in ("", "missing", "unknown", "not found", "none")
+    return False
+
+
+def _extract_missing_fields(result: dict) -> list[dict]:
+    """Build a UI-friendly list of missing fields from detector output."""
+    missing: list[dict] = []
+
+    def add_missing(key: str, label: str, current_value=None):
+        missing.append({"key": key, "label": label, "current_value": current_value or ""})
+
+    if not bool(result.get("has_slos")):
+        add_missing("slo", "Student Learning Outcomes")
+
+    instructor = result.get("instructor") or {}
+    if _empty(instructor.get("name")):
+        add_missing("instructor_name", "Instructor Name")
+    if _empty(instructor.get("title")):
+        add_missing("instructor_title", "Instructor Title")
+    if _empty(instructor.get("department")):
+        add_missing("instructor_department", "Instructor Department")
+
+    if _empty(result.get("course_delivery")) or str(result.get("course_delivery", "")).strip().lower() == "unknown":
+        add_missing("modality", "Course Delivery (Online/Hybrid/In-Person)")
+
+    office = result.get("office_information") or {}
+    if _empty(office.get("location")):
+        add_missing("office_location", "Office Location")
+    if _empty(office.get("hours")):
+        add_missing("office_hours", "Office Hours")
+    if _empty(office.get("phone")):
+        add_missing("office_phone", "Office Phone")
+
+    email = result.get("email_information") or {}
+    if _empty(email.get("email")):
+        add_missing("email", "Instructor Email")
+
+    preferred = result.get("preferred_information") or {}
+    if _empty(preferred.get("preferred")):
+        add_missing("preferred_contact", "Preferred Contact Method")
+
+    late = result.get("late_information") or {}
+    if _empty(late.get("late")):
+        add_missing("late_work_policy", "Late Work Policy")
+
+    credit = result.get("credit_hours") or {}
+    if _empty(credit.get("hours")):
+        add_missing("credit_hours", "Credit Hours")
+
+    workload = result.get("workload_information") or {}
+    if _empty(workload.get("description")):
+        add_missing("workload", "Expected Workload")
+
+    gscale = result.get("grading_scale") or {}
+    if not bool(gscale.get("found")) or _empty(gscale.get("content")):
+        add_missing("grading_scale", "Grading Scale")
+
+    ad = result.get("assignment_delivery") or {}
+    if not bool(ad.get("found")) or _empty(ad.get("content")):
+        add_missing("assignment_delivery", "Assignment Delivery")
+
+    at = result.get("assignment_types") or {}
+    if not bool(at.get("found")) or _empty(at.get("content")):
+        add_missing("assignment_types", "Assignment Types")
+
+    gp = result.get("grading_process") or {}
+    if not bool(gp.get("found")) or _empty(gp.get("content")):
+        add_missing("grading_process", "Grading Process")
+
+    rt = result.get("response_time") or {}
+    if not bool(rt.get("found")) or _empty(rt.get("content")):
+        add_missing("response_time", "Response Time")
+
+    cl = result.get("class_location") or {}
+    if not bool(cl.get("found")) or _empty(cl.get("content")):
+        add_missing("class_location", "Class Location")
+
+    return missing
+
+
+def _build_template_payload(detector_payload: dict, user_inputs: dict) -> dict:
+    """Flatten detector output + user inputs into template placeholder keys."""
+    data = dict(detector_payload or {})
+    user_inputs = dict(user_inputs or {})
+
+    instructor = data.get("instructor") or {}
+    office = data.get("office_information") or {}
+    email_info = data.get("email_information") or {}
+    preferred_info = data.get("preferred_information") or {}
+    late_info = data.get("late_information") or {}
+    credit_info = data.get("credit_hours") or {}
+    workload_info = data.get("workload_information") or {}
+    gscale = data.get("grading_scale") or {}
+    ad = data.get("assignment_delivery") or {}
+    at = data.get("assignment_types") or {}
+    gp = data.get("grading_process") or {}
+    rt = data.get("response_time") or {}
+    cl = data.get("class_location") or {}
+
+    # Keys below intentionally match TEMPLATE_FIELDS in docx_template_updater.py
+    template_data = {
+        "filename": data.get("filename", "Uploaded_syllabus"),
+        "SLOs": data.get("slo_content") if data.get("has_slos") else "",
+        "modality": data.get("course_delivery") if str(data.get("course_delivery", "")).lower() != "unknown" else "",
+        "instructor_name": instructor.get("name") or "",
+        "instructor_title": instructor.get("title") or "",
+        "instructor_department": instructor.get("department") or "",
+        "email": email_info.get("email") or "",
+        "preferred_contact_method": preferred_info.get("preferred") or "",
+        "office_address": office.get("location") or "",
+        "office_hours": office.get("hours") or "",
+        "office_phone": office.get("phone") or "",
+        "credit_hour": credit_info.get("hours") or "",
+        "workload": workload_info.get("description") or "",
+        "final_grade_scale": gscale.get("content") or "",
+        "grading_process": gp.get("content") or "",
+        "assignment_types_title": at.get("content") or "",
+        "assignment_delivery": ad.get("content") or "",
+        "deadline_expectations_title": late_info.get("late") or "",
+        "response_time": rt.get("content") or "",
+        "class_location": cl.get("content") or "",
+    }
+
+    # Map UI keys to template keys and override with user inputs where provided.
+    key_map = {
+        "preferred_contact": "preferred_contact_method",
+        "instructor_name": "instructor_name",
+        "instructor_title": "instructor_title",
+        "instructor_department": "instructor_department",
+        "email": "email",
+        "office_location": "office_address",
+        "office_hours": "office_hours",
+        "office_phone": "office_phone",
+        "credit_hours": "credit_hour",
+        "workload": "workload",
+        "grading_scale": "final_grade_scale",
+        "grading_process": "grading_process",
+        "assignment_types": "assignment_types_title",
+        "assignment_delivery": "assignment_delivery",
+        "late_work_policy": "deadline_expectations_title",
+        "response_time": "response_time",
+        "class_location": "class_location",
+        "modality": "modality",
+        "slo": "SLOs",
+    }
+
+    for ui_key, raw_val in user_inputs.items():
+        if ui_key not in key_map:
+            continue
+        val = str(raw_val).strip() if raw_val is not None else ""
+        if not _empty(val):
+            template_data[key_map[ui_key]] = val
+
+    return template_data
+
+
 # -----------------------------------------------------------------------------
 # Route factory
 # -----------------------------------------------------------------------------
@@ -554,11 +715,18 @@ def create_routes(app):
 
             if len(results) == 1:
                 last_upload_result = results[0]
-                return jsonify(results[0])
+                response_payload = dict(results[0])
+                response_payload["missing_fields"] = _extract_missing_fields(response_payload)
+                return jsonify(response_payload)
             else:
                 # Keep the first result available for template generation flows.
                 last_upload_result = results[0]
-                return jsonify({'results': results})
+                enriched = []
+                for r in results:
+                    rr = dict(r)
+                    rr["missing_fields"] = _extract_missing_fields(rr)
+                    enriched.append(rr)
+                return jsonify({'results': enriched})
 
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
@@ -589,18 +757,13 @@ def create_routes(app):
             logging.exception("Error in /ask")
             return jsonify({"response": f"Server error: {e}"}), 500
 
-    @app.route('/submit_preferred_contact', methods=['POST'])
-    def submit_preferred_contact():
+    @app.route('/submit_missing_fields', methods=['POST'])
+    def submit_missing_fields():
         global last_uploaded_filename, last_detected_email, last_upload_result
-        data = request.get_json()
-        preferred_contact_method = data.get("preferred_contact_method")
-
-        if not preferred_contact_method:
-            return jsonify({"error": "Preferred contact method is required"}), 400
-        
-        preferred_contact_value = str(preferred_contact_method).strip()
-        if preferred_contact_value.lower() == "email" and last_detected_email:
-            preferred_contact_value = last_detected_email
+        data = request.get_json(silent=True) or {}
+        user_inputs = data.get("user_inputs")
+        if not isinstance(user_inputs, dict):
+            user_inputs = {}
 
         if not isinstance(last_upload_result, dict):
             return jsonify({"error": "No uploaded syllabus context found. Please upload a syllabus first."}), 400
@@ -608,11 +771,7 @@ def create_routes(app):
         filename = last_uploaded_filename or data.get("filename") or "Uploaded_syllabus"
         detector_payload = dict(last_upload_result)
         detector_payload["filename"] = filename
-
-        preferred_info = dict(detector_payload.get("preferred_information") or {})
-        preferred_info["preferred"] = preferred_contact_value or "Missing"
-        preferred_info["found"] = bool(preferred_contact_value and preferred_contact_value.strip())
-        detector_payload["preferred_information"] = preferred_info
+        template_data = _build_template_payload(detector_payload, user_inputs)
 
         template_path = Path("updated_syllabus_detector_common_template.docx")
         if not template_path.exists():
@@ -622,7 +781,7 @@ def create_routes(app):
             temp_output_path = Path(tmp.name)
 
         try:
-            fill_docx_template_from_detector_result(template_path, detector_payload, temp_output_path)
+            fill_docx_template_from_detector_result(template_path, template_data, temp_output_path)
             file_bytes = temp_output_path.read_bytes()
         finally:
             try:

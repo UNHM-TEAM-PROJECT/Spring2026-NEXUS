@@ -26,6 +26,7 @@ MAX_UPWARD_SCAN = 7
 MAX_DOWNWARD_SCAN = 9
 MAX_FORWARD_SCAN = 7
 PERCENT_CLUSTER_WINDOW = 3
+MAX_DESCRIPTION_SKIP = 15
 
 
 class GradingProcessDetector:
@@ -54,8 +55,7 @@ class GradingProcessDetector:
         # Pattern to detect grading scale lines (letter grades with ranges)
         # Examples: "A 100 % to 94 %", "A- < 94 % to 90 %", "A: 93 - 100"
         self.grading_scale_pattern = re.compile(
-            r'\b[A-F][+-]?\s*[:<\|]?\s*(<\s*)?\d+\s*%?\s*(to|[-–—])\s*\d+\s*%?',
-            re.I
+            r'\b[A-F][+-]?\s*[:<\|]?\s*(<\s*)?\d+\s*%?\s*(to|[-–—])\s*\d+\s*%?'
         )
 
     def _is_grading_scale_line(self, line: str) -> bool:
@@ -66,6 +66,14 @@ class GradingProcessDetector:
 
         # Check for grading scale patterns like "A 100% to 94%", "A: 93-100"
         if self.grading_scale_pattern.search(line):
+            return True
+
+        # Catch "90% to 100% A" / "80-89% B" / "90% to 100% | A" style
+        if re.search(r'\d+\s*%?\s*(to|[-–—])\s*\d+\s*%\s*[|]?\s*[A-F][+-]?\b', line):
+            return True
+
+        # Catch "< 60% F" / "> 90% A" / "< 60% | F" style
+        if re.search(r'[<>]\s*\d+\s*%\s*[|]?\s*[A-F][+-]?\b', line):
             return True
 
         # Check for table headers typical of grading scales
@@ -90,6 +98,15 @@ class GradingProcessDetector:
                    for letter in ['a', 'b', 'c', 'd', 'f']):
                 return True
 
+        # Attendance-threshold lines (e.g. "90% attendance required")
+        if re.search(r'\d+\s*%\s*attendance\b', line_lower):
+            return True
+
+        # Attendance credit/penalty lines (e.g. "80% for being late, 100% for full attendance")
+        if re.search(r'(for\s*(being\s*)?late|for\s*full\s*attendance|for\s*absence|for\s*tardy)', line_lower):
+            if '%' in line_lower:
+                return True
+
         return False
 
     def _is_late_policy_line(self, line: str) -> bool:
@@ -98,15 +115,42 @@ class GradingProcessDetector:
             return False
         line_lower = line.lower()
 
-        # Check for late submission indicators
-        late_indicators = ['days late', 'late submission', 'points subtracted', 'late penalty',
-                          'will not be graded', 'late work', 'late assignment', 'late deduction']
+        # Check for late submission indicators — keep these specific to avoid
+        # false positives on assignment deadline reminder sentences
+        late_indicators = [
+            'days late', 'late submission', 'points subtracted', 'late penalty',
+            'will not be graded', 'late work', 'late assignment', 'late deduction',
+            'submitted late', 'per day late', 'after the due date and time',
+            'lose 10% per day', 'lose points per day',
+        ]
         if any(indicator in line_lower for indicator in late_indicators):
+            return True
+
+        # "X% per day" late deduction pattern (e.g. "you will lose 10% per day")
+        if re.search(r'\d+\s*%\s*per\s*day', line_lower):
+            return True
+
+        # "Deduct X%" or "X% deduction" in a line that also mentions lateness
+        if re.search(r'\bdeduct\w*\s+\d+(?:\.\d+)?\s*%', line_lower):
+            return True
+        if re.search(r'\d+(?:\.\d+)?\s*%\s*deduction\b', line_lower):
+            return True
+
+        # "decreases by X%" — for lines like "points decreases by 10%"
+        if re.search(r'decreas\w*\s+by\s+\d+(?:\.\d+)?\s*%', line_lower):
+            return True
+
+        # "weeks late" / "days late" (broader catch)
+        if re.search(r'\d+\s*(weeks?|days?)\s+late', line_lower) and re.search(r'\d+\s*%', line_lower):
             return True
 
         # Check for late policy table patterns
         # Example: "1 | 15%" or "7 or more | Will not be graded"
-        if '|' in line and any(word in line_lower for word in ['late', 'day', 'penalty', 'deduction']):
+        if '|' in line and any(word in line_lower for word in ['late', 'penalty', 'deduction']):
+            return True
+
+        # Ascending penalty table: single digit | N% (e.g. "1 | 10%", "2 | 20%")
+        if re.match(r'^\s*\d+\s*\|\s*\d+\s*%', line):
             return True
 
         return False
@@ -163,6 +207,135 @@ class GradingProcessDetector:
 
         return False
 
+    def _has_more_grading_ahead(self, lines, start_idx: int) -> bool:
+        """Return True if a grading item (% or points line) appears within
+        MAX_DESCRIPTION_SKIP lines of start_idx, ignoring empty lines and
+        late-policy/scale lines along the way.
+
+        Stops immediately at a strong section boundary (all-caps heading or
+        anchor keyword heading) that does not itself contain a percentage.
+        """
+        non_empty_seen = 0
+        for j in range(start_idx, min(len(lines), start_idx + MAX_DESCRIPTION_SKIP + 1)):
+            ahead = lines[j].strip()
+            if not ahead:
+                continue  # skip blank lines
+            non_empty_seen += 1
+            # Strong section heading with no % = new section, stop bridging
+            if (ahead.isupper() and len(ahead.split()) <= MAX_HEADING_WORDS_CAPS
+                    and not self.percent_pattern.search(ahead)
+                    and not self.points_pattern.search(ahead)):
+                return False
+            if self._is_grading_scale_line(ahead) or self._is_late_policy_line(ahead):
+                continue  # skip noise lines
+            if (self.percent_pattern.search(ahead)
+                    or self.points_pattern.search(ahead)
+                    or re.match(
+                        r"^[A-Za-z].{0,60}"
+                        r"(\d+\s*%|\(\d+%\)|\d+\s*points|\d+\s*pts)",
+                        ahead, re.I)):
+                return True
+            # Non-% non-heading description line — keep looking
+        return False
+
+    def _format_grading_output(self, raw_text: str) -> str:
+        """
+        Extract percentages from grading process context only.
+
+        Rules:
+        - Only extracts % values (points-only → missing)
+        - Sum of raw percentages must not exceed 200 (sanity check); if it does → missing
+        - Returns comma-separated list sorted descending (deduped)
+        """
+        if not raw_text or not isinstance(raw_text, str):
+            return ""
+
+        text = raw_text.lower()
+        # Support decimal percentages (e.g. "47.5 %", "12.5%")
+        pct_pattern = re.compile(r'(\d+(?:\.\d+)?)\s*%')
+        matches = list(pct_pattern.finditer(text))
+
+        if not matches:
+            return ""
+
+        # Lines that indicate a grand total, scale reference, or course modality —
+        # 100% on these lines is not a category weight and should be excluded.
+        total_line_pattern = re.compile(
+            r'\b(total|online\s*course|asynchronous|hybrid|in.person|'
+            r'out\s+of\s+100|scale|counted\s+as)\b'
+        )
+        # Lines that contain a grade scale context (e.g. "90% attendance required")
+        scale_context_pattern = re.compile(
+            r'\b(attendance\s*required|must\s*attend|letter\s*grade|earn\s*an?\s*[a-f])\b'
+        )
+        # Lines describing attendance credit (e.g. "80% for being late, 100% for full attendance")
+        attendance_credit_pattern = re.compile(
+            r'\b(for\s*(being\s*)?late|for\s*full\s*attendance|for\s*absence|for\s*tardy)\b'
+        )
+        # Lines with passing-threshold context (e.g. "earn a minimum of 75%", "required to pass")
+        threshold_pattern = re.compile(
+            r'\b(minimum\s+of\s+\d|required\s+to\s+pass|to\s+pass\s+the\s+course|'
+            r'earn\s+at\s+least|pass\s+the\s+course|fail\s+to\s+earn)\b'
+        )
+        percentages = []
+        for match in matches:
+            pct_val = float(match.group(1))
+            if 1 <= pct_val <= 100:
+                line_start = text.rfind('\n', 0, match.start()) + 1
+                line_end = text.find('\n', match.end())
+                if line_end == -1:
+                    line_end = len(text)
+                line_text = text[line_start:line_end]
+                # Skip 100% on total/modality lines
+                if pct_val == 100 and total_line_pattern.search(line_text):
+                    continue
+                # Skip percentages on grade-scale context lines
+                if scale_context_pattern.search(line_text):
+                    continue
+                # Skip attendance credit lines
+                if attendance_credit_pattern.search(line_text):
+                    continue
+                # Skip passing-threshold lines
+                if threshold_pattern.search(line_text):
+                    continue
+                # Skip THIS specific % if immediately followed by "or better/above/higher"
+                # e.g. "earn 82% or better" — only the threshold value is skipped,
+                # not other weights that happen to be on the same line.
+                lookahead = text[match.end():min(len(text), match.end() + 20)].lower()
+                if re.match(r'\s*or\s+(better|above|higher|more)\b', lookahead):
+                    continue
+                percentages.append(pct_val)
+
+        if not percentages:
+            return ""
+
+        raw_count = len(percentages)  # count before dedup
+
+        # Dedup first — duplicated sections inflate raw sum
+        percentages = sorted(set(percentages), reverse=True)
+
+        # If 100 is present and remaining values already sum to 70–130,
+        # it's a "TOTAL = 100%" line — remove it as it's not a category weight
+        if 100 in percentages and len(percentages) > 1:
+            rest_sum = sum(p for p in percentages if p != 100)
+            if 70 <= rest_sum <= 130:
+                percentages = [p for p in percentages if p != 100]
+
+        # Require at least 2 raw occurrences — allows "Midterm: 50%, Final: 50%"
+        # where both have the same value but are genuinely different assignments
+        if raw_count < 2:
+            return ""
+
+        # Sanity check: sum must not exceed 200
+        if sum(percentages) > 200:
+            return ""
+
+        # Format: use integer if whole number, one decimal place otherwise
+        def fmt(p):
+            return f"{int(p)}%" if p == int(p) else f"{p:.1f}%"
+        formatted = ", ".join(fmt(pct) for pct in percentages)
+        return formatted
+
     def detect(self, text: str) -> Dict[str, Any]:
         """Detect grading process and return a result dict with keys:
         - 'found': bool
@@ -193,10 +366,12 @@ class GradingProcessDetector:
         for i, ln in enumerate(lines):
             s = ln.strip()
             if not s:
-                # break block
                 if current_block:
-                    windows.append((i - len(current_block), current_block))
-                    current_block = []
+                    if self._has_more_grading_ahead(lines, i + 1):
+                        pass
+                    else:
+                        windows.append((block_start, current_block))
+                        current_block = []
                 continue
 
             has_percent = bool(self.percent_pattern.search(s))
@@ -205,40 +380,51 @@ class GradingProcessDetector:
 
             # Skip lines that look like grading scale (letter grades with ranges)
             if self._is_grading_scale_line(s):
-                # If we have a block, end it here
                 if current_block:
-                    windows.append((i - len(current_block), current_block))
+                    if self._has_more_grading_ahead(lines, i + 1):
+                        continue
+                    windows.append((block_start, current_block))
                     current_block = []
                 continue
 
             # Skip lines that look like late submission policy
             if self._is_late_policy_line(s):
-                # If we have a block, end it here
                 if current_block:
-                    windows.append((i - len(current_block), current_block))
+                    if self._has_more_grading_ahead(lines, i + 1):
+                        continue
+                    windows.append((block_start, current_block))
                     current_block = []
                 continue
 
             if has_percent or has_points or looks_like_item:
+                if not current_block:
+                    block_start = i
                 current_block.append(s)
-            else:
-                # if block already has multiple percent lines, we end it
-                if current_block:
-                    windows.append((i - len(current_block), current_block))
+            elif current_block:
+                # Non-percent line while inside a block (description paragraph or
+                # empty line gap between assignments). Bridge over it if more grading
+                # items appear within MAX_DESCRIPTION_SKIP lines (skipping empty
+                # lines and noise). This handles paragraph-format grading sections
+                # where each assignment is separated by blank lines + descriptions.
+                if self._has_more_grading_ahead(lines, i + 1):
+                    pass  # skip this line, keep block alive
+                else:
+                    windows.append((block_start, current_block))
                     current_block = []
         if current_block:
-            windows.append((len(lines) - len(current_block), current_block))
+            windows.append((block_start, current_block))
 
-        # Choose the best window: one with most percent/points lines
-        best = None
-        best_score = 0
+        # Score all valid windows and try them in descending order.
+        # A window that passes the scale/late filter but whose percentages fail
+        # _format_grading_output (e.g. attendance rubric) should not block a
+        # lower-scoring window that IS a valid grading breakdown.
+        scored_windows = []
         for idx, block in windows:
             # FILTER: Skip windows that are predominantly grading scales or late policies
             grading_scale_lines = sum(1 for ln in block if self._is_grading_scale_line(ln))
             late_policy_lines = sum(1 for ln in block if self._is_late_policy_line(ln))
             total_lines = len(block)
 
-            # If more than 50% of lines are grading scale/late policy, skip this window
             if total_lines > 0 and (grading_scale_lines + late_policy_lines) / total_lines > 0.5:
                 continue
 
@@ -247,162 +433,93 @@ class GradingProcessDetector:
             context = ' '.join(lines[max(0, idx-PERCENT_CLUSTER_WINDOW): min(len(lines), idx+len(block)+PERCENT_CLUSTER_WINDOW)])
             if any(k in context.lower() for k in self.anchor_keywords):
                 score += 1
-            if score > best_score and score >= MIN_WINDOW_SCORE:
-                best_score = score
-                best = (idx, block)
+            if score >= MIN_WINDOW_SCORE:
+                scored_windows.append((score, idx, block))
 
-        if best:
-            start_idx, block = best
-            end_idx = start_idx + len(block) - 1
-
-            # Try to extend upwards to include a nearby heading (scan up to MAX_UPWARD_SCAN lines)
-            start = start_idx
-            for i in range(start_idx - 1, max(-1, start_idx - MAX_UPWARD_SCAN - 1), -1):
-                if i < 0:
-                    break
-                if not lines[i].strip():
-                    break
-                if self._is_heading_line(lines[i]):
-                    start = i
-                    # once we include a heading, stop scanning further up
-                    break
-                # otherwise do not include long paragraph lines as heading
-
-            # Extend down to capture multi-line items (up to MAX_DOWNWARD_SCAN lines), but stop at long sentence paragraphs
-            end = end_idx
-            for j in range(end_idx + 1, min(len(lines), end_idx + MAX_DOWNWARD_SCAN)):
-                if not lines[j].strip():
-                    break
-                next_line = lines[j].strip()
-                # If the line looks like a long sentence (many words and contains a period), stop
-                if '.' in next_line and len(next_line.split()) > MAX_NEXT_LINE_WORDS:
-                    break
-                end = j
-
-            # Prefer to return only the percent/points lines and very short context
-            percent_idxs = [i for i in range(start, end + 1) if self.percent_pattern.search(lines[i]) or self.points_pattern.search(lines[i])]
-            if percent_idxs:
-                selected = []
-                for idx in percent_idxs:
-                    # include one short preceding line if it looks like a heading/context
-                    if idx - 1 >= start and lines[idx-1].strip():
-                        prev = lines[idx-1].strip()
-                        if len(prev.split()) <= MAX_SHORT_LINE_WORDS and len(prev) <= MAX_SHORT_LINE_LENGTH:
-                            selected.append(idx-1)
-                    selected.append(idx)
-                    # include one short following line if it's short and not a long sentence
-                    if idx + 1 <= end and lines[idx+1].strip():
-                        next_line = lines[idx+1].strip()
-                        if len(next_line.split()) <= MAX_NEXT_LINE_WORDS and not ('.' in next_line and len(next_line.split()) > MAX_NEXT_LINE_WORDS):
-                            selected.append(idx+1)
-                # dedupe while preserving order
-                seen = set()
-                final_idxs = []
-                for i in selected:
-                    if i not in seen:
-                        seen.add(i)
-                        final_idxs.append(i)
-
-                # If percent lines are separated by short label lines that appear later,
-                # scan forward up to a few lines to capture them (e.g., 'Quizzes:' then later 'Quiz1: 40%')
-                if final_idxs:
-                    start_block = min(final_idxs)
-                    end_block = max(final_idxs)
-                    for j in range(end_block + 1, min(len(lines), end_block + MAX_FORWARD_SCAN)):
-                        if self.percent_pattern.search(lines[j]):
-                            # include intervening short lines
-                            for k in range(end_block + 1, j + 1):
-                                if k not in seen and lines[k].strip():
-                                    # only include short label/context lines
-                                    if k == j or len(lines[k].split()) <= MAX_SHORT_LINE_WORDS:
-                                        seen.add(k)
-                                        final_idxs.append(k)
-                            end_block = j
-                            break
-
-                content_lines = [lines[i].rstrip() for i in final_idxs if lines[i].strip()]
-                # prepend heading if found above original block
-                heading = self._get_heading_before(lines, start_idx)
-                if heading and (not content_lines or not content_lines[0].startswith(heading)):
-                    content_lines.insert(0, heading)
-                content = '\n'.join(content_lines).strip()
+        # Try windows highest-score first; stop at first that produces valid output
+        scored_windows.sort(key=lambda x: x[0], reverse=True)
+        for score, idx, block in scored_windows:
+            raw_content = '\n'.join(block)
+            formatted = self._format_grading_output(raw_content)
+            if formatted:
                 self.logger.info(f"FOUND: {self.field_name} (percent/points window)")
-                return {'found': True, 'content': content}
-            else:
-                # fallback to returning the short block (should be rare)
-                content_lines = [lines[i].rstrip() for i in range(start, end + 1) if lines[i].strip()]
-                content = '\n'.join(content_lines).strip()
-                self.logger.info(f"FOUND: {self.field_name} (short block fallback)")
-                return {'found': True, 'content': content}
+                return {'found': True, 'content': formatted}
 
-        # 3) fallback: look for lines containing a cluster of assignment labels followed shortly by percentages
-        # find lines where a percentage exists and gather +/-PERCENT_CLUSTER_WINDOW lines around it
-        percent_lines_idx = [i for i, ln in enumerate(lines) if self.percent_pattern.search(ln)]
-        for idx in percent_lines_idx:
-            # gather a slightly larger window and then try to expand to heading/context
-            start = max(0, idx - PERCENT_CLUSTER_WINDOW)
-            end = min(len(lines), idx + PERCENT_CLUSTER_WINDOW + 1)
-            block_lines = [lines[j] for j in range(start, end) if lines[j].strip()]
-            if sum(1 for ln in block_lines if self.percent_pattern.search(ln)) >= MIN_WINDOW_SCORE:
-                # expand similarly to the window case
-                # find nearest non-empty start before 'start' that looks like a heading
-                heading_start = start
-                for i in range(start - 1, max(-1, start - MAX_DOWNWARD_SCAN), -1):
-                    if i < 0 or not lines[i].strip():
-                        break
-                    if any(k in lines[i].lower() for k in self.anchor_keywords) or lines[i].strip().isupper():
-                        heading_start = i
-                        break
-                final_start = heading_start
-                final_end = min(len(lines) - 1, end + PERCENT_CLUSTER_WINDOW)
-                for j in range(end, min(len(lines), end + MAX_DOWNWARD_SCAN)):
-                    if not lines[j].strip():
-                        break
-                    final_end = j
-                # prefer to return only percent/points lines near the cluster
-                percent_idxs2 = [k for k in range(final_start, final_end + 1) if self.percent_pattern.search(lines[k]) or self.points_pattern.search(lines[k])]
-                if percent_idxs2:
-                    selected = []
-                    for idx in percent_idxs2:
-                        if idx - 1 >= final_start and lines[idx-1].strip():
-                            prev = lines[idx-1].strip()
-                            if len(prev.split()) <= MAX_SHORT_LINE_WORDS and len(prev) <= MAX_SHORT_LINE_LENGTH:
-                                selected.append(idx-1)
-                        selected.append(idx)
-                        if idx + 1 <= final_end and lines[idx+1].strip():
-                            next_line = lines[idx+1].strip()
-                            if len(next_line.split()) <= MAX_NEXT_LINE_WORDS and not ('.' in next_line and len(next_line.split()) > MAX_NEXT_LINE_WORDS):
-                                selected.append(idx+1)
-                    seen = set()
-                    final_idxs2 = []
-                    for i in selected:
-                        if i not in seen:
-                            seen.add(i)
-                            final_idxs2.append(i)
+        if scored_windows:
+            self.logger.info(f"NOT_FOUND: {self.field_name} (all windows invalid)")
+            return {'found': False, 'content': ''}
 
-                    # expand forward to include percent lines that appear after short labels
-                    if final_idxs2:
-                        start_block2 = min(final_idxs2)
-                        end_block2 = max(final_idxs2)
-                        for j in range(end_block2 + 1, min(len(lines), end_block2 + MAX_FORWARD_SCAN)):
-                            if self.percent_pattern.search(lines[j]):
-                                for k in range(end_block2 + 1, j + 1):
-                                    if k not in seen and lines[k].strip():
-                                        if k == j or len(lines[k].split()) <= MAX_SHORT_LINE_WORDS:
-                                            seen.add(k)
-                                            final_idxs2.append(k)
-                                end_block2 = j
-                                break
+        # 2) Single-line inline format fallback: one line with 3+ percentage values
+        #    that sum roughly to 100 (75–130). Run AFTER window detection so the
+        #    multi-line block always wins when present.
+        #    e.g. "Participation 10% E-Portfolio 45% Final Drafts 25% Process Grade 20%"
+        inline_pct_pattern = re.compile(r'(\d+(?:\.\d+)?)\s*%')
+        for ln in lines:
+            s = ln.strip()
+            if not s or self._is_grading_scale_line(s) or self._is_late_policy_line(s):
+                continue
+            inline_vals = [float(m.group(1)) for m in inline_pct_pattern.finditer(s)
+                           if 1 <= float(m.group(1)) <= 100]
+            unique_vals = sorted(set(inline_vals))
+            if len(unique_vals) >= 3 and 75 <= sum(unique_vals) <= 130:
+                formatted = self._format_grading_output(s)
+                if formatted:
+                    return {'found': True, 'content': formatted}
 
-                    content_lines = [lines[k].rstrip() for k in final_idxs2 if lines[k].strip()]
-                    heading = self._get_heading_before(lines, final_start)
-                    if heading and (not content_lines or not content_lines[0].startswith(heading)):
-                        content_lines.insert(0, heading)
+        # 3) Fallback: group PCT lines that are close to each other (within
+        #    PERCENT_CLUSTER_WINDOW lines apart), allowing empty-line gaps.
+        #    This catches formats where each item is on its own line/paragraph.
+        pct_idxs = [
+            i for i, ln in enumerate(lines)
+            if (self.percent_pattern.search(ln.strip())
+                and not self._is_grading_scale_line(ln.strip())
+                and not self._is_late_policy_line(ln.strip()))
+        ]
+
+        if len(pct_idxs) >= MIN_WINDOW_SCORE:
+            # Group PCT lines that are within PERCENT_CLUSTER_WINDOW * 2 of each other
+            gap = PERCENT_CLUSTER_WINDOW * 2
+            groups = []
+            current_group = [pct_idxs[0]]
+            for k in range(1, len(pct_idxs)):
+                if pct_idxs[k] - pct_idxs[k - 1] <= gap:
+                    current_group.append(pct_idxs[k])
+                else:
+                    if len(current_group) >= MIN_WINDOW_SCORE:
+                        groups.append(current_group)
+                    current_group = [pct_idxs[k]]
+            if len(current_group) >= MIN_WINDOW_SCORE:
+                groups.append(current_group)
+
+            if groups:
+                # Score groups: prefer larger groups near anchor keywords
+                def group_score(grp):
+                    ctx_start = max(0, grp[0] - PERCENT_CLUSTER_WINDOW)
+                    ctx_end = min(len(lines), grp[-1] + PERCENT_CLUSTER_WINDOW + 1)
+                    ctx = ' '.join(lines[ctx_start:ctx_end]).lower()
+                    anchor_bonus = 1 if any(k in ctx for k in self.anchor_keywords) else 0
+                    return len(grp) + anchor_bonus
+
+                best_group = max(groups, key=group_score)
+
+                # Require an anchor keyword within 20 lines of the best group —
+                # without it we risk picking up late-policy tables or narrative %s
+                anchor_window = 20
+                ctx_start = max(0, best_group[0] - anchor_window)
+                ctx_end = min(len(lines), best_group[-1] + anchor_window + 1)
+                ctx = ' '.join(lines[ctx_start:ctx_end]).lower()
+                if not any(k in ctx for k in self.anchor_keywords):
+                    self.logger.info(f"NOT_FOUND: {self.field_name} (cluster lacks anchor)")
+                    return {'found': False, 'content': ''}
+
+                block_lines = [lines[i].strip() for i in best_group]
+                raw_content = '\n'.join(block_lines)
+                formatted = self._format_grading_output(raw_content)
+                if formatted:
                     self.logger.info(f"FOUND: {self.field_name} (percent cluster)")
-                    return {'found': True, 'content': '\n'.join(content_lines).strip()}
-                content_lines = [lines[k].rstrip() for k in range(final_start, final_end + 1) if lines[k].strip()]
-                self.logger.info(f"FOUND: {self.field_name} (cluster fallback)")
-                return {'found': True, 'content': '\n'.join(content_lines).strip()}
+                    return {'found': True, 'content': formatted}
+                self.logger.info(f"NOT_FOUND: {self.field_name} (cluster invalid)")
+                return {'found': False, 'content': ''}
 
         self.logger.info(f"NOT_FOUND: {self.field_name}")
         return {'found': False, 'content': ''}

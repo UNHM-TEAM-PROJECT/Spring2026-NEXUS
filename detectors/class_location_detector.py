@@ -100,6 +100,10 @@ class ClassLocationDetector:
             (re.compile(r'\b(asynchronous\s+online)\b', re.IGNORECASE), 0.98),
             # Pattern 1e: "As an online class/course" format
             (re.compile(r'(?:as|is)\s+an?\s+(online\s+(?:class|course))', re.IGNORECASE), 0.98),
+            # Pattern 1e2: "online, asynchronous course" phrasing
+            (re.compile(r'(?:as|is)\s+an?\s+(online)[,\s]+asynchronous\s+course', re.IGNORECASE), 0.98),
+            # Pattern 1f: "Online Writing Intensive (Synchronous)" style modality labels
+            (re.compile(r'\b(online\s+writing\s+intensive(?:\s*\([^)]{0,40}\))?)\b', re.IGNORECASE), 0.98),
 
             # Pattern 2: "Online" with context in parentheses
             (re.compile(r'(?:time\s+and\s+location|location\s+and\s+time|class\s+location|meeting\s+location|where|^location)[\s:]+[^\n]{0,50}?\b(online\s*\([^)]{0,100}\))',
@@ -165,6 +169,7 @@ class ClassLocationDetector:
             r'class\s+location',
             r'class\s+meets?',
             r'class\s+meeting',
+            r'lecture\s*\(',
             r'meeting\s+location',
             r'meeting\s+place',
             r'meeting\s+time\s+and\s+place',
@@ -196,6 +201,7 @@ class ClassLocationDetector:
             r'instructor\s+location',
             r'contact\s+information',
             r'contact\s+info',
+            r'physically\s+located',
             r'tutoring\s+center',
             r'writing\s+center',
             r'help\s+center',
@@ -218,6 +224,13 @@ class ClassLocationDetector:
             r'advisors?\s+office',
             r'loan.*laptop',
             r'borrow.*laptop',
+            # Campus support/service locations (not class meeting locations)
+            r'food\s+pantry',
+            r'wildcat\s+cupboard',
+            r'wildcat\s+wardrobe',
+            r'mental\s+health\s+center',
+            r'connors\s+writing\s+center',
+            r'sharpp',
         ]
 
         # PRE-COMPILED regex patterns for performance (compiled once at init)
@@ -231,42 +244,50 @@ class ClassLocationDetector:
         # Format: (compiled_pattern, confidence_level)
         self.room_patterns = [
             # Pattern 0: Explicit class meeting formats "in ROOM" or "Section X: ... Room Y"
-            (re.compile(r'\b(?:class\s+meetings?|section\s+\w+).*?\b((?:in|room|rm\.?)\s+[A-Za-z]?\d{2,4})\b', re.IGNORECASE | re.DOTALL),
+            (re.compile(r'\b(?:class\s+meetings?|section\s+\w+).*?\b((?:in|room|rm\.?)\s+[A-Za-z]?\d{2,4}[A-Z]*)\b', re.IGNORECASE | re.DOTALL),
              HIGH_CONFIDENCE + 0.01),  # Slightly higher than other high confidence
 
             # Pattern 0b: "Course Room Number: X" format
-            (re.compile(r'\bcourse\s+room\s+(?:number)?[\s:]+([A-Za-z]?\d{2,4})\b', re.IGNORECASE),
+            (re.compile(r'\bcourse\s+room\s+(?:number)?[\s:]+([A-Za-z]?\d{2,4}[A-Z]*)\b', re.IGNORECASE),
              HIGH_CONFIDENCE + 0.01),
 
             # Pattern 1: "Room/Rm [Number]" possibly followed by building
             (re.compile(r'\b((?:room|rm\.?)\s+[A-Za-z]?\d{2,4}(?:\s*[,\-]?\s*[\w\s]+?(?:hall|building|bldg|mill|lab))?)\b', re.IGNORECASE),
              HIGH_CONFIDENCE),
 
-            # Pattern 2: Known building name followed by room number
+            # Pattern 1b: UNHM PANDRA format (e.g., "UNHM PANDRA P102")
+            (re.compile(r'\b((?:unhm|unh)\s+pandra(?:a)?(?:\s+mill)?(?:\s*\([^)]*\))?\s*p\s*\d{3,4}[A-Z]*)\b', re.IGNORECASE),
+             HIGH_CONFIDENCE + 0.01),
+
+            # Pattern 2: Known building name followed by room number  
             # Allow parenthetical content like "(UNHM)" between building and room
             (re.compile(r'\b((?:pandora|pandra|hamilton\s+smith|dimond|parsons|kingsbury|morse|rudman|murkland)'
-                       r'(?:\s+mill|\s+hall|\s+building|\s+lab)?(?:\s*\([^)]{1,20}\))?\s*[,\-]?\s*(?:room|rm\.?)?\s*[A-Za-z]?\d{2,4})\b', re.IGNORECASE),
+                       r'(?:\s+mill|\s+hall|\s+building|\s+lab)?(?:\s*\([^)]+\))?\s*[,\-]?\s*(?:room|rm\.?)?\s*[A-Za-z]?\d{2,4}[A-Z]*)\b', re.IGNORECASE),
              HIGH_CONFIDENCE),
 
             # Pattern 3: Just "Room [Number]" or "Rm [Number]"
-            (re.compile(r'\b((?:room|rm\.?)\s+[A-Za-z]?\d{2,4})\b', re.IGNORECASE),
+            (re.compile(r'\b((?:room|rm\.?)\s+[A-Za-z]?\d{2,4}[A-Z]*)\b', re.IGNORECASE),
              LOW_CONFIDENCE),
 
             # Pattern 4: "Classroom: [Number]" or "Classroom [Number]"
-            (re.compile(r'\b(classroom:?\s+[A-Za-z]?\d{2,4})\b', re.IGNORECASE),
+            (re.compile(r'\b(classroom:?\s+[A-Za-z]?\d{2,4}[A-Z]*)\b', re.IGNORECASE),
              MEDIUM_CONFIDENCE),
 
             # Pattern 5: "Rm" or "Room" directly attached to number (no space)
-            (re.compile(r'\b((?:room|rm)\.?[A-Za-z]?\d{2,4})\b', re.IGNORECASE),
+            (re.compile(r'\b((?:room|rm)\.?[A-Za-z]?\d{2,4}[A-Z]*)\b', re.IGNORECASE),
              MEDIUM_CONFIDENCE),
 
-            # Pattern 6: Single letter + 3-4 digits (like P380, R540)
+            # Pattern 5b: Uppercase "RM" format (e.g., "RM 354", "RM 345")
+            (re.compile(r'\b(RM\s+\d{2,4}[A-Z]*)\b', re.IGNORECASE),
+             MEDIUM_CONFIDENCE),
+
+            # Pattern 6: Single letter + 3-4 digits with optional letter suffix (like P380, P345EC, R540)
             # Must NOT be preceded by alphanumeric (avoids "MegaFix P1135")
-            (re.compile(r'(?<![A-Za-z0-9])([A-Z]\d{3,4})\b'),
+            (re.compile(r'(?<![A-Za-z0-9])([A-Z]\d{3,4}[A-Z]*)\b'),
              MEDIUM_CONFIDENCE),
 
-            # Pattern 6b: Single letter + space + 3-4 digits (like "P 146")
-            (re.compile(r'(?<![A-Za-z0-9])([A-Z]\s+\d{3,4})\b'),
+            # Pattern 6b: Single letter + space + 3-4 digits with optional suffix (like "P 146", "P 345EC")
+            (re.compile(r'(?<![A-Za-z0-9])([A-Z]\s+\d{3,4}[A-Z]*)\b'),
              MEDIUM_CONFIDENCE),
 
             # Pattern 7: Bare 3-digit number followed by "(Lecture" context
@@ -275,16 +296,24 @@ class ClassLocationDetector:
              HIGH_CONFIDENCE),
 
             # Pattern 8: Room number in "Room P380" format (P prefix with Room)
-            (re.compile(r'\b(room\s+p\s*\d{3,4})\b', re.IGNORECASE),
+            (re.compile(r'\b(room\s+p\s*\d{3,4}[A-Z]*)\b', re.IGNORECASE),
              HIGH_CONFIDENCE),
 
             # Pattern 9: "Pandora Building (UNHM) P 146" - building + optional parens + P-room
-            (re.compile(r'\b((?:pandora|pandra)\s+(?:building|mill|hall)?\s*(?:\([^)]+\))?\s*p\s*\d{3,4})\b', re.IGNORECASE),
+            (re.compile(r'\b((?:pandora|pandra)\s+(?:building|mill|hall)?\s*(?:\([^)]+\))?\s*p\s*\d{3,4}[A-Z]*)\b', re.IGNORECASE),
              HIGH_CONFIDENCE),
 
             # Pattern 10: Lab room format "Lab (Rm 560)"
-            (re.compile(r'\blab\s*\(\s*(rm\.?\s*\d{3,4})\s*\)', re.IGNORECASE),
+            (re.compile(r'\blab\s*\(\s*(rm\.?\s*\d{3,4}[A-Z]*)\s*\)', re.IGNORECASE),
              MEDIUM_CONFIDENCE),
+
+            # Pattern 11: Multi-section format "M1: Room X | M2: Room Y" or "M1: P### | M2: P###" - take first room
+            (re.compile(r'(?:M\d|Section\s+\w+|L\d)\s*[:\.]\s*(?:room\s+)?([A-Za-z]?\d{2,4}[A-Z]*)\b', re.IGNORECASE),
+             MEDIUM_CONFIDENCE),
+
+            # Pattern 12: Bare room patterns like "280" when in location context
+            (re.compile(r'(?:location|where|room)\s*[:=]\s*(\d{3,4}[A-Z]*)\b', re.IGNORECASE),
+             LOW_CONFIDENCE),
         ]
 
         # PRE-COMPILED patterns for context checking
@@ -387,8 +416,16 @@ class ClassLocationDetector:
         Examples:
             - "COMP 405" -> True
             - "BIOL 413A" -> True
+            - "RM 354" -> False (room abbreviation)
             - "Room 405" -> False
         """
+        # First check if it's a known room/non-course abbreviation
+        non_course_abbrev = ['rm', 'rm.', 'room', 'p', 'p.']
+        text_lower = text.lower().strip()
+        for abbrev in non_course_abbrev:
+            if text_lower.startswith(abbrev + ' ') or text_lower.startswith(abbrev + '.'):
+                return False
+        
         for pattern in self.course_code_patterns:
             if pattern.search(text):
                 return True
@@ -410,6 +447,12 @@ class ClassLocationDetector:
             if match:
                 location = match.group(1).strip()
 
+                # REJECT if location contains problematic keywords
+                location_lower = location.lower()
+                reject_keywords = ['zoom', 'teams', 'link', 'https', 'http', 'unh.edu', '@unh', 'email']
+                if any(keyword in location_lower for keyword in reject_keywords):
+                    continue
+
                 # REJECT if it looks like a course code
                 if self._is_course_code(location):
                     continue
@@ -426,7 +469,7 @@ class ClassLocationDetector:
                     continue  # Skip product models
 
                 # For pattern6 (single letter + digits), only accept if NOT a course code context
-                if pattern == self.room_patterns[5][0]:  # Pattern 6
+                if pattern == self.room_patterns[9][0] or pattern == self.room_patterns[10][0]:  # Pattern 6 or 6b (single letter patterns)
                     # Check if this is in a course code context (e.g., "COMP 405")
                     context_check = text[max(0, match.start()-10):match.start()]
                     if self.course_code_context_pattern.search(context_check):
@@ -632,19 +675,19 @@ class ClassLocationDetector:
         # Patterns: "Class meetings: ... P149", "Class Meeting Room 341", "Class meets in Room 105"
         explicit_class_patterns = [
             # "Class Time & Location: ... P146" or "Class Time & Location: ... Pandora Building (UNHM) P146"
-            re.compile(r'class\s+time\s*[&]\s*location\s*:[^\n]*\b((?:pandora|pandra)?\s*(?:building)?\s*(?:\([^)]+\))?\s*P\s*\d{3,4})\b', re.IGNORECASE),
+            re.compile(r'class\s+time\s*[&]\s*location\s*:[^\n]*\b((?:pandora|pandra)?\s*(?:building)?\s*(?:\([^)]+\))?\s*P\s*\d{3,4}[A-Z]*)\b', re.IGNORECASE),
             re.compile(r'class\s+time\s*[&]\s*location\s*:[^\n]*\b(room\s*\d{2,4})\b', re.IGNORECASE),
             # "Class meetings: Tuesday, 9:00 - 11:50 AM. P149" or "Class meetings: ... Room 105"
-            re.compile(r'class\s+meetings?\s*[:\s][^P\n]*\b(P\d{3,4})\b', re.IGNORECASE),
-            re.compile(r'class\s+meetings?\s*[:\s][^\n]*\b(room\s*\d{2,4})\b', re.IGNORECASE),
-            # "Class Meeting Room 341"
-            re.compile(r'class\s+meeting\s+room\s*[:\s]*([A-Za-z]?\d{2,4})', re.IGNORECASE),
-            # "Class meets in Room 105" or "Class meets in P149"
-            re.compile(r'class\s+meets?\s+(?:in\s+)?((?:room\s+)?[A-Za-z]?\d{2,4})', re.IGNORECASE),
+            # Use non-greedy matching to capture first room only
+            re.compile(r'class\s+meetings?\s*[:\s][^:\n]{0,100}?\b(P\d{3,4}[A-Z]*)\b', re.IGNORECASE),
+            re.compile(r'class\s+meetings?\s*[:\s][^:\n]{0,100}?\b(room\s*\d{2,4})\b', re.IGNORECASE),
+            # "Class Meeting Room 341" or "Class meets in Room 105"
+            re.compile(r'class\s+meeting\s+room\s*[:\s]*([A-Za-z]?\d{2,4}[A-Z]*)', re.IGNORECASE),
+            re.compile(r'class\s+meets?\s+(?:in\s+)?((?:room\s+)?[A-Za-z]?\d{2,4}[A-Z]*)', re.IGNORECASE),
             # "Lecture: P502" or "Lecture – P502"
-            re.compile(r'lecture\s*[:\-–]\s*(P\d{3,4})', re.IGNORECASE),
+            re.compile(r'lecture\s*[:\-–]\s*(P\d{3,4}[A-Z]*)', re.IGNORECASE),
             # "Location and Times: Lecture – P502"
-            re.compile(r'location[^:]*:\s*lecture\s*[:\-–]\s*(P\d{3,4})', re.IGNORECASE),
+            re.compile(r'location[^:]*:\s*lecture\s*[:\-–]\s*(P\d{3,4}[A-Z]*)', re.IGNORECASE),
         ]
         for line in lines[:20]:  # Only check first 20 lines (header area)
             for pattern in explicit_class_patterns:
@@ -657,18 +700,21 @@ class ClassLocationDetector:
                     self.logger.info(f"Found explicit class location in header: {room}")
                     return (room, HIGH_CONFIDENCE + 0.02)
 
-        # PRIORITY 1: Check for online/remote/virtual/appointment locations
-        online_result = self._find_online_or_remote_location(text)
-        if online_result:
-            return online_result
-
-        # PRIORITY 2: Look for physical room locations
+        # PRIORITY 1: Look for physical room locations FIRST
         # Find all physical location candidates with context analysis
         candidates = self._find_all_location_candidates(lines)
 
         # Select best candidate (only physical locations)
         if candidates:
-            return self._select_best_candidate(candidates)
+            best = self._select_best_candidate(candidates)
+            if best:
+                location, confidence = best
+                return (location, confidence)
+
+        # PRIORITY 2: Check for online/remote/virtual/appointment locations (only if NO physical rooms found)
+        online_result = self._find_online_or_remote_location(text)
+        if online_result:
+            return online_result
 
         # No location found - return None
         return None

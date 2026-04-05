@@ -271,7 +271,9 @@ def compare_grading_scale(gt, pred):
             return set()
 
         # Pattern to find grade letters
-        pattern = r"\b([A-F][+-]?)(?=[\s:=\d<>%]|$)"
+        # Use lookbehind instead of \b so digit-letter boundaries are handled
+        # (e.g. "94B+: 87" where \b fails between digit and letter) (TeamNexus)
+        pattern = r"(?<![A-Za-z])([A-F][+-]?)(?=[\s:=\d<>%≤≥]|$)"
         matches = re.findall(pattern, str(text), re.IGNORECASE)
         return set(match.upper() for match in matches)
 

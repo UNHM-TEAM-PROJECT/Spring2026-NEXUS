@@ -38,6 +38,10 @@ class AssignmentDeliveryDetector:
             # Plain Canvas
             (r'(?i)\bcanvas\b', 'Canvas'),
             
+            # Version control / code submission platforms (specific: "GitHub organization used to submit")
+            (r'(?i)\bgithub\s+organization\b.*\bsubmit\b', 'GitHub'),
+            (r'(?i)\bsubmit\b.*\bgithub\s+organization\b', 'GitHub'),
+
             # Assignment platforms
             (r'(?i)\bmyopenmath\b', 'MyOpenMath'),
             (r'(?i)\bmastering\s*(?:a\s*&\s*p|anatomy\s*(?:and|&)\s*physiology)', 'Mastering A&P'),
@@ -56,6 +60,9 @@ class AssignmentDeliveryDetector:
             (r'(?i)\bcollected\s+in\s+class\b', 'Collected in class'),
             (r'(?i)\bin\s*-?\s*person\s+submission\b', 'In-person submission'),
             (r'(?i)\bhanded?\s+in\b', 'Handed in'),
+            # "turn in ... hard copy" — explicit physical submission instruction
+            (r'(?i)\bturn\s+in\b.*\bhard\s+cop\w+\b', 'Handed in'),
+            (r'(?i)\bhard\s+cop\w+\b.*\bturn\s+in\b', 'Handed in'),
         ]
         
         # Noise phrases to remove
@@ -82,8 +89,6 @@ class AssignmentDeliveryDetector:
             r'(?i)(?:upload|post|turn\s+in)\s+(?:your\s+)?(?:assignments?|work|homework)\s+(?:via|on|to|through|in)',
             r'(?i)all\s+(?:assignments?|work|homework)\s+(?:will\s+be\s+)?(?:submitted|posted|uploaded)\s+(?:via|on|to|in)',
             r'(?i)(?:assignments?|homework)\s+(?:should|must)\s+be\s+(?:submitted|uploaded|posted|turned\s+in)\s+(?:via|on|to|in)',
-            r'(?i)assignment\s+(?:information\s+)?(?:will\s+be\s+)?posted\s+(?:on|in)\s+(?:canvas|mycourses)\b.*due\s+dates?',
-            r'(?i)(?:homework|assignments?)\s+will\s+be\s+posted\s+(?:in|on)\s+(?:canvas|mycourses)\b',
             r'(?i)submit\s+them\s+in\s+a\s+single\s+file\b.*(?:canvas|mycourses)',
             r'(?i)all\s+assignments?\s+must\s+be\s+submitted\s+by\s+the\s+due\s+date',
         ]
@@ -157,8 +162,9 @@ class AssignmentDeliveryDetector:
             r'(?i)\bcanvas\s+announcements?\b',
             r'(?i)\bcanvas\s+here\s*:',
 
-            # "handed in late" — late penalty context, not submission method
+            # "handed in late" / "turn in late" — late penalty context, not submission method
             r'(?i)\bhanded?\s+in\s+late\b',
+            r'(?i)\bturn\s+in\b.*\b(?:late|after\s+(?:solutions?|the\s+due))\b',
 
             # MyCourses/Canvas as LMS description
             r'(?i)\b(?:canvas|mycourses)\s+(?:is\s+)?(?:unh[\'s]*\s+)?course\s+management\s+system\b',
@@ -304,14 +310,67 @@ class AssignmentDeliveryDetector:
             # "Email me...using MyCourses" — any variation ending with MyCourses
             r'(?i)\bemail\s+me\b.*\busing\s+mycourses\s*$',
 
-            # "make an appointment using MyCourses Canvas Inbox tool"
-            r'(?i)\bmake\s+an\s+appointment\s+using\s+mycourses\b',
+            # "make an appointment using MyCourses Canvas Inbox tool" (with or without space)
+            r'(?i)\bmake\s+an\s+appointment\s+using\s*mycourses\b',
 
             # "myCourses is UNH's course management system"
             r'(?i)\bmycourses\s+is\s+unh\b',
 
             # "MyCourses (also called Canvas) is the learning management system"
             r'(?i)\bmycourses\s*\(also\s+called\s+canvas\)\s+is\b',
+
+            # "will be posted in Canvas/MyCourses" — materials made available, not submission
+            r'(?i)\bwill\s+be\s+posted\s+(?:in|on)\s+(?:canvas|mycourses)\b',
+
+            # Standalone "Posted in Canvas." — schedule/materials line
+            r'(?i)^\s*posted\s+in\s+(?:canvas|mycourses)\b',
+
+            # "syllabus will be posted" — administrative, not submission
+            r'(?i)\bsyllabus\b.*\bwill\s+be\s+posted\b',
+
+            # "assignment information will be posted on Canvas" — availability, not submission
+            r'(?i)\bassignment\s+information\b.*\bposted\b',
+            r'(?i)\bassignment\s+(?:information\s+)?(?:will\s+be\s+)?posted\s+(?:on|in)\s+(?:canvas|mycourses)\b',
+
+            # "absence/missing the class ... using MyCourses" — contact for absences
+            r'(?i)\b(?:absence|missing\s+(?:the\s+)?class)\b.*\busing\s+mycourses\b',
+
+            # "turned in late/after" — late penalty context, not submission method
+            r'(?i)\bturned?\s+in\s+(?:late|after|past)\b',
+
+            # "homework/assignments will be posted in Canvas" — posting for viewing, not submission
+            r'(?i)(?:homework|assignments?)\s+will\s+be\s+posted\s+(?:in|on)\s+(?:canvas|mycourses)\b',
+
+            # "Canvas is the learning management tool" (not just system)
+            r'(?i)\b(?:canvas|mycourses)\s+is\s+the\s+learning\s+management\s+tool\b',
+
+            # "check Canvas/MyCourses regularly" — monitoring reminder, not submission
+            r'(?i)\bcheck\s+(?:your\s+)?(?:canvas|mycourses)\s+(?:regularly|frequently|often)\b',
+
+            # "check Canvas/MyCourses for details/updates" — materials/info context
+            r'(?i)\bcheck\s+(?:canvas|mycourses)\s+for\s+(?:details|updates?|more\s+information|relevant)\b',
+
+            # "active in the canvas page" — instructor presence, not submission
+            r'(?i)\bactive\s+in\s+(?:the\s+)?canvas\s+(?:page|site|course)\b',
+
+            # "canvas. Otherwise" / "canvas, please" — sentence fragment from OCR/extraction
+            r'(?i)^canvas[.,]\s+(?:otherwise|please|feel)\b',
+
+            # "course is administered using Canvas/MyCourses" — LMS description, not submission
+            r'(?i)\bcourse\s+is\s+administered\s+using\b',
+
+            # "curated through Canvas" — course materials context, not submission
+            r'(?i)\bcurated\s+through\s+(?:canvas|mycourses)\b',
+
+            # "referenced from the Canvas site" — materials location, not submission
+            r'(?i)\breferenced\s+from\s+(?:the\s+)?(?:canvas|mycourses)\s+site\b',
+
+            # "via email/Canvas" or "via email/MyCourses" — communication, not submission
+            r'(?i)\bvia\s+email\s*/\s*(?:canvas|mycourses)\b',
+
+            # "check MyCourses/Canvas" — material access, not submission
+            r'(?i)\bcheck\s+(?:mycourses|canvas)\s*/\s*(?:canvas|mycourses)\b',
+
         ]
     
     def _clean_line_for_extraction(self, line: str) -> str:

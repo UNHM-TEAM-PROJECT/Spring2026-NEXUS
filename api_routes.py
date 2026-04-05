@@ -507,26 +507,23 @@ def _empty(val) -> bool:
 
 
 def _extract_course_title(text: str) -> tuple[str, str, str]:
-    """Extract course title, code, and name from the first lines of the syllabus."""
+    """Extract course code from first lines and use it as course title."""
     if not text:
         return "", "", ""
 
     for line in [line.strip() for line in text.splitlines()[:15] if line.strip()]:
-        match = re.match(r'^(?P<code>[A-Z]{4}\s?\d{3})\s+(?P<name>.+)$', line)
+        match = re.search(r'\b(?P<code>[A-Z]{4}\s?\d{3})\b', line)
         if not match:
             continue
         course_code = re.sub(r'\s+', '', match.group('code'))
-        course_name = match.group('name').strip()
-        return f"{course_code} {course_name}", course_code, course_name
+        return course_code, course_code, ""
 
     return "", "", ""
 
 
 def _get_template_payload_fields() -> list[tuple[str, str]]:
     return [
-        ("course_title", "Course Title"),
         ("course_code", "Course Code"),
-        ("course_name", "Course Name"),
         ("SLOs", "Student Learning Outcomes"),
         ("modality", "Course Delivery (Online/Hybrid/In-Person)"),
         ("instructor_name", "Instructor Name"),
@@ -587,19 +584,22 @@ def _build_template_payload(detector_payload: dict, user_inputs: dict) -> dict:
 
     course_title = data.get("course_title") or ""
     course_code = data.get("course_code") or ""
-    course_name = data.get("course_name") or ""
-    if _empty(course_title) or _empty(course_code) or _empty(course_name):
+    course_name = ""
+    if _empty(course_code):
         extracted_title, extracted_code, extracted_name = _extract_course_title(data.get("extracted_text") or "")
         course_title = course_title or extracted_title
         course_code = course_code or extracted_code
         course_name = course_name or extracted_name
+
+    if _empty(course_title):
+        course_title = course_code
 
     # Keys below intentionally match TEMPLATE_FIELDS in docx_template_updater.py
     template_data = {
         "filename": data.get("filename", "Uploaded_syllabus"),
         "course_title": course_title,
         "course_code": course_code,
-        "course_name": course_name,
+        "course_name": "",
         "SLOs": data.get("slo_content") if data.get("has_slos") else "",
         "modality": data.get("course_delivery") if str(data.get("course_delivery", "")).lower() != "unknown" else "",
         "instructor_name": instructor.get("name") or "",
@@ -649,7 +649,6 @@ def _build_template_payload(detector_payload: dict, user_inputs: dict) -> dict:
         "preferred_contact_method": "preferred_contact_method",
         "course_title": "course_title",
         "course_code": "course_code",
-        "course_name": "course_name",
     }
 
     for ui_key, raw_val in user_inputs.items():

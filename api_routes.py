@@ -200,6 +200,7 @@ def _process_single_file(file, temp_dir: str) -> dict:
             "filename": filename,
             "slo_status": "PASS" if has_slos else "FAIL",
             "has_slos": has_slos,
+            "extracted_text": extracted_text,
             "message": (
                 "SLOs detected" if has_slos else
                 "Student Learning Outcome: Not find the acceptable title for SLO<br>"
@@ -207,6 +208,13 @@ def _process_single_file(file, temp_dir: str) -> dict:
                 "• Learning Outcomes<br>• Learning Objectives"
             ),
         }
+        course_title, course_code, course_name = _extract_course_title(extracted_text)
+        if course_title:
+            result["course_title"] = course_title
+        if course_code:
+            result["course_code"] = course_code
+        if course_name:
+            result["course_name"] = course_name
         if has_slos and slo_content:
             result["slo_content"] = (slo_content[:300] + "...") if len(slo_content) > 300 else slo_content
 
@@ -498,6 +506,49 @@ def _empty(val) -> bool:
     return False
 
 
+def _extract_course_title(text: str) -> tuple[str, str, str]:
+    """Extract course title, code, and name from the first lines of the syllabus."""
+    if not text:
+        return "", "", ""
+
+    for line in [line.strip() for line in text.splitlines()[:15] if line.strip()]:
+        match = re.match(r'^(?P<code>[A-Z]{4}\s?\d{3})\s+(?P<name>.+)$', line)
+        if not match:
+            continue
+        course_code = re.sub(r'\s+', '', match.group('code'))
+        course_name = match.group('name').strip()
+        return f"{course_code} {course_name}", course_code, course_name
+
+    return "", "", ""
+
+
+def _get_template_payload_fields() -> list[tuple[str, str]]:
+    return [
+        ("course_title", "Course Title"),
+        ("course_code", "Course Code"),
+        ("course_name", "Course Name"),
+        ("SLOs", "Student Learning Outcomes"),
+        ("modality", "Course Delivery (Online/Hybrid/In-Person)"),
+        ("instructor_name", "Instructor Name"),
+        ("instructor_title", "Instructor Title"),
+        ("instructor_department", "Instructor Department"),
+        ("email", "Instructor Email"),
+        ("preferred_contact_method", "Preferred Contact Method"),
+        ("office_address", "Office Location"),
+        ("office_hours", "Office Hours"),
+        ("office_phone", "Office Phone"),
+        ("credit_hour", "Credit Hours"),
+        ("workload", "Expected Workload"),
+        ("final_grade_scale", "Grading Scale"),
+        ("grading_process", "Grading Process"),
+        ("assignment_types_title", "Assignment Types"),
+        ("assignment_delivery", "Assignment Delivery"),
+        ("deadline_expectations_title", "Late Work Policy"),
+        ("response_time", "Response Time"),
+        ("class_location", "Class Location"),
+    ]
+
+
 def _extract_missing_fields(result: dict) -> list[dict]:
     """Build a UI-friendly list of missing fields from detector output."""
     missing: list[dict] = []
@@ -505,71 +556,12 @@ def _extract_missing_fields(result: dict) -> list[dict]:
     def add_missing(key: str, label: str, current_value=None):
         missing.append({"key": key, "label": label, "current_value": current_value or ""})
 
-    if not bool(result.get("has_slos")):
-        add_missing("slo", "Student Learning Outcomes")
+    template_fields = _build_template_payload(result, {})
+    labels = dict(_get_template_payload_fields())
 
-    instructor = result.get("instructor") or {}
-    if _empty(instructor.get("name")):
-        add_missing("instructor_name", "Instructor Name")
-    if _empty(instructor.get("title")):
-        add_missing("instructor_title", "Instructor Title")
-    if _empty(instructor.get("department")):
-        add_missing("instructor_department", "Instructor Department")
-
-    if _empty(result.get("course_delivery")) or str(result.get("course_delivery", "")).strip().lower() == "unknown":
-        add_missing("modality", "Course Delivery (Online/Hybrid/In-Person)")
-
-    office = result.get("office_information") or {}
-    if _empty(office.get("location")):
-        add_missing("office_location", "Office Location")
-    if _empty(office.get("hours")):
-        add_missing("office_hours", "Office Hours")
-    if _empty(office.get("phone")):
-        add_missing("office_phone", "Office Phone")
-
-    email = result.get("email_information") or {}
-    if _empty(email.get("email")):
-        add_missing("email", "Instructor Email")
-
-    preferred = result.get("preferred_information") or {}
-    if _empty(preferred.get("preferred")):
-        add_missing("preferred_contact", "Preferred Contact Method")
-
-    late = result.get("late_information") or {}
-    if _empty(late.get("late")):
-        add_missing("late_work_policy", "Late Work Policy")
-
-    credit = result.get("credit_hours") or {}
-    if _empty(credit.get("hours")):
-        add_missing("credit_hours", "Credit Hours")
-
-    workload = result.get("workload_information") or {}
-    if _empty(workload.get("description")):
-        add_missing("workload", "Expected Workload")
-
-    gscale = result.get("grading_scale") or {}
-    if not bool(gscale.get("found")) or _empty(gscale.get("content")):
-        add_missing("grading_scale", "Grading Scale")
-
-    ad = result.get("assignment_delivery") or {}
-    if not bool(ad.get("found")) or _empty(ad.get("content")):
-        add_missing("assignment_delivery", "Assignment Delivery")
-
-    at = result.get("assignment_types") or {}
-    if not bool(at.get("found")) or _empty(at.get("content")):
-        add_missing("assignment_types", "Assignment Types")
-
-    gp = result.get("grading_process") or {}
-    if not bool(gp.get("found")) or _empty(gp.get("content")):
-        add_missing("grading_process", "Grading Process")
-
-    rt = result.get("response_time") or {}
-    if not bool(rt.get("found")) or _empty(rt.get("content")):
-        add_missing("response_time", "Response Time")
-
-    cl = result.get("class_location") or {}
-    if not bool(cl.get("found")) or _empty(cl.get("content")):
-        add_missing("class_location", "Class Location")
+    for key, label in labels.items():
+        if _empty(template_fields.get(key)):
+            add_missing(key, label)
 
     return missing
 
@@ -593,9 +585,21 @@ def _build_template_payload(detector_payload: dict, user_inputs: dict) -> dict:
     rt = data.get("response_time") or {}
     cl = data.get("class_location") or {}
 
+    course_title = data.get("course_title") or ""
+    course_code = data.get("course_code") or ""
+    course_name = data.get("course_name") or ""
+    if _empty(course_title) or _empty(course_code) or _empty(course_name):
+        extracted_title, extracted_code, extracted_name = _extract_course_title(data.get("extracted_text") or "")
+        course_title = course_title or extracted_title
+        course_code = course_code or extracted_code
+        course_name = course_name or extracted_name
+
     # Keys below intentionally match TEMPLATE_FIELDS in docx_template_updater.py
     template_data = {
         "filename": data.get("filename", "Uploaded_syllabus"),
+        "course_title": course_title,
+        "course_code": course_code,
+        "course_name": course_name,
         "SLOs": data.get("slo_content") if data.get("has_slos") else "",
         "modality": data.get("course_delivery") if str(data.get("course_delivery", "")).lower() != "unknown" else "",
         "instructor_name": instructor.get("name") or "",
@@ -619,25 +623,33 @@ def _build_template_payload(detector_payload: dict, user_inputs: dict) -> dict:
 
     # Map UI keys to template keys and override with user inputs where provided.
     key_map = {
-        "preferred_contact": "preferred_contact_method",
         "instructor_name": "instructor_name",
         "instructor_title": "instructor_title",
         "instructor_department": "instructor_department",
         "email": "email",
         "office_location": "office_address",
+        "office_address": "office_address",
         "office_hours": "office_hours",
         "office_phone": "office_phone",
         "credit_hours": "credit_hour",
         "workload": "workload",
         "grading_scale": "final_grade_scale",
+        "final_grade_scale": "final_grade_scale",
         "grading_process": "grading_process",
         "assignment_types": "assignment_types_title",
         "assignment_delivery": "assignment_delivery",
         "late_work_policy": "deadline_expectations_title",
+        "deadline_expectations_title": "deadline_expectations_title",
         "response_time": "response_time",
         "class_location": "class_location",
         "modality": "modality",
         "slo": "SLOs",
+        "SLOs": "SLOs",
+        "preferred_contact": "preferred_contact_method",
+        "preferred_contact_method": "preferred_contact_method",
+        "course_title": "course_title",
+        "course_code": "course_code",
+        "course_name": "course_name",
     }
 
     for ui_key, raw_val in user_inputs.items():

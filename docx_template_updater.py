@@ -34,22 +34,41 @@ def _get(data: Dict[str, Any], *keys: str) -> Any:
 
 def _to_template_values(record: Dict[str, Any]) -> Dict[str, str]:
     """Accept either already-flat template keys or nested detector payload."""
+    course_code = _clean(record.get("course_code"))
+    course_name = _clean(record.get("course_name"))
+    course_title = _clean(record.get("course_title"))
+    if (
+        course_title == MISSING
+        and course_code != MISSING
+        and course_name != MISSING
+    ):
+        course_title = f"{course_code} {course_name}"
+
     values = {
         "filename": _clean(record.get("filename")),
+        "course_title": course_title,
+        "course_code": course_code,
+        "course_name": course_name,
         "instructor_name": _clean(record.get("instructor_name")),
         "instructor_title": _clean(record.get("instructor_title")),
         "instructor_department": _clean(record.get("instructor_department")),
         "email": _clean(record.get("email")),
-        "preferred_contact_method": _clean(record.get("preferred_contact_method")),
+        "preferred_contact_method": _clean(
+            record.get("preferred_contact_method")
+        ),
         "response_time": _clean(record.get("response_time")),
         "office_address": _clean(record.get("office_address")),
         "office_phone": _clean(record.get("office_phone")),
         "office_hours": _clean(record.get("office_hours")),
         "modality": _clean(record.get("modality")),
         "class_location": _clean(record.get("class_location")),
-        "assignment_types_title": _clean(record.get("assignment_types_title")),
+        "assignment_types_title": _clean(
+            record.get("assignment_types_title")
+        ),
         "assignment_delivery": _clean(record.get("assignment_delivery")),
-        "deadline_expectations_title": _clean(record.get("deadline_expectations_title")),
+        "deadline_expectations_title": _clean(
+            record.get("deadline_expectations_title")
+        ),
         "SLOs": _clean(record.get("SLOs")),
         "credit_hour": _clean(record.get("credit_hour")),
         "workload": _clean(record.get("workload")),
@@ -61,24 +80,47 @@ def _to_template_values(record: Dict[str, Any]) -> Dict[str, str]:
     fallback = {
         "instructor_name": _clean(_get(record, "instructor", "name")),
         "instructor_title": _clean(_get(record, "instructor", "title")),
-        "instructor_department": _clean(_get(record, "instructor", "department")),
+        "instructor_department": _clean(
+            _get(record, "instructor", "department")
+        ),
         "email": _clean(_get(record, "email_information", "email")),
-        "preferred_contact_method": _clean(_get(record, "preferred_information", "preferred")),
+        "preferred_contact_method": _clean(
+            _get(record, "preferred_information", "preferred")
+        ),
         "response_time": _clean(_get(record, "response_time", "content")),
-        "office_address": _clean(_get(record, "office_information", "location")),
+        "office_address": _clean(
+            _get(record, "office_information", "location")
+        ),
         "office_phone": _clean(_get(record, "office_information", "phone")),
         "office_hours": _clean(_get(record, "office_information", "hours")),
         "modality": _clean(record.get("course_delivery")),
         "class_location": _clean(_get(record, "class_location", "content")),
-        "assignment_types_title": _clean(_get(record, "assignment_types", "content")),
-        "assignment_delivery": _clean(_get(record, "assignment_delivery", "content")),
-        "deadline_expectations_title": _clean(_get(record, "late_information", "late")),
-        "SLOs": _clean(record.get("slo_content") if record.get("has_slos") else None),
+        "assignment_types_title": _clean(
+            _get(record, "assignment_types", "content")
+        ),
+        "assignment_delivery": _clean(
+            _get(record, "assignment_delivery", "content")
+        ),
+        "deadline_expectations_title": _clean(
+            _get(record, "late_information", "late")
+        ),
+        "SLOs": _clean(
+            record.get("slo_content") if record.get("has_slos") else None
+        ),
         "credit_hour": _clean(_get(record, "credit_hours", "hours")),
-        "workload": _clean(_get(record, "workload_information", "description")),
+        "workload": _clean(
+            _get(record, "workload_information", "description")
+        ),
         "grading_process": _clean(_get(record, "grading_process", "content")),
-        "final_grade_scale": _clean(_get(record, "grading_scale", "content")),
+        "final_grade_scale": _clean(
+            _get(record, "grading_scale", "content")
+        ),
     }
+
+    values["grading_scale"] = values["final_grade_scale"]
+    values["late_work_policy"] = values["deadline_expectations_title"]
+    values["office_location"] = values["office_address"]
+    values["preferred_contact"] = values["preferred_contact_method"]
 
     for k, v in fallback.items():
         if values.get(k) == MISSING and v != MISSING:
@@ -87,31 +129,32 @@ def _to_template_values(record: Dict[str, Any]) -> Dict[str, str]:
     return values
 
 
-def _replace_runs(runs, values: Dict[str, str]) -> None:
-    for run in runs:
-        if not run.text:
-            continue
-        t = run.text
-        for key, value in values.items():
-            t = t.replace("{{" + key + "}}", value)
-        run.text = t
+def _replace_text(text: str, values: Dict[str, str]) -> str:
+    updated = text or ""
+    for key, value in values.items():
+        updated = updated.replace("{{" + key + "}}", value)
+    return updated
 
 
 def _replace_all(doc: Document, values: Dict[str, str]) -> None:
     for p in doc.paragraphs:
-        _replace_runs(p.runs, values)
+        if "{{" in (p.text or ""):
+            p.text = _replace_text(p.text, values)
 
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
                 for p in cell.paragraphs:
-                    _replace_runs(p.runs, values)
+                    if "{{" in (p.text or ""):
+                        p.text = _replace_text(p.text, values)
 
     for section in doc.sections:
         for p in section.header.paragraphs:
-            _replace_runs(p.runs, values)
+            if "{{" in (p.text or ""):
+                p.text = _replace_text(p.text, values)
         for p in section.footer.paragraphs:
-            _replace_runs(p.runs, values)
+            if "{{" in (p.text or ""):
+                p.text = _replace_text(p.text, values)
 
 
 def _replace_unresolved(doc: Document) -> None:
@@ -159,7 +202,12 @@ def fill_docx_template_from_detector_result(
     doc.save(str(output_path))
 
 
-def fill_docx_template(template_path: Path, data_path: Path, output_path: Path, index: int) -> None:
+def fill_docx_template(
+    template_path: Path,
+    data_path: Path,
+    output_path: Path,
+    index: int,
+) -> None:
     """Small file-based helper kept for compatibility."""
     raw = json.loads(data_path.read_text(encoding="utf-8"))
     if isinstance(raw, dict) and isinstance(raw.get("results"), list):

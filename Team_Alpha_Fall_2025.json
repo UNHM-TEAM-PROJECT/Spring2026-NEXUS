@@ -411,7 +411,7 @@
     "deadline_expectations_title": "You will lose 10% per day for work submitted late for up to 48 hours after the due day. Submissions must be completed through MyCourses in order to receive credits.",
     "assignment_delivery": "MyCourses",
     "final_grade_scale": "Missing",
-    "grading_process": "Labs: 25%, Homework: 25%, Web project: 25%, Participation: 15%, Final exam: 10%" 
+    "grading_process": "Labs: 25%, Homework: 25%, Web project: 25%, Participation: 15%, Final exam: 10%"
   },
   {
     "filename": "COMP_405 - Jin_Fall - Fall 2021.pdf",
@@ -1951,7 +1951,7 @@
     "grading_procedures_title": "Missing",
     "deadline_expectations_title": "Course Policies",
     "assignment_delivery": "Missing",
-    "final_grade_scale": "Missing",
+    "final_grade_scale": "94-100 | A | 4.0 90-93 | A- | 3.67 87-89 | B+ | 3.33 84-86 | B | 3.0 80-83 | B- | 2.67 77-79 | C+ | 2.33 74-76 | C | 2.0 70-73 | C- | 1.67 67-69 | D+ | 1.33 64-66 | D | 1.0 60-63 | D- | 0.67 < 60 | F | 0.0",
     "grading_process": "Missing"
   },
   {
@@ -2484,7 +2484,6 @@
     "grading_process": "Homework: 10%, Reading Quizzes: 2%, Labs: 20%, Regular Exams: 48%, Final Exam: 20%"
   },
   {
-    
     "filename": "PHYS 401.M1-Summer 2025 Syllabus .pdf",
     "instructor_name": "David Jagodowski",
     "instructor_title": "Professor",
@@ -2642,7 +2641,7 @@
     "grading_procedures_title": "ASSIGNMENT OF A LETTER GRADE:",
     "deadline_expectations_title": "Late Work:",
     "assignment_delivery": "Missing",
-    "final_grade_scale": "Missing",
+    "final_grade_scale": "A = 93.0-100 B- = 80.0-82.9 D+ = 65.0-69.9 A- = 90.0-92.9 C+ = 77.0-79.9 D = 60.0-64.9 B+ = 87.0-89.9 C = 73.0-76.9 F = 59.9 and below B = 83.0-86.9 C- = 70.0-72.9",
     "grading_process": "Missing"
   },
   {
@@ -3207,7 +3206,7 @@
     "assignment_types_title": "Missing",
     "deadline_expectations_title": "Missing",
     "assignment_delivery": "Canvas",
-    "final_grade_scale": "Missing",
+    "final_grade_scale": "A 95-100% A- 90-94 B+ 86-89 B 83-85 B- 80-82 C+ 77-80 C 73-76 C- 70-72 D+ 67-69 D 63-66 D- 60-62 F < 60",
     "grading_process": "Missing"
   },
   {
@@ -3669,5 +3668,5 @@
     "assignment_delivery": "Canvas",
     "final_grade_scale": "A 92.6-100, A- 89.6-92.5, B+ 86.6-89.5, B 82.6-86.5, B- 79.6-82.5, C+ 76.6-79.5, C 72.6-76.5, C- 69.6-72.5, D+ 66.6-69.5, D 62.6-66.5, D- 60-62.5, F <60",
     "grading_process": "Missing"
-    }
+  }
 ]

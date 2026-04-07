@@ -34,7 +34,8 @@ class SLODetector:
     SECTION_HEADERS = [
         'course description', 'course objectives', 'course goals',
         'prerequisites', 'textbook', 'grading', 'schedule', 'required',
-        'course requirements', 'homework', 'assignments', 'exams'
+        'course requirements', 'homework', 'assignments', 'exams',
+        'course policies', 'course policy'
     ]
 
     LIST_ITEM_PATTERN = re.compile(
@@ -58,17 +59,22 @@ class SLODetector:
             "learning objective",
             "course learning outcomes",
             "course learning objectives",
-            "business program student learning outcomes"
+            "business program student learning outcomes",
+            "learning goals and objectives",
+            "course learning goals and objectives",
+            "specific learning objectives",
         ]
 
         self.approved_abbreviations = ["slos", "slo"]
-        
+
         # Comprehensive embedded patterns - covers ALL 9 failure cases
         self.embedded_patterns = [
             # Pattern 1: "primary objectives of this course are to give students"
+            # context_reject: skip if this is inside a "course description" section
             {
                 'regex': r'(?i)(?:the\s+)?primary\s+objectives?\s+of\s+this\s+course\s+(?:are|is)\s+to\s+give\s+students?',
-                'min_score': 10
+                'min_score': 10,
+                'context_reject': r'course description'
             },
             # Pattern 2: "course should help you to:"
             {
@@ -114,6 +120,11 @@ class SLODetector:
                 'regex': r'(?i)student\s+outcomes?\s*:',
                 'min_score': 10
             },
+            # Pattern 10: "Specific learning objectives" (standalone heading)
+            {
+                'regex': r'(?i)specific\s+learning\s+objectives?',
+                'min_score': 9
+            },
         ]
 
     def detect(self, text: str) -> Dict[str, Any]:
@@ -127,7 +138,7 @@ class SLODetector:
         try:
             # Try formal titles first (higher confidence)
             found, content = self._simple_title_detection(text)
-            
+
             # If not found, try embedded patterns (catches 9 missing cases)
             if not found:
                 found, content = self._embedded_pattern_detection(text)
@@ -165,54 +176,60 @@ class SLODetector:
         lines = text.split('\n')
         best_match = None
         best_score = 0
-        
+
         for i, line in enumerate(lines):
             # Check each embedded pattern
             for pattern_info in self.embedded_patterns:
                 pattern = pattern_info['regex']
                 min_score = pattern_info['min_score']
-                
+
                 match = re.search(pattern, line)
                 if match:
                     # reject if line looks like generic course description
                     line_lower = line.lower()
                     if "read the complex texts" in line_lower or "study at least" in line_lower:
                         continue
-                    
+
+                    # context_reject: skip if preceding lines contain the reject phrase
+                    if 'context_reject' in pattern_info:
+                        prev_text = ' '.join(lines[max(0, i - 4):i]).lower()
+                        if re.search(pattern_info['context_reject'], prev_text, re.IGNORECASE):
+                            continue
+
                     # Found a match - calculate score based on pattern strength and position
                     score = min_score
-                    
+
                     # Prefer earlier occurrences (first page)
                     position_ratio = i / max(len(lines), 1)
                     if position_ratio < 0.15:
                         score += 5
                     elif position_ratio < 0.30:
                         score += 3
-                    
+
                     # Track best match
                     if score > best_score:
                         best_score = score
                         best_match = (i, line, pattern)
-        
+
         if best_match:
             match_line_idx, match_line, match_pattern = best_match
-            
+
             # Extract content starting from matched line
             content_lines = [match_line.strip()]
             content_length = len(match_line)
-            
+
             # Collect following lines
             for j in range(match_line_idx + 1, min(match_line_idx + self.MAX_CONTENT_LINES, len(lines))):
                 if j >= len(lines):
                     break
-                
+
                 next_line = lines[j].strip()
                 if not next_line:
                     continue
-                
-                # Stop at next major section
-                next_lower = next_line.lower()
-                if any(section in next_lower for section in self.SECTION_HEADERS):
+
+                # Stop at next major section (use startswith to avoid mid-line false stops)
+                next_lower = next_line.lower().strip()
+                if any(next_lower.startswith(section) for section in self.SECTION_HEADERS):
                     # But allow "course requirements" if it's part of SLO context
                     if 'requirement' in next_lower and len(content_lines) < 3:
                         pass  # Continue collecting
@@ -324,7 +341,7 @@ class SLODetector:
                 if not next_line:
                     continue
 
-                if any(section in next_line.lower() for section in self.SECTION_HEADERS):
+                if any(next_line.lower().strip().startswith(section) for section in self.SECTION_HEADERS):
                     break
 
                 content_lines.append(next_line)
@@ -332,6 +349,10 @@ class SLODetector:
 
                 if content_length > self.MAX_CONTENT_LENGTH:
                     break
+
+            # Require at least 2 lines (header + at least 1 SLO item)
+            if len(content_lines) < 2:
+                return False, ""
 
             content = '\n'.join(content_lines)
             return True, content

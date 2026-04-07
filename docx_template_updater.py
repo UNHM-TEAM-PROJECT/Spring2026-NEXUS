@@ -110,7 +110,13 @@ def _to_template_values(record: Dict[str, Any]) -> Dict[str, str]:
     course_code = _clean(record.get("course_code"))
     course_name = _clean(record.get("course_name"))
     course_title = _clean(record.get("course_title"))
-    if course_title == MISSING and course_code != MISSING:
+    if (
+        course_title == MISSING
+        and course_code != MISSING
+        and course_name != MISSING
+    ):
+        course_title = f"{course_code} {course_name}"
+    elif course_title == MISSING and course_code != MISSING:
         course_title = course_code
 
     values = {

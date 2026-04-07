@@ -507,16 +507,51 @@ def _empty(val) -> bool:
 
 
 def _extract_course_title(text: str) -> tuple[str, str, str]:
-    """Extract course code from first lines and use it as course title."""
+    """Extract course code and associated course name from early syllabus lines."""
     if not text:
         return "", "", ""
 
-    for line in [line.strip() for line in text.splitlines()[:15] if line.strip()]:
-        match = re.search(r'\b(?P<code>[A-Z]{4}\s?\d{3})\b', line)
+    lines = [line.strip() for line in text.splitlines()[:20] if line.strip()]
+
+    # Pattern 1: CODE + NAME on same line.
+    for line in lines:
+        match = re.match(
+            r'^(?P<code>[A-Z]{3,4}\s?\d{3})\s*[:\-]?\s*(?P<name>.+)$',
+            line,
+        )
+        if match:
+            code = re.sub(r'\s+', '', match.group('code'))
+            name = match.group('name').strip(' -:\t')
+            if name:
+                return f"{code} {name}", code, name
+
+    # Pattern 2: CODE on one line and NAME on the next non-empty line.
+    code_only = re.compile(r'^(?P<code>[A-Z]{3,4}\s?\d{3})\s*[:\-]?\s*$')
+    heading_like = re.compile(r'^[A-Z\s]{3,}:?$')
+    for idx, line in enumerate(lines):
+        match = code_only.match(line)
         if not match:
             continue
-        course_code = re.sub(r'\s+', '', match.group('code'))
-        return course_code, course_code, ""
+
+        code = re.sub(r'\s+', '', match.group('code'))
+        for j in range(idx + 1, min(idx + 4, len(lines))):
+            candidate = lines[j].strip(' -:\t')
+            if not candidate:
+                continue
+            if code_only.match(candidate):
+                break
+            if heading_like.match(candidate):
+                continue
+            return f"{code} {candidate}", code, candidate
+
+        return code, code, ""
+
+    # Pattern 3: CODE exists somewhere; name unknown.
+    for line in lines:
+        match = re.search(r'\b(?P<code>[A-Z]{3,4}\s?\d{3})\b', line)
+        if match:
+            code = re.sub(r'\s+', '', match.group('code'))
+            return code, code, ""
 
     return "", "", ""
 
@@ -524,6 +559,7 @@ def _extract_course_title(text: str) -> tuple[str, str, str]:
 def _get_template_payload_fields() -> list[tuple[str, str]]:
     return [
         ("course_code", "Course Code"),
+        ("course_name", "Course Name"),
         ("SLOs", "Student Learning Outcomes"),
         ("modality", "Course Delivery (Online/Hybrid/In-Person)"),
         ("instructor_name", "Instructor Name"),
@@ -563,6 +599,14 @@ def _extract_missing_fields(result: dict) -> list[dict]:
     return missing
 
 
+def _hide_empty_course_fields(payload: dict) -> None:
+    """Keep empty course code/name out of the upload response payload."""
+    if _empty(payload.get("course_code")):
+        payload.pop("course_code", None)
+    if _empty(payload.get("course_name")):
+        payload.pop("course_name", None)
+
+
 def _build_template_payload(detector_payload: dict, user_inputs: dict) -> dict:
     """Flatten detector output + user inputs into template placeholder keys."""
     data = dict(detector_payload or {})
@@ -584,14 +628,16 @@ def _build_template_payload(detector_payload: dict, user_inputs: dict) -> dict:
 
     course_title = data.get("course_title") or ""
     course_code = data.get("course_code") or ""
-    course_name = ""
-    if _empty(course_code):
+    course_name = data.get("course_name") or ""
+    if _empty(course_code) or _empty(course_name):
         extracted_title, extracted_code, extracted_name = _extract_course_title(data.get("extracted_text") or "")
         course_title = course_title or extracted_title
         course_code = course_code or extracted_code
         course_name = course_name or extracted_name
 
-    if _empty(course_title):
+    if not _empty(course_code) and not _empty(course_name):
+        course_title = f"{course_code} {course_name}".strip()
+    elif _empty(course_title):
         course_title = course_code
 
     # Keys below intentionally match TEMPLATE_FIELDS in docx_template_updater.py
@@ -599,7 +645,7 @@ def _build_template_payload(detector_payload: dict, user_inputs: dict) -> dict:
         "filename": data.get("filename", "Uploaded_syllabus"),
         "course_title": course_title,
         "course_code": course_code,
-        "course_name": "",
+        "course_name": course_name,
         "SLOs": data.get("slo_content") if data.get("has_slos") else "",
         "modality": data.get("course_delivery") if str(data.get("course_delivery", "")).lower() != "unknown" else "",
         "instructor_name": instructor.get("name") or "",
@@ -651,6 +697,7 @@ def _build_template_payload(detector_payload: dict, user_inputs: dict) -> dict:
         "preferred_contact_method": "preferred_contact_method",
         "course_title": "course_title",
         "course_code": "course_code",
+        "course_name": "course_name",
     }
 
     # Accept direct template keys from the UI for all payload fields.
@@ -663,6 +710,14 @@ def _build_template_payload(detector_payload: dict, user_inputs: dict) -> dict:
         val = str(raw_val).strip() if raw_val is not None else ""
         if not _empty(val):
             template_data[key_map[ui_key]] = val
+
+    # Recompute course title after user overrides.
+    final_code = template_data.get("course_code") or ""
+    final_name = template_data.get("course_name") or ""
+    if not _empty(final_code) and not _empty(final_name):
+        template_data["course_title"] = f"{final_code} {final_name}".strip()
+    elif _empty(template_data.get("course_title")):
+        template_data["course_title"] = final_code
 
     return template_data
 
@@ -734,6 +789,7 @@ def create_routes(app):
                 last_upload_result = results[0]
                 response_payload = dict(results[0])
                 response_payload["missing_fields"] = _extract_missing_fields(response_payload)
+                _hide_empty_course_fields(response_payload)
                 return jsonify(response_payload)
             else:
                 # Keep the first result available for template generation flows.
@@ -742,6 +798,7 @@ def create_routes(app):
                 for r in results:
                     rr = dict(r)
                     rr["missing_fields"] = _extract_missing_fields(rr)
+                    _hide_empty_course_fields(rr)
                     enriched.append(rr)
                 return jsonify({'results': enriched})
 

@@ -1,235 +1,386 @@
-"""Fill detector placeholders in a DOCX template while preserving images.
+"""Minimal DOCX template updater used by api_routes.
 
-Usage:
-    python docx_template_updater.py \
-        --template path/to/template.docx \
-        --data detector_output.json \
-        --output path/to/filled.docx \
-        --index 0
-
-Placeholders in the document should follow: {{field_name}}
-
-This script supports both:
-1) Flattened records (e.g., Team_Alpha_Fall_2025.json)
-2) Raw /upload API responses with nested detector fields
-   (single object or {'results': [...]} wrapper)
+Replaces placeholders like {{field_name}} in paragraphs/tables/headers/footers.
 """
 
-import argparse
 import json
 import re
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
 from docx import Document
 
 
 MISSING = "Missing"
 
-# Placeholders expected by the syllabus template.
-TEMPLATE_FIELDS = [
-    "filename",
-    "instructor_name",
-    "instructor_title",
-    "instructor_department",
-    "email",
-    "preferred_contact_method",
-    "response_time",
-    "office_address",
-    "office_phone",
-    "office_hours",
-    "modality",
-    "class_location",
-    "assignment_types_title",
-    "assignment_delivery",
-    "deadline_expectations_title",
-    "SLOs",
-    "credit_hour",
-    "workload",
-    "grading_process",
-    "final_grade_scale",
-]
 
-
-def _normalize_value(value: Any) -> str:
+def _clean(value: Any) -> str:
     if value is None:
         return MISSING
-
-    # Avoid writing complex structures directly into template placeholders.
     if isinstance(value, (dict, list, tuple, set)):
         return MISSING
-
     text = str(value).strip()
-    if not text:
-        return MISSING
-    if text.lower() in {"missing", "none", "null", "n/a", "na"}:
-        return MISSING
-    return text
+    return text if text else MISSING
 
 
-def _get_nested(data: Dict[str, Any], *keys: str) -> Any:
-    current: Any = data
-    for key in keys:
-        if not isinstance(current, dict):
+def _get(data: Dict[str, Any], *keys: str) -> Any:
+    cur: Any = data
+    for k in keys:
+        if not isinstance(cur, dict):
             return None
-        current = current.get(key)
-    return current
+        cur = cur.get(k)
+    return cur
 
 
-def _resolve_modality(record: Dict[str, Any]) -> str:
-    val = _get_nested(record, "modality", "modality")
-    if _normalize_value(val) != MISSING:
-        return _normalize_value(val)
+def _format_structured_text(value: str) -> str:
+    """Normalize detector prose into cleaner bullet-style lines."""
+    if value == MISSING:
+        return value
 
-    val = record.get("course_delivery")
-    if _normalize_value(val) != MISSING:
-        return _normalize_value(val)
+    raw = (value or "").replace("\r\n", "\n")
+    raw = re.sub(r"\s+", " ", raw)
+    raw = re.sub(r"\s*\n\s*", "\n", raw)
 
-    return MISSING
+    split_pattern = r"(?:\n+|\s*;\s*|\s*\|\s*|\s*•\s*|\s*\u2022\s*|\s+-\s+)"
+    parts = [p.strip(" .") for p in re.split(split_pattern, raw) if p.strip()]
+
+    # If no clear separators were found, try splitting numbered clauses.
+    if len(parts) <= 1:
+        numbered = re.split(r"\s+(?=\d+[\.)]\s+)", raw.strip())
+        parts = [p.strip(" .") for p in numbered if p.strip()]
+
+    # De-duplicate while preserving order.
+    seen = set()
+    unique_parts = []
+    for part in parts:
+        key = part.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        unique_parts.append(part)
+
+    if not unique_parts:
+        return value
+
+    if len(unique_parts) == 1:
+        return unique_parts[0]
+
+    return "\n".join(f"- {item}" for item in unique_parts)
 
 
-def _resolve_slos(record: Dict[str, Any]) -> str:
-    val = record.get("SLOs")
-    if _normalize_value(val) != MISSING:
-        return _normalize_value(val)
+def _strip_redundant_header(value: str, aliases: list[str]) -> str:
+    """Remove detector headers when template already has section headers."""
+    if value == MISSING:
+        return value
 
-    val = record.get("slo_content")
-    if _normalize_value(val) != MISSING:
-        return _normalize_value(val)
+    text = (value or "").strip()
+    if not text:
+        return value
 
-    if bool(record.get("has_slos")):
-        return "SLOs detected"
+    alias_pattern = "|".join(re.escape(alias) for alias in aliases if alias)
+    if not alias_pattern:
+        return value
 
-    return MISSING
+    # Remove leading markdown/hash bullets and one or more duplicated headers.
+    text = re.sub(
+        rf"^(?:\s*[#*-]+\s*)?(?:{alias_pattern})\s*[:\-]?\s*",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    )
+
+    # Remove standalone header lines that may still exist after newline splits.
+    lines = []
+    for line in text.splitlines():
+        clean = line.strip()
+        if re.fullmatch(
+            rf"(?:\s*[#*-]+\s*)?(?:{alias_pattern})\s*[:\-]?\s*",
+            clean,
+            flags=re.IGNORECASE,
+        ):
+            continue
+        lines.append(line)
+
+    cleaned = "\n".join(lines).strip()
+    return cleaned if cleaned else value
 
 
 def _to_template_values(record: Dict[str, Any]) -> Dict[str, str]:
-    """Convert detector output (nested or flat) into template placeholders."""
-    values: Dict[str, str] = {field: MISSING for field in TEMPLATE_FIELDS}
+    """Accept either already-flat template keys or nested detector payload."""
+    course_code = _clean(record.get("course_code"))
+    course_name = _clean(record.get("course_name"))
+    course_title = _clean(record.get("course_title"))
+    if (
+        course_title == MISSING
+        and course_code != MISSING
+        and course_name != MISSING
+    ):
+        course_title = f"{course_code} {course_name}"
+    elif course_title == MISSING and course_code != MISSING:
+        course_title = course_code
 
-    # Preserve direct values first for compatibility with already-flattened JSON.
-    for field in TEMPLATE_FIELDS:
-        if field in record:
-            values[field] = _normalize_value(record.get(field))
-
-    # Map nested /upload detector response fields onto template placeholders.
-    nested_map = {
-        "filename": _normalize_value(record.get("filename")),
-        "instructor_name": _normalize_value(_get_nested(record, "instructor", "name")),
-        "instructor_title": _normalize_value(_get_nested(record, "instructor", "title")),
-        "instructor_department": _normalize_value(_get_nested(record, "instructor", "department")),
-        "email": _normalize_value(_get_nested(record, "email_information", "email")),
-        "preferred_contact_method": _normalize_value(_get_nested(record, "preferred_information", "preferred")),
-        "response_time": _normalize_value(_get_nested(record, "response_time", "content")),
-        "office_address": _normalize_value(_get_nested(record, "office_information", "location")),
-        "office_phone": _normalize_value(_get_nested(record, "office_information", "phone")),
-        "office_hours": _normalize_value(_get_nested(record, "office_information", "hours")),
-        "modality": _resolve_modality(record),
-        "class_location": _normalize_value(_get_nested(record, "class_location", "content")),
-        "assignment_types_title": _normalize_value(_get_nested(record, "assignment_types", "content")),
-        "assignment_delivery": _normalize_value(_get_nested(record, "assignment_delivery", "content")),
-        "deadline_expectations_title": _normalize_value(_get_nested(record, "late_information", "late")),
-        "SLOs": _resolve_slos(record),
-        "credit_hour": _normalize_value(_get_nested(record, "credit_hours", "hours")),
-        "workload": _normalize_value(_get_nested(record, "workload_information", "description")),
-        "grading_process": _normalize_value(_get_nested(record, "grading_process", "content")),
-        "final_grade_scale": _normalize_value(_get_nested(record, "grading_scale", "content")),
+    values = {
+        "filename": _clean(record.get("filename")),
+        "course_title": course_title,
+        "course_code": course_code,
+        "course_name": course_name,
+        "instructor_name": _clean(record.get("instructor_name")),
+        "instructor_title": _clean(record.get("instructor_title")),
+        "instructor_department": _clean(record.get("instructor_department")),
+        "email": _clean(record.get("email")),
+        "preferred_contact_method": _clean(
+            record.get("preferred_contact_method")
+        ),
+        "response_time": _clean(record.get("response_time")),
+        "office_address": _clean(record.get("office_address")),
+        "office_phone": _clean(record.get("office_phone")),
+        "office_hours": _clean(record.get("office_hours")),
+        "modality": _clean(record.get("modality")),
+        "class_location": _clean(record.get("class_location")),
+        "assignment_types_title": _clean(
+            record.get("assignment_types_title")
+        ),
+        "assignment_delivery": _clean(record.get("assignment_delivery")),
+        "deadline_expectations_title": _clean(
+            record.get("deadline_expectations_title")
+        ),
+        "SLOs": _clean(record.get("SLOs")),
+        "credit_hour": _clean(record.get("credit_hour")),
+        "workload": _clean(record.get("workload")),
+        "grading_process": _clean(record.get("grading_process")),
+        "final_grade_scale": _clean(record.get("final_grade_scale")),
     }
 
-    # Nested values override direct values when they contain real detector output.
-    for key, value in nested_map.items():
-        if value != MISSING:
-            values[key] = value
+    # If flat values are missing, attempt nested detector keys.
+    fallback = {
+        "instructor_name": _clean(_get(record, "instructor", "name")),
+        "instructor_title": _clean(_get(record, "instructor", "title")),
+        "instructor_department": _clean(
+            _get(record, "instructor", "department")
+        ),
+        "email": _clean(_get(record, "email_information", "email")),
+        "preferred_contact_method": _clean(
+            _get(record, "preferred_information", "preferred")
+        ),
+        "response_time": _clean(_get(record, "response_time", "content")),
+        "office_address": _clean(
+            _get(record, "office_information", "location")
+        ),
+        "office_phone": _clean(_get(record, "office_information", "phone")),
+        "office_hours": _clean(_get(record, "office_information", "hours")),
+        "modality": _clean(record.get("course_delivery")),
+        "class_location": _clean(_get(record, "class_location", "content")),
+        "assignment_types_title": _clean(
+            _get(record, "assignment_types", "content")
+        ),
+        "assignment_delivery": _clean(
+            _get(record, "assignment_delivery", "content")
+        ),
+        "deadline_expectations_title": _clean(
+            _get(record, "late_information", "late")
+        ),
+        "SLOs": _clean(
+            record.get("slo_content") if record.get("has_slos") else None
+        ),
+        "credit_hour": _clean(_get(record, "credit_hours", "hours")),
+        "workload": _clean(
+            _get(record, "workload_information", "description")
+        ),
+        "grading_process": _clean(_get(record, "grading_process", "content")),
+        "final_grade_scale": _clean(
+            _get(record, "grading_scale", "content")
+        ),
+    }
+
+    values["grading_scale"] = values["final_grade_scale"]
+    values["late_work_policy"] = values["deadline_expectations_title"]
+    values["office_location"] = values["office_address"]
+    values["preferred_contact"] = values["preferred_contact_method"]
+
+    for k, v in fallback.items():
+        if values.get(k) == MISSING and v != MISSING:
+            values[k] = v
+
+    header_aliases = {
+        "SLOs": [
+            "SLOs",
+            "SLO",
+            "Student Learning Outcomes",
+            "Learning Outcomes",
+        ],
+        "modality": ["Modality", "Course Delivery", "Delivery Mode"],
+        "assignment_types_title": ["Assignment Types", "Assignments"],
+        "assignment_delivery": [
+            "Assignment Delivery",
+            "Submission",
+            "Deliverables",
+        ],
+        "deadline_expectations_title": [
+            "Late Work",
+            "Deadline Expectations",
+            "Missing Work",
+        ],
+        "response_time": ["Response Time", "Turnaround Time"],
+        "class_location": ["Class Location", "Location"],
+        "workload": ["Workload", "Expected Workload", "Course Workload"],
+        "grading_process": [
+            "Grading Process",
+            "Grading Procedures",
+            "Evaluation",
+        ],
+        "final_grade_scale": [
+            "Grading Scale",
+            "Final Grade Scale",
+            "Grade Scale",
+        ],
+        "office_address": ["Office", "Office Location", "Location"],
+        "office_hours": ["Office Hours", "Hours"],
+        "office_phone": ["Phone", "Office Phone", "Contact"],
+        "preferred_contact_method": [
+            "Preferred Contact",
+            "Preferred Contact Method",
+            "Contact Method",
+        ],
+    }
+
+    format_fields = [
+        "SLOs",
+        "modality",
+        "assignment_types_title",
+        "assignment_delivery",
+        "deadline_expectations_title",
+        "response_time",
+        "class_location",
+        "workload",
+        "grading_process",
+        "final_grade_scale",
+        "office_address",
+        "office_hours",
+        "preferred_contact_method",
+    ]
+
+    for field, aliases in header_aliases.items():
+        values[field] = _strip_redundant_header(values[field], aliases)
+
+    for field in format_fields:
+        values[field] = _format_structured_text(values[field])
 
     return values
 
 
-def _replace_in_runs(runs, values: Dict[str, str]) -> None:
-    # Run-level replacement keeps images and other embedded content intact.
-    for run in runs:
-        if not run.text:
+def _replace_span_in_runs(
+    runs,
+    start: int,
+    end: int,
+    replacement: str,
+) -> None:
+    """Replace a character span [start, end) in paragraph runs."""
+    if start >= end:
+        return
+
+    # Build char->run index map for current run state.
+    idx_map = []
+    for run_idx, run in enumerate(runs):
+        for char_idx, _ in enumerate(run.text or ""):
+            idx_map.append((run_idx, char_idx))
+
+    if not idx_map or start < 0 or end > len(idx_map):
+        return
+
+    first_run_idx, first_char_idx = idx_map[start]
+    last_run_idx, last_char_idx = idx_map[end - 1]
+
+    first_text = runs[first_run_idx].text or ""
+    last_text = runs[last_run_idx].text or ""
+
+    if first_run_idx == last_run_idx:
+        runs[first_run_idx].text = (
+            first_text[:first_char_idx]
+            + replacement
+            + first_text[last_char_idx + 1:]
+        )
+        return
+
+    runs[first_run_idx].text = first_text[:first_char_idx] + replacement
+
+    for i in range(first_run_idx + 1, last_run_idx):
+        runs[i].text = ""
+
+    runs[last_run_idx].text = last_text[last_char_idx + 1:]
+
+
+def _replace_placeholders_in_paragraph(
+    paragraph,
+    values: Dict[str, str],
+) -> None:
+    full_text = paragraph.text or ""
+    if "{{" not in full_text:
+        return
+
+    matches = list(re.finditer(r"\{\{[^{}]+\}\}", full_text))
+    if not matches:
+        return
+
+    # Replace from end so earlier match indices remain valid.
+    for match in reversed(matches):
+        token = match.group(0)
+        key = token[2:-2].strip()
+        replacement = values.get(key)
+        if replacement is None:
             continue
-        updated = run.text
-        for key, value in values.items():
-            updated = updated.replace(f"{{{{{key}}}}}", value)
-        run.text = updated
+        _replace_span_in_runs(
+            paragraph.runs,
+            match.start(),
+            match.end(),
+            replacement,
+        )
 
 
-def _replace_leftover_placeholders(doc: Document) -> None:
-    """Replace any unresolved {{placeholder}} text with 'Missing'."""
+def _replace_all(doc: Document, values: Dict[str, str]) -> None:
+    for p in doc.paragraphs:
+        _replace_placeholders_in_paragraph(p, values)
+
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for p in cell.paragraphs:
+                    _replace_placeholders_in_paragraph(p, values)
+
+    for section in doc.sections:
+        for p in section.header.paragraphs:
+            _replace_placeholders_in_paragraph(p, values)
+        for p in section.footer.paragraphs:
+            _replace_placeholders_in_paragraph(p, values)
+
+
+def _replace_unresolved(doc: Document) -> None:
     pattern = re.compile(r"\{\{[^{}]+\}\}")
 
-    def _replace_text(text: str) -> str:
-        return pattern.sub(MISSING, text)
+    def replace_unresolved_in_paragraph(paragraph) -> None:
+        text = paragraph.text or ""
+        if not pattern.search(text):
+            return
 
-    for paragraph in doc.paragraphs:
-        if pattern.search(paragraph.text or ""):
-            paragraph.text = _replace_text(paragraph.text)
+        unresolved = {
+            match.group(0)[2:-2].strip(): MISSING
+            for match in pattern.finditer(text)
+        }
+        _replace_placeholders_in_paragraph(paragraph, unresolved)
 
-    for table in doc.tables:
-        for row in table.rows:
-            for cell in row.cells:
-                for paragraph in cell.paragraphs:
-                    if pattern.search(paragraph.text or ""):
-                        paragraph.text = _replace_text(paragraph.text)
-
-    for section in doc.sections:
-        for paragraph in section.header.paragraphs:
-            if pattern.search(paragraph.text or ""):
-                paragraph.text = _replace_text(paragraph.text)
-        for paragraph in section.footer.paragraphs:
-            if pattern.search(paragraph.text or ""):
-                paragraph.text = _replace_text(paragraph.text)
-
-
-def _replace_in_doc(doc: Document, values: Dict[str, str]) -> None:
-    for paragraph in doc.paragraphs:
-        _replace_in_runs(paragraph.runs, values)
+    for p in doc.paragraphs:
+        replace_unresolved_in_paragraph(p)
 
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
-                for paragraph in cell.paragraphs:
-                    _replace_in_runs(paragraph.runs, values)
+                for p in cell.paragraphs:
+                    replace_unresolved_in_paragraph(p)
 
     for section in doc.sections:
-        for paragraph in section.header.paragraphs:
-            _replace_in_runs(paragraph.runs, values)
-        for paragraph in section.footer.paragraphs:
-            _replace_in_runs(paragraph.runs, values)
-
-
-def _load_record(data_file: Path, index: int) -> Dict[str, str]:
-    raw = json.loads(data_file.read_text(encoding="utf-8"))
-
-    if isinstance(raw, dict) and isinstance(raw.get("results"), list):
-        raw = raw["results"]
-
-    if isinstance(raw, list):
-        if not raw:
-            raise ValueError("JSON data file is an empty list.")
-        if index < 0 or index >= len(raw):
-            raise IndexError(
-                f"index {index} is out of range for list of size {len(raw)}"
-            )
-        record = raw[index]
-    elif isinstance(raw, dict):
-        record = raw
-    else:
-        raise ValueError("JSON data must be an object or a list of objects.")
-
-    if not isinstance(record, dict):
-        raise ValueError("Selected JSON record must be an object.")
-
-    return _to_template_values(record)
-
-
-def fill_docx_template(template_path: Path, data_path: Path, output_path: Path, index: int) -> None:
-    values = _load_record(data_path, index)
-    doc = Document(str(template_path))
-    _replace_in_doc(doc, values)
-    _replace_leftover_placeholders(doc)
-    doc.save(str(output_path))
+        for p in section.header.paragraphs:
+            replace_unresolved_in_paragraph(p)
+        for p in section.footer.paragraphs:
+            replace_unresolved_in_paragraph(p)
 
 
 def fill_docx_template_from_detector_result(
@@ -237,52 +388,37 @@ def fill_docx_template_from_detector_result(
     detector_result: Dict[str, Any],
     output_path: Path,
 ) -> None:
-    """Populate a DOCX template from detector output dict (UI upload response shape)."""
     if not isinstance(detector_result, dict):
-        raise ValueError("detector_result must be a JSON object/dict.")
+        raise ValueError("detector_result must be a dict")
 
-    record: Dict[str, Any] = detector_result
-    if isinstance(detector_result.get("results"), list):
-        if not detector_result["results"]:
-            raise ValueError("detector_result['results'] is empty.")
-        first = detector_result["results"][0]
-        if not isinstance(first, dict):
-            raise ValueError("detector_result['results'][0] must be an object.")
-        record = first
+    record = detector_result
+    if isinstance(record.get("results"), list) and record["results"]:
+        record = record["results"][0]
 
     values = _to_template_values(record)
     doc = Document(str(template_path))
-    _replace_in_doc(doc, values)
-    _replace_leftover_placeholders(doc)
+    _replace_all(doc, values)
+    _replace_unresolved(doc)
     doc.save(str(output_path))
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Fill DOCX template placeholders with detector JSON fields"
-    )
-    parser.add_argument("--template", required=True, help="Input .docx template path")
-    parser.add_argument("--data", required=True, help="JSON file path with detector data")
-    parser.add_argument("--output", required=True, help="Output .docx path")
-    parser.add_argument(
-        "--index",
-        type=int,
-        default=0,
-        help="Record index when JSON file contains a list (default: 0)",
-    )
+def fill_docx_template(
+    template_path: Path,
+    data_path: Path,
+    output_path: Path,
+    index: int,
+) -> None:
+    """Small file-based helper kept for compatibility."""
+    raw = json.loads(data_path.read_text(encoding="utf-8"))
+    if isinstance(raw, dict) and isinstance(raw.get("results"), list):
+        raw = raw["results"]
+    if isinstance(raw, list):
+        if index < 0 or index >= len(raw):
+            raise IndexError("index out of range")
+        record = raw[index]
+    elif isinstance(raw, dict):
+        record = raw
+    else:
+        raise ValueError("JSON must be object or list")
 
-    args = parser.parse_args()
-
-    template_path = Path(args.template)
-    data_path = Path(args.data)
-    output_path = Path(args.output)
-
-    if template_path.suffix.lower() != ".docx":
-        raise ValueError("Template must be a .docx file.")
-
-    fill_docx_template(template_path, data_path, output_path, args.index)
-    print(f"Generated: {output_path}")
-
-
-if __name__ == "__main__":
-    main()
+    fill_docx_template_from_detector_result(template_path, record, output_path)

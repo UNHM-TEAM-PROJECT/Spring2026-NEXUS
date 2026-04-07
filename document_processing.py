@@ -176,31 +176,6 @@ def try_alternative_pdf_extraction(pdf_path):
     return alternative_text
 
 
-def _extract_doc_via_win32com(doc_path: str):
-    """Fallback: use win32com (MS Word) to extract text from old .doc files."""
-    import re as _re
-    try:
-        import win32com.client, os
-        word = win32com.client.Dispatch('Word.Application')
-        word.Visible = False
-        abs_path = os.path.abspath(doc_path)
-        doc = word.Documents.Open(abs_path)
-        text = doc.Range().Text
-        doc.Close(False)
-        word.Quit()
-        if not text.strip():
-            return None
-        # Word uses \r for paragraph breaks and \x07 for table cell separators.
-        # Replace \r with \n, strip \x07 and other control chars so lines are clean.
-        text = text.replace('\r', '\n')
-        text = _re.sub(r'[\x00-\x08\x0b-\x1f\x7f]', ' ', text)
-        text = _re.sub(r' {3,}', '  ', text)
-        return text
-    except Exception as e:
-        logging.warning(f"win32com fallback failed for {doc_path}: {e}")
-        return None
-
-
 def extract_text_from_docx(docx_path):
     """
     Extracts text from a DOCX file using python-docx with detailed diagnostics.

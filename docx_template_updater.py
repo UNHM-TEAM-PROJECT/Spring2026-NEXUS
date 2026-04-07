@@ -32,6 +32,79 @@ def _get(data: Dict[str, Any], *keys: str) -> Any:
     return cur
 
 
+def _format_structured_text(value: str) -> str:
+    """Normalize detector prose into cleaner bullet-style lines."""
+    if value == MISSING:
+        return value
+
+    raw = (value or "").replace("\r\n", "\n")
+    raw = re.sub(r"\s+", " ", raw)
+    raw = re.sub(r"\s*\n\s*", "\n", raw)
+
+    split_pattern = r"(?:\n+|\s*;\s*|\s*\|\s*|\s*•\s*|\s*\u2022\s*|\s+-\s+)"
+    parts = [p.strip(" .") for p in re.split(split_pattern, raw) if p.strip()]
+
+    # If no clear separators were found, try splitting numbered clauses.
+    if len(parts) <= 1:
+        numbered = re.split(r"\s+(?=\d+[\.)]\s+)", raw.strip())
+        parts = [p.strip(" .") for p in numbered if p.strip()]
+
+    # De-duplicate while preserving order.
+    seen = set()
+    unique_parts = []
+    for part in parts:
+        key = part.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        unique_parts.append(part)
+
+    if not unique_parts:
+        return value
+
+    if len(unique_parts) == 1:
+        return unique_parts[0]
+
+    return "\n".join(f"- {item}" for item in unique_parts)
+
+
+def _strip_redundant_header(value: str, aliases: list[str]) -> str:
+    """Remove detector headers when template already has section headers."""
+    if value == MISSING:
+        return value
+
+    text = (value or "").strip()
+    if not text:
+        return value
+
+    alias_pattern = "|".join(re.escape(alias) for alias in aliases if alias)
+    if not alias_pattern:
+        return value
+
+    # Remove leading markdown/hash bullets and one or more duplicated headers.
+    text = re.sub(
+        rf"^(?:\s*[#*-]+\s*)?(?:{alias_pattern})\s*[:\-]?\s*",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    )
+
+    # Remove standalone header lines that may still exist after newline splits.
+    lines = []
+    for line in text.splitlines():
+        clean = line.strip()
+        if re.fullmatch(
+            rf"(?:\s*[#*-]+\s*)?(?:{alias_pattern})\s*[:\-]?\s*",
+            clean,
+            flags=re.IGNORECASE,
+        ):
+            continue
+        lines.append(line)
+
+    cleaned = "\n".join(lines).strip()
+    return cleaned if cleaned else value
+
+
 def _to_template_values(record: Dict[str, Any]) -> Dict[str, str]:
     """Accept either already-flat template keys or nested detector payload."""
     course_code = _clean(record.get("course_code"))
@@ -122,61 +195,186 @@ def _to_template_values(record: Dict[str, Any]) -> Dict[str, str]:
         if values.get(k) == MISSING and v != MISSING:
             values[k] = v
 
+    header_aliases = {
+        "SLOs": [
+            "SLOs",
+            "SLO",
+            "Student Learning Outcomes",
+            "Learning Outcomes",
+        ],
+        "modality": ["Modality", "Course Delivery", "Delivery Mode"],
+        "assignment_types_title": ["Assignment Types", "Assignments"],
+        "assignment_delivery": [
+            "Assignment Delivery",
+            "Submission",
+            "Deliverables",
+        ],
+        "deadline_expectations_title": [
+            "Late Work",
+            "Deadline Expectations",
+            "Missing Work",
+        ],
+        "response_time": ["Response Time", "Turnaround Time"],
+        "class_location": ["Class Location", "Location"],
+        "workload": ["Workload", "Expected Workload", "Course Workload"],
+        "grading_process": [
+            "Grading Process",
+            "Grading Procedures",
+            "Evaluation",
+        ],
+        "final_grade_scale": [
+            "Grading Scale",
+            "Final Grade Scale",
+            "Grade Scale",
+        ],
+        "office_address": ["Office", "Office Location", "Location"],
+        "office_hours": ["Office Hours", "Hours"],
+        "office_phone": ["Phone", "Office Phone", "Contact"],
+        "preferred_contact_method": [
+            "Preferred Contact",
+            "Preferred Contact Method",
+            "Contact Method",
+        ],
+    }
+
+    format_fields = [
+        "SLOs",
+        "modality",
+        "assignment_types_title",
+        "assignment_delivery",
+        "deadline_expectations_title",
+        "response_time",
+        "class_location",
+        "workload",
+        "grading_process",
+        "final_grade_scale",
+        "office_address",
+        "office_hours",
+        "preferred_contact_method",
+    ]
+
+    for field, aliases in header_aliases.items():
+        values[field] = _strip_redundant_header(values[field], aliases)
+
+    for field in format_fields:
+        values[field] = _format_structured_text(values[field])
+
     return values
 
 
-def _replace_text(text: str, values: Dict[str, str]) -> str:
-    updated = text or ""
-    for key, value in values.items():
-        updated = updated.replace("{{" + key + "}}", value)
-    return updated
+def _replace_span_in_runs(
+    runs,
+    start: int,
+    end: int,
+    replacement: str,
+) -> None:
+    """Replace a character span [start, end) in paragraph runs."""
+    if start >= end:
+        return
+
+    # Build char->run index map for current run state.
+    idx_map = []
+    for run_idx, run in enumerate(runs):
+        for char_idx, _ in enumerate(run.text or ""):
+            idx_map.append((run_idx, char_idx))
+
+    if not idx_map or start < 0 or end > len(idx_map):
+        return
+
+    first_run_idx, first_char_idx = idx_map[start]
+    last_run_idx, last_char_idx = idx_map[end - 1]
+
+    first_text = runs[first_run_idx].text or ""
+    last_text = runs[last_run_idx].text or ""
+
+    if first_run_idx == last_run_idx:
+        runs[first_run_idx].text = (
+            first_text[:first_char_idx]
+            + replacement
+            + first_text[last_char_idx + 1:]
+        )
+        return
+
+    runs[first_run_idx].text = first_text[:first_char_idx] + replacement
+
+    for i in range(first_run_idx + 1, last_run_idx):
+        runs[i].text = ""
+
+    runs[last_run_idx].text = last_text[last_char_idx + 1:]
+
+
+def _replace_placeholders_in_paragraph(
+    paragraph,
+    values: Dict[str, str],
+) -> None:
+    full_text = paragraph.text or ""
+    if "{{" not in full_text:
+        return
+
+    matches = list(re.finditer(r"\{\{[^{}]+\}\}", full_text))
+    if not matches:
+        return
+
+    # Replace from end so earlier match indices remain valid.
+    for match in reversed(matches):
+        token = match.group(0)
+        key = token[2:-2].strip()
+        replacement = values.get(key)
+        if replacement is None:
+            continue
+        _replace_span_in_runs(
+            paragraph.runs,
+            match.start(),
+            match.end(),
+            replacement,
+        )
 
 
 def _replace_all(doc: Document, values: Dict[str, str]) -> None:
     for p in doc.paragraphs:
-        if "{{" in (p.text or ""):
-            p.text = _replace_text(p.text, values)
+        _replace_placeholders_in_paragraph(p, values)
 
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
                 for p in cell.paragraphs:
-                    if "{{" in (p.text or ""):
-                        p.text = _replace_text(p.text, values)
+                    _replace_placeholders_in_paragraph(p, values)
 
     for section in doc.sections:
         for p in section.header.paragraphs:
-            if "{{" in (p.text or ""):
-                p.text = _replace_text(p.text, values)
+            _replace_placeholders_in_paragraph(p, values)
         for p in section.footer.paragraphs:
-            if "{{" in (p.text or ""):
-                p.text = _replace_text(p.text, values)
+            _replace_placeholders_in_paragraph(p, values)
 
 
 def _replace_unresolved(doc: Document) -> None:
     pattern = re.compile(r"\{\{[^{}]+\}\}")
 
-    def fix(text: str) -> str:
-        return pattern.sub(MISSING, text or "")
+    def replace_unresolved_in_paragraph(paragraph) -> None:
+        text = paragraph.text or ""
+        if not pattern.search(text):
+            return
+
+        unresolved = {
+            match.group(0)[2:-2].strip(): MISSING
+            for match in pattern.finditer(text)
+        }
+        _replace_placeholders_in_paragraph(paragraph, unresolved)
 
     for p in doc.paragraphs:
-        if pattern.search(p.text or ""):
-            p.text = fix(p.text)
+        replace_unresolved_in_paragraph(p)
 
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
                 for p in cell.paragraphs:
-                    if pattern.search(p.text or ""):
-                        p.text = fix(p.text)
+                    replace_unresolved_in_paragraph(p)
 
     for section in doc.sections:
         for p in section.header.paragraphs:
-            if pattern.search(p.text or ""):
-                p.text = fix(p.text)
+            replace_unresolved_in_paragraph(p)
         for p in section.footer.paragraphs:
-            if pattern.search(p.text or ""):
-                p.text = fix(p.text)
+            replace_unresolved_in_paragraph(p)
 
 
 def fill_docx_template_from_detector_result(

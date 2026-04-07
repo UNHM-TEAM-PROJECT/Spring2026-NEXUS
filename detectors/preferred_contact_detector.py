@@ -29,6 +29,7 @@ HEADING_CLUES = [
     "(preferred)",
 
     # Best way variations
+    "best way",
     "best way to reach",
     "best way to contact",
     "best way to communicate",
@@ -86,6 +87,10 @@ class PreferredDetector:
         for i, raw in enumerate(lines):
             line = raw.strip()
             normalized_line = self._normalize_text(line)
+
+            # Handle phrasing like Gerard syllabi: "email is preferable".
+            if "email is preferable" in normalized_line:
+                return "email is preferable"
 
             # Check if any heading clue appears in the normalized line
             for clue in HEADING_CLUES:

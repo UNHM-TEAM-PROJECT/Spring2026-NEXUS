@@ -14,6 +14,7 @@ import os
 import sys
 import json
 import argparse
+import re
 from collections import defaultdict
 from difflib import SequenceMatcher
 
@@ -270,7 +271,9 @@ def compare_grading_scale(gt, pred):
             return set()
 
         # Pattern to find grade letters
-        pattern = r"\b([A-F][+-]?)(?=[\s:=\d<>%]|$)"
+        # Use lookbehind instead of \b so digit-letter boundaries are handled
+        # (e.g. "94B+: 87" where \b fails between digit and letter) (TeamNexus)
+        pattern = r"(?<![A-Za-z])([A-F][+-]?)(?=[\s:=\d<>%≤≥]|$)"
         matches = re.findall(pattern, str(text), re.IGNORECASE)
         return set(match.upper() for match in matches)
 
@@ -459,32 +462,80 @@ def compare_class_location(gt, pred, modality):
     return SequenceMatcher(None, g_norm, p_norm).ratio() >= FUZZY_MATCH_THRESHOLD
 
 
+def _extract_percentages_from_grading(text):
+    """
+    Extract percentages and their labels from grading process text.
+    Format: "Exam 50%, Homework 30%, Project 20%" → set of "50%", "30%" etc
+
+    Returns:
+        tuple: (set of percentages as strings like "50%", label_percent_dict)
+               or (set(), {}) if no percentages found (but NOT enforcing 100% sum)
+
+    NOTE: Removed 100% validation - comparison logic handles matching, not extraction.
+    """
+    if not text or not isinstance(text, str):
+        return set(), {}
+
+    text = text.lower().strip()
+
+    # Find all percentage patterns - be very flexible
+    pattern = r'(\d+)\s*%'
+    matches = re.finditer(pattern, text)
+
+    percentages = []
+    pct_set = set()
+
+    for match in matches:
+        pct_val = int(match.group(1))
+        if 1 <= pct_val <= 100:  # Valid percentage range
+            percentages.append(pct_val)
+            pct_set.add(f"{pct_val}%")
+
+    # Return percentages found (even if they don't sum to 100%)
+    # The comparison logic will decide if they match
+    if not percentages:
+        return set(), {}
+
+    # Create label_to_pct dict for reference
+    label_to_pct = {f"pct{i}": pct_val for i, pct_val in enumerate(percentages)}
+
+    return pct_set, label_to_pct
+
+
 def compare_grading_process(gt, pred):
     """
-    Lenient comparison for grading_process field.
+    Compare grading_process fields using Jaccard similarity on percentage sets.
 
-    The detector often finds the correct content but with minor formatting differences
-    (extra context, different whitespace, etc.). Use a more lenient threshold (75% vs 80%).
+    Strategy:
+    - Both missing/empty → MATCH
+    - Both have percentages → Jaccard similarity >= 0.55
+    - One has percentages, other doesn't → NO MATCH
+    - Both have no percentages → fuzzy match at 0.55 threshold
     """
     g = norm(gt)
     p = norm(pred)
 
-    # If GT is Missing/not found/empty, expect empty pred
+    # If GT missing, pred must also be missing
     if g in ("", "not found", "missing", "tbd", "not specified", "n/a"):
-        return p in ("", "missing")
+        return p in ("", "missing", "not found")
 
-    # Use fuzzy matching with MORE LENIENT threshold for grading_process
-    # Standard threshold is 80%, but grading_process uses 60% due to formatting variations
-    GRADING_PROCESS_THRESHOLD = 0.60
+    # Extract percentages from both
+    gt_pcts, _ = _extract_percentages_from_grading(g)
+    pred_pcts, _ = _extract_percentages_from_grading(p)
 
-    if not g and not p:
-        return True
-    if not g or not p:
-        return False
-    if g == p or g in p or p in g:
-        return True
+    # Both have percentages → Jaccard similarity >= 0.55
+    if gt_pcts and pred_pcts:
+        intersection = len(gt_pcts & pred_pcts)
+        union = len(gt_pcts | pred_pcts)
+        jaccard = intersection / union if union > 0 else 0
+        return jaccard >= 0.55
 
-    return SequenceMatcher(None, g, p).ratio() >= GRADING_PROCESS_THRESHOLD
+    # Both have no percentages → fuzzy match at 0.55 threshold
+    if not gt_pcts and not pred_pcts:
+        return SequenceMatcher(None, g, p).ratio() >= 0.55
+
+    # One has percentages, other doesn't → no match
+    return False
 
 
 # ======================================================================
@@ -686,7 +737,7 @@ def run_tests_for_folder(folder_path, ground_truth_json, output_json):
 
     # CHANGE 1: Store file count so main() can use it for weighted combining
     file_count = len(gt_data)
-    print(f"\nFound {file_count} records in ground truth.")
+    print(f"\nFound {file_count} records in {folder_path}.")
 
     # Track TP, FP, FN, TN for F1 score calculation
     # TP = True Positive: GT has value, Pred has value, Match correct

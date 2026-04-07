@@ -179,6 +179,7 @@ def try_alternative_pdf_extraction(pdf_path):
 def extract_text_from_docx(docx_path):
     """
     Extracts text from a DOCX file using python-docx with detailed diagnostics.
+    Falls back to win32com for old .doc (OLE) files that python-docx cannot read.
 
     Args:
         docx_path (str): Path to the DOCX file
@@ -241,13 +242,13 @@ def extract_text_from_docx(docx_path):
                 logging.warning(f"{file_name}: Could not extract header/footer from section {section_idx + 1}: {e}")
 
     except Exception as e:
-        logging.error(f"{file_name}: Error extracting DOCX {docx_path}: {e}")
-        return None
+        logging.warning(f"{file_name}: python-docx failed ({e}), trying win32com fallback")
+        return _extract_doc_via_win32com(docx_path)
 
     combined_text = "\n".join(full_text)
     if not combined_text.strip():
-        logging.warning(f"{file_name}: No text extracted from {docx_path}")
-        return None
+        logging.warning(f"{file_name}: No text extracted from {docx_path}, trying win32com fallback")
+        return _extract_doc_via_win32com(docx_path)
     else:
         logging.info(f"{file_name}: TOTAL DOCX EXTRACTION:")
         logging.info(f"  - {paragraph_count} paragraphs")

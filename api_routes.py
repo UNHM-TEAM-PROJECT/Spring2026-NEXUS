@@ -513,27 +513,36 @@ def _extract_course_title(text: str) -> tuple[str, str, str]:
 
     lines = [line.strip() for line in text.splitlines()[:20] if line.strip()]
 
+    # Subject can be a short code (ET) or a word (English).
+    code_body = r'(?P<subject>[A-Z][A-Za-z]{1,15})\s*(?:-\s*)?(?P<number>\d{3})'
+
+    def normalize_code(raw_code: str) -> str:
+        match = re.search(code_body, raw_code)
+        if not match:
+            return re.sub(r'\s+', '', raw_code).upper()
+        return f"{match.group('subject').upper()}{match.group('number')}"
+
     # Pattern 1: CODE + NAME on same line.
     for line in lines:
         match = re.match(
-            r'^(?P<code>[A-Z]{3,4}\s?\d{3})\s*[:\-]?\s*(?P<name>.+)$',
+            rf'^(?P<code>{code_body})\s*[:\-]?\s*(?P<name>.+)$',
             line,
         )
         if match:
-            code = re.sub(r'\s+', '', match.group('code'))
+            code = normalize_code(match.group('code'))
             name = match.group('name').strip(' -:\t')
             if name:
                 return f"{code} {name}", code, name
 
     # Pattern 2: CODE on one line and NAME on the next non-empty line.
-    code_only = re.compile(r'^(?P<code>[A-Z]{3,4}\s?\d{3})\s*[:\-]?\s*$')
+    code_only = re.compile(rf'^(?P<code>{code_body})\s*[:\-]?\s*$')
     heading_like = re.compile(r'^[A-Z\s]{3,}:?$')
     for idx, line in enumerate(lines):
         match = code_only.match(line)
         if not match:
             continue
 
-        code = re.sub(r'\s+', '', match.group('code'))
+        code = normalize_code(match.group('code'))
         for j in range(idx + 1, min(idx + 4, len(lines))):
             candidate = lines[j].strip(' -:\t')
             if not candidate:
@@ -548,9 +557,9 @@ def _extract_course_title(text: str) -> tuple[str, str, str]:
 
     # Pattern 3: CODE exists somewhere; name unknown.
     for line in lines:
-        match = re.search(r'\b(?P<code>[A-Z]{3,4}\s?\d{3})\b', line)
+        match = re.search(rf'\b(?P<code>{code_body})\b', line)
         if match:
-            code = re.sub(r'\s+', '', match.group('code'))
+            code = normalize_code(match.group('code'))
             return code, code, ""
 
     return "", "", ""

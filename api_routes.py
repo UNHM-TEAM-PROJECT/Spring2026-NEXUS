@@ -632,11 +632,13 @@ def _build_template_payload(detector_payload: dict, user_inputs: dict) -> dict:
         "office_hours": "office_hours",
         "office_phone": "office_phone",
         "credit_hours": "credit_hour",
+        "credit_hour": "credit_hour",
         "workload": "workload",
         "grading_scale": "final_grade_scale",
         "final_grade_scale": "final_grade_scale",
         "grading_process": "grading_process",
         "assignment_types": "assignment_types_title",
+        "assignment_types_title": "assignment_types_title",
         "assignment_delivery": "assignment_delivery",
         "late_work_policy": "deadline_expectations_title",
         "deadline_expectations_title": "deadline_expectations_title",
@@ -650,6 +652,10 @@ def _build_template_payload(detector_payload: dict, user_inputs: dict) -> dict:
         "course_title": "course_title",
         "course_code": "course_code",
     }
+
+    # Accept direct template keys from the UI for all payload fields.
+    for field in template_data.keys():
+        key_map.setdefault(field, field)
 
     for ui_key, raw_val in user_inputs.items():
         if ui_key not in key_map:

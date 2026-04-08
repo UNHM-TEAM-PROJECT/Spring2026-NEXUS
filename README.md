@@ -15,9 +15,8 @@ The **Syllabus Field Detector** is a web application that automatically analyzes
 - Uses lightweight pattern matching for fast, explainable results with confidence scores
 - Provides instant, explainable results with confidence scores
 - Supports batch processing via ZIP uploads or folder selection
-- Achieves **91.6% F1 Score** across all detectors (tested on 161 syllabi)
-- Uses AI-based detection (Groq LLaMA 3) to extract fields that pattern matching cannot reliably handle
-- Guides users through filling missing fields via an interactive chat card with input validation, confirmation step, and downloadable output *(currently implemented for `preferred_contact_method`)*
+- Achieves **95% F1 Score** across all detectors (tested on 210 syllabi)
+- Guides users through filling all missing fields via an interactive UI form and generates a downloadable updated DOCX template
 
 ---
 
@@ -30,8 +29,8 @@ Fall2025-Team-Alpha/
 ├── config.py                   # Server configuration (host, port, logging)
 ├── api_routes.py               # HTTP request handlers, orchestrates all detectors
 ├── document_processing.py      # PDF/DOCX text extraction engine
-|__ ai_detector.py              # Groq LLM-based extraction for preferred contact method
-├── template_generator.py       # Generates filled template documents from user-provided values
+├── docx_template_updater.py    # Fills DOCX template placeholders from detector/user inputs
+├── template_generator.py       # Legacy text template helper
 │
 ├── detectors/                  # 19 specialized field detection modules
 │   ├── __init__.py
@@ -53,28 +52,26 @@ Fall2025-Team-Alpha/
 │
 ├── templates/
 │   └── index.html              # Web UI with drag-and-drop file upload
-│   ├── syllabus_template.txt   # Template with placeholders (filename, preferred_contact_method)
-|
+├── updated_syllabus_detector_common_template.docx  # Active DOCX template
+│
 ├── static/
 │   ├── architecture.png        # System architecture diagram
 │   ├── logo3.png              # Application logo
 │   └── favicon.ico            # Browser favicon
 │
-├── ground_truth_syllabus/      # Test syllabi (PDF/DOCX files)
-├── ground_truth.json           # Expected values for each test syllabus
-├── new_ground_truth_syllabus/  # New Test syllabi (PDF/DOCX files)
-├── new_ground_truth.json       # Expected values for each new test syllabus
+├── Team_Alpha_Fall_2025_syllabus/  # Evaluation syllabi set A
+├── Team_Nexus_Spring_2026_syllabus/ # Evaluation syllabi set B
+├── Team_Alpha_Fall_2025.json        # Ground truth for set A
+├── Team_Nexus_Spring_2026.json      # Ground truth for set B
 ├── test_runner.py              # Automated testing framework
 ├── test_results.json           # Test metrics output
-├── new_test_results.json       # Latest test metrics output
+├── new_test_results.json       # Additional test metrics output
 │
 ├── requirements.txt            # Python dependencies
 ├── Dockerfile                  # Container configuration
 ├── DockerREADME.md             # Docker deployment guide
 ├── DEVELOPER_GUIDE.md          # How to add new detectors
 └── README.md                   # This file
-├── AI_GROQ_README.md           # Setup and usage guide for Groq integration
-└── AIchatfeatureREADME.md      # Full documentation for the AI chat feature
 ```
 
 ---
@@ -110,8 +107,7 @@ The application follows a modular pipeline architecture:
 | **Text Extraction** | `document_processing.py` | Extracts text from PDF (pdfplumber) and DOCX (python-docx) |
 | **Detectors** | `detectors/*.py` | 19 independent modules, each detecting one field |
 | **Frontend** | `templates/index.html` | Drag-and-drop interface, displays results |
-| **AI Detector** | `ai_detector.py` | Uses Groq LLaMA 3 to extract preferred contact method from unstructured text |
-| **Template Generator** | `template_generator.py` | Fills `syllabus_template.txt` with filename and user-provided values |
+| **Template Generator** | `docx_template_updater.py` | Fills `updated_syllabus_detector_common_template.docx` using detector output + user inputs |
 
 ### Data Flow
 
@@ -120,7 +116,7 @@ The application follows a modular pipeline architecture:
 3. **Detect** — Text is passed to all 19 detectors in parallel
 4. **Respond** — Each detector returns `{field_name, found, content, confidence}`
 5. **Display** — Results rendered in UI with FOUND/MISSING status and evidence
-6. **Prompt** — If a field is missing, frontend displays a chat card; user submits value, backend generates and returns a completed template as a downloadable file
+6. **Prompt** — If fields are missing, frontend displays an input form for all missing fields; user submits values, backend generates and returns a completed template as a downloadable DOCX file
 
 ### Detector Pattern
 
@@ -208,7 +204,6 @@ python main.py
 - `python-docx==1.1.0` — Word document processing
 - `python-dotenv==1.0.1` — Environment configuration
 - `lxml>=4.9.0` — XML parsing for DOCX
-- `groq` — Groq API client for LLaMA 3 AI-based field extraction
 
 ### Production Deployment (Docker on VM)
 
@@ -257,7 +252,7 @@ See `DockerREADME.md` for detailed deployment instructions including SSH key set
 | Debug | `config.py` | `True` | Flask debug mode |
 | Log Level | `config.py` | `INFO` | Logging verbosity |
 
-**No API keys or external services required.** The application runs entirely offline using pattern matching.
+**No API keys or external services are required for the current workflow.** The application runs offline using rule-based detectors.
 
 ---
 
@@ -277,7 +272,11 @@ See `DockerREADME.md` for detailed deployment instructions including SSH key set
    - **Modality Badge** — Online, In-Person, or Hybrid with confidence score
    - **Field Cards** — Each detected field shows FOUND/MISSING status with extracted content
 
-4. **Batch processing:**
+4. **Generate updated template:**
+   - Fill all missing fields shown in the UI form
+   - Click **Generate & Download DOCX** to populate placeholders and download the updated syllabus template
+
+5. **Batch processing:**
    - Upload a ZIP file containing multiple syllabi
    - Results are displayed for each file in the archive
 
@@ -290,60 +289,29 @@ python test_runner.py
 # Results saved to test_results.json
 ```
 
-### Current Test Results (163 syllabi)
-**ground_truth_syllabus**
-==========================================================================================
-Field                           Accuracy  Precision    Recall   F1 Score
-------------------------------------------------------------------------------------------
-modality                          77.3%      96.2%     79.8%      87.2%
-SLOs                              90.8%     100.0%     78.3%      87.8%
-email                             89.6%      97.2%     91.4%      94.2%
-credit_hour                       89.6%     100.0%     85.2%      92.0%
-workload                          89.6%      90.7%     89.7%      90.2%
-instructor_name                   94.5%     100.0%     94.2%      97.0%
-instructor_title                  93.9%      89.7%     97.2%      93.3%
-instructor_department             89.6%      88.3%     89.5%      88.9%
-office_address                    91.4%      97.4%     86.2%      91.5%
-office_hours                      85.9%      99.1%     83.3%      90.5%
-office_phone                      92.6%      95.4%     87.3%      91.2%
-preferred_contact_method          88.3%      95.8%     91.4%      93.6%
-assignment_types_title            80.4%      91.7%     81.3%      86.2%
-deadline_expectations_title       79.8%      98.1%     76.5%      86.0%
-assignment_delivery               90.8%      98.5%     91.1%      94.7%
-final_grade_scale                 93.2%      95.7%     83.0%      88.9%
-response_time                     98.2%      96.8%     93.8%      95.2%
-class_location                    84.0%      98.3%     83.1%      90.1%
-grading_process                   88.8%      97.2%     91.0%      94.0%
-------------------------------------------------------------------------------------------
-OVERALL                           88.9%      96.4%     86.9%      91.4%
-==========================================================================================
-
-### CURRENT WEIGHTED COMBINED RESULTS - All 2 Folders (184 total files)
-==========================================================================================
-Field                           Accuracy  Precision    Recall   F1 Score
-------------------------------------------------------------------------------------------
-modality                          84.6%      94.7%     88.9%      91.6%
-SLOs                              94.7%      93.6%     93.0%      92.9%
-email                             88.8%      96.9%     90.7%      93.7%
-credit_hour                       89.4%      94.6%     90.3%      92.4%
-workload                          94.1%      96.0%     93.2%      94.6%
-instructor_name                   89.9%      99.4%     90.1%      94.5%
-instructor_title                  92.5%      94.9%     87.8%      91.2%
-instructor_department             92.0%      94.3%     89.0%      91.6%
-office_address                    88.8%      95.5%     82.8%      88.6%
-office_hours                      73.9%      89.3%     76.4%      82.2%
-office_phone                      93.6%     100.0%     86.1%      92.4%
-preferred_contact_method          98.9%      96.0%     96.0%      96.0%
-assignment_types_title            64.4%      91.8%     61.4%      73.4%
-deadline_expectations_title       62.2%      97.5%     55.4%      70.6%
-assignment_delivery               66.0%      65.4%     91.1%      76.1%
-final_grade_scale                 94.7%      96.6%     87.9%      92.0%
-response_time                     97.9%      92.9%     94.5%      93.3%
-class_location                    87.8%      97.9%     87.6%      92.5%
-grading_process                   62.9%      96.3%     63.7%      76.4%
-------------------------------------------------------------------------------------------
-OVERALL                           85.1%      93.2%     82.2%      87.3%
-==========================================================================================
+### Current Test Results (WEIGHTED COMBINED RESULTS - All 2 Folders, 210 total files)
+| Field | Accuracy | Precision | Recall | F1 Score |
+|------|---------:|----------:|-------:|---------:|
+| modality | 91.4% | 96.0% | 95.1% | 95.5% |
+| SLOs | 95.7% | 97.8% | 92.3% | 95.0% |
+| email | 94.3% | 100.0% | 93.8% | 96.8% |
+| credit_hour | 93.3% | 100.0% | 90.8% | 95.2% |
+| workload | 95.2% | 97.4% | 94.2% | 95.7% |
+| instructor_name | 88.1% | 100.0% | 87.7% | 93.4% |
+| instructor_title | 92.4% | 98.8% | 85.4% | 91.0% |
+| instructor_department | 90.0% | 93.1% | 84.6% | 88.6% |
+| office_address | 91.9% | 97.1% | 87.1% | 91.7% |
+| office_hours | 85.2% | 96.0% | 85.2% | 90.0% |
+| office_phone | 91.4% | 100.0% | 84.0% | 91.0% |
+| preferred_contact_method | 99.5% | 100.0% | 97.0% | 98.4% |
+| assignment_types_title | 62.4% | 98.2% | 92.0% | 95.0% |
+| deadline_expectations_title | 83.8% | 98.2% | 82.6% | 88.5% |
+| assignment_delivery | 94.3% | 98.6% | 92.3% | 95.3% |
+| final_grade_scale | 96.2% | 98.6% | 93.9% | 96.0% |
+| response_time | 98.6% | 97.8% | 95.2% | 96.4% |
+| class_location | 93.8% | 98.2% | 94.4% | 96.3% |
+| grading_process | 92.9% | 96.7% | 93.7% | 95.1% |
+| **OVERALL** | **90.8%** | **97.9%** | **87.4%** | **92.3%** |
 
 ## Next Steps and Future Work
 
@@ -357,29 +325,24 @@ OVERALL                           85.1%      93.2%     82.2%      87.3%
 
 ### Recommended Improvements for Future Teams
 
-1. **Improve F1 Scores** — Focus on improving recall for lower-performing detectors:
-   - `modality` (77.0% accuracy) — Add more pattern variations for hybrid courses
-   - `deadline_expectations_title` (80.1%) — Handle more section title variations
-   - `assignment_types_title` (80.1%) — Expand pattern matching
+1. **Solve Edge Cases** — Analyze false negatives in `test_results.json` to identify common failure patterns and add handling for them.
 
-2. **Solve Edge Cases** — Analyze false negatives in `test_results.json` to identify common failure patterns and add handling for them.
-
-3. **Add New Detectors** — Potential fields to add:
+2. **Add New Detectors** — Potential fields to add:
    - Textbook/required materials
    - Course schedule/calendar
    - Attendance policy
    - Academic integrity policy
 
-4. **UI Enhancements:**
+3. **UI Enhancements:**
    - Export results to CSV/JSON
    - Side-by-side comparison of multiple syllabi
    - Highlight detected sections in original document
 
-5. **Performance Optimization** — For large batch uploads, consider parallel processing of files.
+4. **Performance Optimization** — For large batch uploads, consider parallel processing of files.
 
 ### Known Issues
 
-1. **Missing Test Files** — Two ground truth files are missing: `Gerard Spring 2018` and `Troy Fall 2024.docx` - Solved
+1. **Ground Truth Alignment** — Ensure filenames in test JSON exactly match dataset filenames before running `test_runner.py`.
 
 2. **Image-Based PDFs** — Pages 14-17 in some test PDFs are image-based and cannot be processed (warning logged but no text extracted)
 
@@ -393,7 +356,6 @@ OVERALL                           85.1%      93.2%     82.2%      87.3%
 - **PDF Processing:** pdfplumber 0.11.4
 - **DOCX Processing:** python-docx 1.1.0
 - **Deployment:** Docker
-- **AI/LLM:** Groq API (LLaMA 3) — free tier, up to 8192 tokens per request
 
 ---
 

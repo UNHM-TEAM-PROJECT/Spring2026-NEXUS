@@ -29,6 +29,7 @@ HEADING_CLUES = [
     "(preferred)",
 
     # Best way variations
+    "best way",
     "best way to reach",
     "best way to contact",
     "best way to communicate",
@@ -87,6 +88,16 @@ class PreferredDetector:
             line = raw.strip()
             normalized_line = self._normalize_text(line)
 
+            # Handle phrasing like Gerard syllabi: "email is preferable".
+            if "email is preferable" in normalized_line:
+                return "email is preferable"
+
+            # Handle phrasing like: "You may reach me via email ..."
+            if "reach me via email" in normalized_line:
+                m = PREFERRED_RX.search(line)
+                if m:
+                    return m.group(0)
+
             # Check if any heading clue appears in the normalized line
             for clue in HEADING_CLUES:
                 if self._normalize_text(clue) in normalized_line:
@@ -133,6 +144,13 @@ class PreferredDetector:
                         search_lines.append(lines[i+2])
 
                     for search_line in search_lines:
+                        normalized_search = self._normalize_text(search_line)
+                        if (
+                            "documented disabilities" in normalized_search
+                            or "student-accessibility-services" in normalized_search
+                            or "reasonable accommodations" in normalized_search
+                        ):
+                            continue
                         m = PREFERRED_RX.search(search_line)
                         if m:
                             return m.group(0)
@@ -143,6 +161,13 @@ class PreferredDetector:
                         # Search first 150 lines for email
                         header_lines = lines[:min(150, len(lines))]
                         for header_line in header_lines:
+                            normalized_header = self._normalize_text(header_line)
+                            if (
+                                "documented disabilities" in normalized_header
+                                or "student-accessibility-services" in normalized_header
+                                or "reasonable accommodations" in normalized_header
+                            ):
+                                continue
                             m = PREFERRED_RX.search(header_line)
                             if m:
                                 return m.group(0)

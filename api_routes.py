@@ -57,6 +57,27 @@ from detectors.class_location_detector import ClassLocationDetector
 last_uploaded_filename = None
 last_detected_email = None
 last_upload_result = None
+DEFAULT_TEMPLATE_NAME = "updated_syllabus_detector_common_template.docx"
+
+
+def _resolve_docx_template_path() -> Path | None:
+    """Resolve template path for local and Docker environments."""
+    configured = os.getenv("DOCX_TEMPLATE_PATH", "").strip()
+    candidates: list[Path] = []
+
+    if configured:
+        candidates.append(Path(configured))
+
+    module_dir = Path(__file__).resolve().parent
+    candidates.extend([
+        Path(DEFAULT_TEMPLATE_NAME),
+        module_dir / DEFAULT_TEMPLATE_NAME,
+    ])
+
+    for candidate in candidates:
+        if candidate.exists() and candidate.is_file():
+            return candidate
+    return None
 
 # -----------------------------------------------------------------------------
 # Helpers
@@ -856,9 +877,16 @@ def create_routes(app):
         detector_payload["filename"] = filename
         template_data = _build_template_payload(detector_payload, user_inputs)
 
-        template_path = Path("updated_syllabus_detector_common_template.docx")
-        if not template_path.exists():
-            return jsonify({"error": "DOCX template not found in workspace."}), 500
+        template_path = _resolve_docx_template_path()
+        if template_path is None:
+            return jsonify(
+                {
+                    "error": (
+                        "DOCX template not found. Expected "
+                        f"'{DEFAULT_TEMPLATE_NAME}' in app root or set DOCX_TEMPLATE_PATH."
+                    )
+                }
+            ), 500
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
             temp_output_path = Path(tmp.name)

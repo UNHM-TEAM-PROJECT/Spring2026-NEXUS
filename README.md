@@ -303,8 +303,8 @@ python test_runner.py
 | office_address | 91.9% | 97.1% | 87.1% | 91.7% |
 | office_hours | 85.2% | 96.0% | 85.2% | 90.0% |
 | office_phone | 91.4% | 100.0% | 84.0% | 91.0% |
-| preferred_contact_method | 94.3% | 96.5% | 79.5% | 83.3% |
-| assignment_types_title | 62.4% | 98.2% | 58.2% | 73.0% |
+| preferred_contact_method | 99.5% | 100.0% | 97.0% | 98.4% |
+| assignment_types_title | 62.4% | 98.2% | 92.0% | 95.0% |
 | deadline_expectations_title | 83.8% | 98.2% | 82.6% | 88.5% |
 | assignment_delivery | 94.3% | 98.6% | 92.3% | 95.3% |
 | final_grade_scale | 96.2% | 98.6% | 93.9% | 96.0% |

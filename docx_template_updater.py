@@ -109,21 +109,38 @@ def _to_template_values(record: Dict[str, Any]) -> Dict[str, str]:
     """Accept either already-flat template keys or nested detector payload."""
     course_code = _clean(record.get("course_code"))
     course_name = _clean(record.get("course_name"))
+    semester_year = _clean(record.get("semester_year"))
     course_title = _clean(record.get("course_title"))
     if (
         course_title == MISSING
         and course_code != MISSING
         and course_name != MISSING
     ):
-        course_title = f"{course_code} {course_name}"
+        primary_line = f"{course_code} {course_name}"
+        course_title = (
+            f"{primary_line}\n{semester_year}"
+            if semester_year != MISSING
+            else primary_line
+        )
     elif course_title == MISSING and course_code != MISSING:
-        course_title = course_code
+        course_title = (
+            f"{course_code}\n{semester_year}"
+            if semester_year != MISSING
+            else course_code
+        )
+    elif (
+        course_title != MISSING
+        and semester_year != MISSING
+        and semester_year.lower() not in course_title.lower()
+    ):
+        course_title = f"{course_title}\n{semester_year}"
 
     values = {
         "filename": _clean(record.get("filename")),
         "course_title": course_title,
         "course_code": course_code,
         "course_name": course_name,
+        "semester_year": semester_year,
         "instructor_name": _clean(record.get("instructor_name")),
         "instructor_title": _clean(record.get("instructor_title")),
         "instructor_department": _clean(record.get("instructor_department")),
@@ -190,6 +207,7 @@ def _to_template_values(record: Dict[str, Any]) -> Dict[str, str]:
         "final_grade_scale": _clean(
             _get(record, "grading_scale", "content")
         ),
+            "semester_year": _clean(_get(record, "semester_year")),
     }
 
     values["grading_scale"] = values["final_grade_scale"]
@@ -241,6 +259,7 @@ def _to_template_values(record: Dict[str, Any]) -> Dict[str, str]:
             "Preferred Contact Method",
             "Contact Method",
         ],
+            "semester_year": ["Semester", "Term", "Semester and Year", "Term and Year"],
     }
 
     format_fields = [
@@ -257,6 +276,7 @@ def _to_template_values(record: Dict[str, Any]) -> Dict[str, str]:
         "office_address",
         "office_hours",
         "preferred_contact_method",
+            "semester_year",
     ]
 
     for field, aliases in header_aliases.items():

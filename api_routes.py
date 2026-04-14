@@ -25,6 +25,7 @@ import shutil
 import zipfile
 from flask import request, jsonify, render_template, Response
 from docx_template_updater import fill_docx_template_from_detector_result
+from course_metadata_extractor import extract_course_title, extract_semester_year
 
 from document_processing import extract_text_from_pdf, extract_text_from_docx
 
@@ -229,13 +230,16 @@ def _process_single_file(file, temp_dir: str) -> dict:
                 "• Learning Outcomes<br>• Learning Objectives"
             ),
         }
-        course_title, course_code, course_name = _extract_course_title(extracted_text)
+        course_title, course_code, course_name = extract_course_title(extracted_text)
+        semester_year = extract_semester_year(extracted_text, filename)
         if course_title:
             result["course_title"] = course_title
         if course_code:
             result["course_code"] = course_code
         if course_name:
             result["course_name"] = course_name
+        if semester_year:
+            result["semester_year"] = semester_year
         if has_slos and slo_content:
             result["slo_content"] = (slo_content[:300] + "...") if len(slo_content) > 300 else slo_content
 
@@ -527,69 +531,11 @@ def _empty(val) -> bool:
     return False
 
 
-def _extract_course_title(text: str) -> tuple[str, str, str]:
-    """Extract course code and associated course name from early syllabus lines."""
-    if not text:
-        return "", "", ""
-
-    lines = [line.strip() for line in text.splitlines()[:20] if line.strip()]
-
-    # Subject can be a short code (ET) or a word (English).
-    code_body = r'(?P<subject>[A-Z][A-Za-z]{1,15})\s*(?:-\s*)?(?P<number>\d{3})'
-
-    def normalize_code(raw_code: str) -> str:
-        match = re.search(code_body, raw_code)
-        if not match:
-            return re.sub(r'\s+', '', raw_code).upper()
-        return f"{match.group('subject').upper()}{match.group('number')}"
-
-    # Pattern 1: CODE + NAME on same line.
-    for line in lines:
-        match = re.match(
-            rf'^(?P<code>{code_body})\s*[:\-]?\s*(?P<name>.+)$',
-            line,
-        )
-        if match:
-            code = normalize_code(match.group('code'))
-            name = match.group('name').strip(' -:\t')
-            if name:
-                return f"{code} {name}", code, name
-
-    # Pattern 2: CODE on one line and NAME on the next non-empty line.
-    code_only = re.compile(rf'^(?P<code>{code_body})\s*[:\-]?\s*$')
-    heading_like = re.compile(r'^[A-Z\s]{3,}:?$')
-    for idx, line in enumerate(lines):
-        match = code_only.match(line)
-        if not match:
-            continue
-
-        code = normalize_code(match.group('code'))
-        for j in range(idx + 1, min(idx + 4, len(lines))):
-            candidate = lines[j].strip(' -:\t')
-            if not candidate:
-                continue
-            if code_only.match(candidate):
-                break
-            if heading_like.match(candidate):
-                continue
-            return f"{code} {candidate}", code, candidate
-
-        return code, code, ""
-
-    # Pattern 3: CODE exists somewhere; name unknown.
-    for line in lines:
-        match = re.search(rf'\b(?P<code>{code_body})\b', line)
-        if match:
-            code = normalize_code(match.group('code'))
-            return code, code, ""
-
-    return "", "", ""
-
-
 def _get_template_payload_fields() -> list[tuple[str, str]]:
     return [
         ("course_code", "Course Code"),
         ("course_name", "Course Name"),
+        ("semester_year", "Semester and Year"),
         ("SLOs", "Student Learning Outcomes"),
         ("modality", "Course Delivery (Online/Hybrid/In-Person)"),
         ("instructor_name", "Instructor Name"),
@@ -659,16 +605,32 @@ def _build_template_payload(detector_payload: dict, user_inputs: dict) -> dict:
     course_title = data.get("course_title") or ""
     course_code = data.get("course_code") or ""
     course_name = data.get("course_name") or ""
+    semester_year = data.get("semester_year") or ""
     if _empty(course_code) or _empty(course_name):
-        extracted_title, extracted_code, extracted_name = _extract_course_title(data.get("extracted_text") or "")
+        extracted_title, extracted_code, extracted_name = extract_course_title(data.get("extracted_text") or "")
         course_title = course_title or extracted_title
         course_code = course_code or extracted_code
         course_name = course_name or extracted_name
+    if _empty(semester_year):
+        semester_year = extract_semester_year(
+            data.get("extracted_text") or "",
+            data.get("filename") or "",
+        )
 
     if not _empty(course_code) and not _empty(course_name):
-        course_title = f"{course_code} {course_name}".strip()
+        primary_line = f"{course_code} {course_name}".strip()
+        if not _empty(semester_year):
+            course_title = f"{primary_line}\n{semester_year}"
+        else:
+            course_title = primary_line
     elif _empty(course_title):
-        course_title = course_code
+        if not _empty(course_code) and not _empty(semester_year):
+            course_title = f"{course_code}\n{semester_year}"
+        else:
+            course_title = course_code
+    elif not _empty(semester_year) and semester_year.lower() not in str(course_title).lower():
+        # If title exists but does not include term/year (common when name is missing), append it.
+        course_title = f"{course_title}\n{semester_year}".strip()
 
     # Keys below intentionally match TEMPLATE_FIELDS in docx_template_updater.py
     template_data = {
@@ -676,6 +638,7 @@ def _build_template_payload(detector_payload: dict, user_inputs: dict) -> dict:
         "course_title": course_title,
         "course_code": course_code,
         "course_name": course_name,
+        "semester_year": semester_year,
         "SLOs": data.get("slo_content") if data.get("has_slos") else "",
         "modality": data.get("course_delivery") if str(data.get("course_delivery", "")).lower() != "unknown" else "",
         "instructor_name": instructor.get("name") or "",
@@ -728,6 +691,7 @@ def _build_template_payload(detector_payload: dict, user_inputs: dict) -> dict:
         "course_title": "course_title",
         "course_code": "course_code",
         "course_name": "course_name",
+        "semester_year": "semester_year",
     }
 
     # Accept direct template keys from the UI for all payload fields.
@@ -744,10 +708,21 @@ def _build_template_payload(detector_payload: dict, user_inputs: dict) -> dict:
     # Recompute course title after user overrides.
     final_code = template_data.get("course_code") or ""
     final_name = template_data.get("course_name") or ""
+    final_semester = template_data.get("semester_year") or ""
     if not _empty(final_code) and not _empty(final_name):
-        template_data["course_title"] = f"{final_code} {final_name}".strip()
+        primary_line = f"{final_code} {final_name}".strip()
+        template_data["course_title"] = (
+            f"{primary_line}\n{final_semester}" if not _empty(final_semester) else primary_line
+        )
     elif _empty(template_data.get("course_title")):
-        template_data["course_title"] = final_code
+        if not _empty(final_code) and not _empty(final_semester):
+            template_data["course_title"] = f"{final_code}\n{final_semester}"
+        else:
+            template_data["course_title"] = final_code
+    elif not _empty(final_semester):
+        current_title = str(template_data.get("course_title") or "")
+        if final_semester.lower() not in current_title.lower():
+            template_data["course_title"] = f"{current_title}\n{final_semester}".strip()
 
     return template_data
 

@@ -402,6 +402,9 @@ Contributors: Sindhu Priya Itukulapati(Spring 2025), Erik Baily(Fall 2025)
       chips:[{label:'1',cls:'option',val:'1',preview:''},{label:'2',cls:'option',val:'2',preview:''},{label:'3',cls:'option',val:'3',preview:'common'},{label:'4',cls:'option',val:'4',preview:''}],
       validate:v=>(/^\d+(\.\d+)?$/.test(v)&&parseFloat(v)>0?null:'Enter a number, e.g. 3')});
     if(!wl.found) courseF.push({key:'workload',label:'Expected Workload',placeholder:'e.g. 6–9 hours per week outside class.',chips:[],validate:null});
+    if(!data.course_code) courseF.push({key:'course_code',label:'Course Code',placeholder:'e.g. BIOT753',chips:[],validate:null});
+    if(!data.course_name) courseF.push({key:'course_name',label:'Course Name',placeholder:'e.g. Cell Culture (Lecture)',chips:[],validate:null});
+    if(!data.semester_year) courseF.push({key:'semester_year',label:'Semester and Year',placeholder:'e.g. Spring 2026',chips:[],validate:null});
     if(courseF.length) sections.push({title:'Course Details',icon:'fa-book',fields:courseF});
 
     // ACADEMIC

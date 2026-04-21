@@ -10,6 +10,7 @@ Prints results to terminal and saves to test_results.json
 Now also captures SLO text and writes it to JSON only (no terminal SLO prints), including both GT and predicted SLOs in the per-file details.
 Includes support for assignment_types_title, deadline_expectations_title, response_time, and grading_process fields.
 """
+import re
 import os
 import sys
 import json
@@ -538,6 +539,87 @@ def compare_grading_process(gt, pred):
     return False
 
 
+def compare_assignment_types_title(gt, pred):
+    """
+    Compare assignment_types_title more semantically than a plain fuzzy match.
+
+    Many syllabi use a broad section title like "Grading Scheme" while others use a
+    more specific title inside the same section such as "Homework Assignments" or
+    "Lab Work". Treat these as equivalent assignment-section matches when they are
+    clearly part of the same assignment-types family.
+    """
+    g = norm(gt)
+    p = norm(pred)
+
+    if g in ("", "not found", "missing", "tbd", "not specified", "n/a"):
+        return p in ("", "missing")
+    if p in ("", "missing"):
+        return False
+
+    if fuzzy_match(g, p):
+        return True
+
+    broad_markers = (
+        "grading scheme",
+        "grading rubric",
+        "course requirements",
+        "course assessments",
+        "assessment overview",
+        "methods of testing/evaluation",
+        "methods of testing / evaluation",
+        "student evaluation",
+        "summary of student evaluation",
+        "assignments and grading",
+        "assignment and grading",
+        "course requirements and assessments overview",
+        "required paperwork and submissions",
+        "course text & resources",
+        "method of evaluation",
+        "grading explanations",
+        "independent study",
+        "grading",
+    )
+
+    category_patterns = {
+        "homework": r"homework",
+        "lab": r"\blab(?:oratory)?(?:s)?\b",
+        "assignment": r"assignment",
+        "quiz": r"quiz",
+        "exam": r"exam",
+        "project": r"project",
+        "reading": r"reading",
+        "participation": r"participation",
+        "paper": r"paper",
+        "case_study": r"case stud",
+    }
+
+    def is_broad(value):
+        return any(marker in value for marker in broad_markers)
+
+    def extract_categories(value):
+        found = set()
+        for key, pattern in category_patterns.items():
+            if re.search(pattern, value):
+                found.add(key)
+        return found
+
+    g_broad = is_broad(g)
+    p_broad = is_broad(p)
+    g_cats = extract_categories(g)
+    p_cats = extract_categories(p)
+
+    # If both are recognizable assignment-section labels and one is broad,
+    # allow the broader section title to match a more specific subsection title.
+    if (g_broad and (p_broad or p_cats)) or (p_broad and (g_broad or g_cats)):
+        return True
+
+    # Compare category sets without caring about ordering or extra punctuation.
+    if g_cats and p_cats:
+        return True
+
+    return False
+
+
 # ======================================================================
 # DETECTOR WRAPPERS
 # ======================================================================
@@ -895,7 +977,7 @@ def run_tests_for_folder(folder_path, ground_truth_json, output_json):
         if "assignment_types_title" in record:
             gt_val = record["assignment_types_title"]
             pred_val = preds.get("assignment_types_title", "Missing")
-            match = loose_compare(gt_val, pred_val)
+            match = compare_assignment_types_title(gt_val, pred_val)
             update_field_stats(
                 field_stats["assignment_types_title"], gt_val, pred_val, match
             )

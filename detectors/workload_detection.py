@@ -138,6 +138,18 @@ class WorkloadDetector:
             # "complete the minimal X hours of onsite work"
             r'complete\s+the\s+minim(?:al|um)\s+(\d+)\s+hours?\s+(?:of\s+)?(?:onsite|on-site)\s+work',
 
+            # NEW: "at least X hours per/each week" — course-specific commitment
+            r'at\s+least\s+(\d+(?:-\d+)?)\s+hours?\s+(?:per\s+week|each\s+week|a\s+week)',
+
+            # NEW: "no more than X hours per week"
+            r'no\s+more\s+than\s+(\d+(?:-\d+)?)\s+hours?\s+per\s+week',
+
+            # NEW: "X hours of study per (every) hour spent in class (or laboratory)"
+            r'(\d+(?:-\d+)?)\s+hours?\s+of\s+study\s+per\s+(?:every\s+)?hour\s+(?:spent\s+)?in\s+class',
+
+            # NEW: "expect to spend an average of X/nine hours per week (completing work)"
+            r'(?:should\s+)?expect\s+to\s+spend\s+an?\s+average\s+of\s+((?:one|two|three|four|five|six|seven|eight|nine|ten|\d+))\s+hours?\s+per\s+week',
+
             # "X hours per week for graduate students" or "X hours per week"
             r'(\d+)\s+hours?\s+per\s+week(?:\s+for\s+(?:graduate|undergraduate)\s+students)?',
 
@@ -219,31 +231,45 @@ class WorkloadDetector:
         # Collect all potential matches with their positions and pattern index
         candidates = []
 
-        # Generic boilerplate patterns (UNH policy text) - these should be deprioritized
-        # These patterns often appear in syllabi as policy text, not course-specific workload
+        # These are patterns added to handle cases where the instructor gives a concrete number
+        # that differs from the generic UNH credit-hour policy text.
+        specific_patterns = {
+            r'at\s+least\s+(\d+(?:-\d+)?)\s+hours?\s+(?:per\s+week|each\s+week|a\s+week)',
+            r'no\s+more\s+than\s+(\d+(?:-\d+)?)\s+hours?\s+per\s+week',
+            r'(\d+(?:-\d+)?)\s+hours?\s+of\s+study\s+per\s+(?:every\s+)?hour\s+(?:spent\s+)?in\s+class',
+            r'(?:should\s+)?expect\s+to\s+spend\s+an?\s+average\s+of\s+((?:one|two|three|four|five|six|seven|eight|nine|ten|\d+))\s+hours?\s+per\s+week',
+        }
+
+        # Generic boilerplate patterns (UNH policy text) - these should be deprioritized.
+        # These patterns often appear in syllabi as policy text, not course-specific workload.
+        # When a more specific pattern also matches the same document, the specific one wins.
         generic_patterns = {
+            # "45 hours of student/course academic work per credit" — UNH credit hour policy
             r'(\d+)\s+hours?\s+(?:of\s+)?(?:student\s+)?academic\s+work\s+per\s+credit',
             r'(\d+)\s+hours?\s+(?:of\s+)?course\s+work\s+per\s+credit',
             r'(\d+)\s+credit\s*=\s*(\d+)\s+hours?\s+(?:of\s+)?academic\s+work\s+per\s+week',
             r'(three|four|five|six|seven|eight|nine|ten|one|two)\s+hours?\s+of\s+student\s+academic\s+work\s+each\s+week',
+            r'(three|four|five|six|seven|eight|nine|ten|one|two)\s+hours?\s+of\s+student\s+academic\s+work\s+and\s+engagement\s+each\s+week',
         }
 
         for pattern_idx, pattern in enumerate(self.workload_patterns):
+            is_specific = pattern in specific_patterns
             is_generic = pattern in generic_patterns
             for match in re.finditer(pattern, cleaned_text, re.IGNORECASE):
                 full_match = match.group(0).strip()
                 position = match.start()
 
-                # Add to candidates with (is_generic, position, pattern_idx, match)
-                # Non-generic patterns (is_generic=False=0) sort before generic (is_generic=True=1)
-                candidates.append((is_generic, position, pattern_idx, full_match))
-                self.logger.debug(f"Found potential workload: {full_match} at position {position} (generic={is_generic})")
+                # Three-tier priority: specific > non-generic > generic
+                # Sort key: (-is_specific, is_generic, position)
+                # is_specific=True → -1 (sorts first); is_generic=True → 1 (sorts last)
+                candidates.append((-is_specific, is_generic, position, pattern_idx, full_match))
+                self.logger.debug(f"Found potential workload: {full_match} at position {position} (specific={is_specific}, generic={is_generic})")
 
-        # If we found candidates, prefer non-generic patterns, then earliest position
+        # If we found candidates, prefer specific, then non-generic, then earliest position
         if candidates:
-            candidates.sort(key=lambda x: (x[0], x[1]))  # Sort by is_generic, then position
-            is_generic, position, pattern_idx, best_match = candidates[0]
-            self.logger.info(f"Found workload declaration: {best_match} (generic={is_generic})")
+            candidates.sort(key=lambda x: (x[0], x[1], x[2]))
+            neg_is_specific, is_generic, position, pattern_idx, best_match = candidates[0]
+            self.logger.info(f"Found workload declaration: {best_match} (specific={neg_is_specific < 0}, generic={is_generic})")
             return True, best_match
 
         return False, None

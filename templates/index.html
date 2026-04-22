@@ -1,737 +1,1125 @@
 <!--
 File: index.html
-Authors: Hemasri Muddam(Spring 2025), Jacqueline Ebel (Fall 2025)
-Contributors: Sindhu Priya Itukulapati(Spring 2025), Erik Baily(Fall 2025)
-  — Single combined missing-fields card: all missing values collected in one form,
-    one confirm step, one POST to /submit_missing_fields, one docx download.
+Design: WildCatcher
+Authors: Hemasri Muddam (Spring 2025), Jacqueline Ebel (Fall 2025), Srujan Reddy (Spring 2026)
+Contributors: Sindhu Priya Itukulapati (Spring 2025), Erik Baily (Fall 2025)
 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>WildCatcher: Wildcat Syllabus Checker</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <title>WildCatcher: Syllabus Checker</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
   <style>
-    .detector-tabs .nav-tabs .nav-link#assignment_type-tab{min-width:110px;max-width:140px;}
-    .detector-tabs .nav-tabs .nav-link#assignment_deliverable-tab{min-width:120px;max-width:170px;}
-    :root{--unh-blue:#002B7D;--unh-white:#ffffff;--unh-black:#000000;}
-    html,body{height:100%;margin:0;padding:0;overflow:hidden;}
-    .page-container{height:100vh;width:100vw;backdrop-filter:blur(5px);background:rgba(0,0,0,.3);}
-    .chat-container{height:100vh;display:flex;flex-direction:column;background-color:rgba(255,255,255,.9);backdrop-filter:blur(10px);border-radius:0;box-shadow:0 0 20px rgba(0,0,0,.15);margin:0;}
-    .chat-header{background:linear-gradient(135deg,var(--unh-blue) 0%,#004db3 100%);color:var(--unh-white);padding:1rem;display:flex;justify-content:center;border-bottom:2px solid rgba(255,255,255,.1);height:80px;}
-    .header-content{display:flex;align-items:center;gap:10px;}
-    .chat-header-title{font-size:24px;font-weight:600;margin:0;text-shadow:0 2px 4px rgba(0,0,0,.1);}
-    .chat-history{flex:1;overflow-y:auto;padding:2rem;display:flex;flex-direction:column;gap:1rem;background-color:transparent;}
-    .edit-icon-container{position:absolute;bottom:40px;right:-2px;z-index:1;display:flex;align-items:center;justify-content:center;}
-    .edit-icon{font-size:16px;color:var(--unh-black);cursor:pointer;transition:color .2s;}
-    .edit-icon:hover{color:var(--unh-blue);}
-    .message{position:relative;margin-bottom:1.5rem;padding:1rem;border-radius:1rem;max-width:75%;animation:fadeIn .3s ease-in-out;box-shadow:0 3px 10px rgba(0,0,0,.1);word-wrap:break-word;}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
-    .user-message{background:rgba(255,255,255,.9);color:#212529;align-self:flex-end;border-bottom-right-radius:.25rem;text-align:left;}
-    .assistant-message{background:rgba(255,255,255,.9);color:#212529;align-self:flex-start;border-bottom-left-radius:.25rem;backdrop-filter:blur(5px);text-align:left;}
-    .message-avatar{width:32px;height:32px;position:absolute;bottom:-16px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(0,0,0,.1);z-index:1;}
-    .message-content{display:flex;align-items:center;justify-content:space-between;gap:10px;}
-    .edit-input{flex-grow:1;padding:10px;border:1px solid #ccc;border-radius:5px;box-sizing:border-box;}
-    .action-buttons{display:flex;gap:8px;}
-    .cancel-button,.send-button{padding:6px 10px;border:none;border-radius:4px;cursor:pointer;font-size:12px;line-height:1.2;}
-    .cancel-button{background:#f5f5f5;color:#333;}
-    .send-button{background:#002B7D;color:#fff;}
-    .send-button:hover{background:#001F5C;}
-    .cancel-button:hover{background:#e0e0e0;}
-    .user-message .message-avatar{right:-16px;background:var(--unh-blue);color:#fff;}
-    .assistant-message .message-avatar{left:-16px;background:var(--unh-blue);color:#fff;}
-    .input-area{display:flex;justify-content:center;align-items:center;padding:15px;background:#e6e6fa;border-bottom-left-radius:30px;border-bottom-right-radius:30px;}
-    .input-group{background:var(--unh-white);border-radius:2rem;padding:.5rem;box-shadow:0 2px 8px rgba(0,0,0,.1);margin-left:20px;}
-    #user-input{border:none;padding:.75rem 1.5rem;font-size:1rem;background:transparent;}
-    #user-input:focus{box-shadow:none;}
-    .zip-symbol{display:none!important;}
-    #send-button{width:45px;height:45px;border-radius:50%;background:#0b5ed7;color:#fff;display:flex;align-items:center;justify-content:center;transition:all .3s;margin-right:.5rem;}
-    #send-button:hover{background:#0b5ed7;transform:scale(1.05);}
-    .plus-symbol i{color:#007bff;}
-    .plus-symbol i:hover{color:#0056b3;}
-    .chat-history::-webkit-scrollbar{width:8px;}
-    .chat-history::-webkit-scrollbar-track{background:rgba(0,0,0,.1);}
-    .chat-history::-webkit-scrollbar-thumb{background:rgba(0,53,145,.5);border-radius:4px;}
-    .chat-history::-webkit-scrollbar-thumb:hover{background:rgba(0,53,145,.7);}
-    .typing-indicator{display:flex;align-items:center;font-size:1rem;color:#666;margin-top:10px;}
-    .typing-indicator .dot{width:8px;height:8px;background:#666;border-radius:50%;margin:0 2px;animation:blink 1s infinite alternate;}
-    .typing-indicator .dot:nth-child(2){animation-delay:.2s;}
-    .typing-indicator .dot:nth-child(3){animation-delay:.4s;}
-    .status-pass{color:#28a745;font-weight:bold;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
-    .status-fail{color:#dc3545;font-weight:bold;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
-    @keyframes blink{0%{opacity:0;}100%{opacity:1;}}
-    @media(max-width:768px){.chat-container{margin:0;border-radius:0;}.message{max-width:85%;}.chat-header{padding:.75rem;height:70px;}.chat-header-title{font-size:1.2rem;}.chat-history{padding:1rem;font-size:.9rem;}.input-area{flex-direction:column;padding:10px;}.input-group{flex-direction:column;width:100%;margin-left:0;}#user-input{width:100%;margin-top:.5rem;}#send-button{margin:0 auto;margin-top:.5rem;}}
-    .detector-tabs .nav-tabs{flex-wrap:wrap;max-height:4.5em;overflow-y:hidden;row-gap:0;margin-bottom:0;display:flex;flex-direction:row;line-height:1.1;}
-    .detector-tabs .nav-tabs .nav-item{margin-bottom:0;padding:0;}
-    .detector-tabs .nav-tabs .nav-link{font-size:0.85rem;padding:0.25rem 0.5rem;min-width:80px;max-width:120px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;height:2.2em;display:flex;align-items:center;justify-content:center;gap:0.3em;}
-    .detector-tabs .nav-tabs .nav-link i{font-size:1em;margin-right:0.3em;}
-    @media(max-width:600px){.detector-tabs .nav-tabs .nav-link{font-size:0.75rem;min-width:60px;max-width:90px;padding:0.15rem 0.3rem;}.detector-tabs .nav-tabs{max-height:5.5em;}}
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue: #3b6fd4;
+      --green: #10b981;
+      --green-bg: rgba(5,150,105,0.15);
+      --green-border: rgba(16,185,129,0.3);
+      --red: #f87171;
+      --red-bg: rgba(239,68,68,0.12);
+      --red-border: rgba(248,113,113,0.25);
+      --amber: #f59e0b;
+      --amber-bg: rgba(245,158,11,0.08);
+      --amber-border: rgba(245,158,11,0.15);
+      --sky: #0ea5e9;
+      --bg: #0e1b3d;
+      --text: #dde8ff;
+      --text-muted: rgba(150,180,240,0.55);
+      --font: 'DM Sans', system-ui, sans-serif;
+      --font-display: 'Space Grotesk', system-ui, sans-serif;
+    }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      cursor: none;
+    }
+    * { cursor: none !important; }
 
-    /* ===== Single Missing Fields Card ===== */
-    @keyframes mfpSlide{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
-    @keyframes popScale{0%{transform:scale(0);opacity:0;}60%{transform:scale(1.2);opacity:1;}100%{transform:scale(1);}}
+    /* ── Cursor & Canvas ── */
+    #cursor-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+    #bg-canvas { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
 
-    .mfp-card{background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.14);overflow:hidden;max-width:560px;width:100%;animation:mfpSlide .38s ease both;border-left:4px solid #f59e0b;}
-    .mfp-header{background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);padding:14px 18px;display:flex;align-items:center;gap:12px;}
-    .mfp-header-icon{width:38px;height:38px;background:rgba(255,255,255,.22);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;flex-shrink:0;}
-    .mfp-header-text{color:#fff;}
-    .mfp-header-text strong{font-size:15px;display:block;line-height:1.2;}
-    .mfp-header-text span{font-size:12px;opacity:.88;}
-    .mfp-body{padding:18px;}
-    .mfp-section{margin-bottom:18px;}
-    .mfp-section-title{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#9ca3af;margin-bottom:10px;padding-bottom:4px;border-bottom:1px solid #f3f4f6;}
-    .mfp-field{margin-bottom:12px;}
-    .mfp-label{font-size:12px;font-weight:600;color:#374151;margin-bottom:4px;display:block;}
-    .mfp-input{width:100%;padding:9px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s;box-sizing:border-box;}
-    .mfp-input:focus{border-color:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.22);}
-    .mfp-input.valid{border-color:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.18);}
-    .mfp-input.invalid{border-color:#dc2626;box-shadow:0 0 0 3px rgba(220,38,38,.18);}
-    .mfp-error{color:#dc2626;font-size:11.5px;margin-top:3px;display:none;}
-    .mfp-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
-    .mfp-chip{padding:4px 10px;border-radius:999px;border:1.5px solid;cursor:pointer;font-size:11px;font-weight:600;transition:all .15s;white-space:nowrap;line-height:1.4;}
-    .mfp-chip.found{background:#dcfce7;border-color:#22c55e;color:#166534;}
-    .mfp-chip.option{background:#f3f4f6;border-color:#9ca3af;color:#374151;}
-    .mfp-chip.option:hover{background:#e5e7eb;border-color:#6b7280;}
-    .mfp-chip.active{outline:2px solid #f59e0b;outline-offset:2px;}
-    .mfp-hist{font-size:11px;color:#9ca3af;margin-top:4px;}
-    .mfp-hist-btn{background:none;border:none;color:#f59e0b;font-size:11px;cursor:pointer;font-weight:600;text-decoration:underline;padding:0;margin-left:4px;}
-    .mfp-submit-btn{background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);color:#fff;border:none;padding:11px 24px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:opacity .2s,transform .15s;box-shadow:0 2px 8px rgba(217,119,6,.3);margin-top:6px;}
-    .mfp-submit-btn:hover:not(:disabled){opacity:.88;transform:translateY(-1px);}
-    .mfp-submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
-    .mfp-edit-btn{background:#f3f4f6;color:#374151;border:1px solid #d1d5db;padding:11px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .15s;}
-    .mfp-edit-btn:hover{background:#e5e7eb;}
-    .mfp-dl-btn{background:#22c55e;color:#fff;border:none;padding:11px 24px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:opacity .2s,transform .15s;box-shadow:0 2px 8px rgba(34,197,94,.3);margin-top:6px;}
-    .mfp-dl-btn:hover:not(:disabled){opacity:.88;transform:translateY(-1px);}
-    .mfp-dl-btn:disabled{opacity:.7;cursor:not-allowed;transform:none;}
-    .mfp-reenter{background:none;border:none;color:#6b7280;font-size:12px;cursor:pointer;text-decoration:underline;margin-top:8px;padding:0;display:block;}
-    .mfp-reenter:hover{color:#374151;}
-    .mfp-confirm{animation:mfpSlide .25s ease both;}
-    .mfp-confirm-label{font-size:12px;color:#6b7280;margin:0 0 8px;}
-    .mfp-confirm-rows{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;max-height:260px;overflow-y:auto;}
-    .mfp-confirm-row{font-size:13px;color:#374151;padding:5px 0;border-bottom:1px solid #f3f4f6;}
-    .mfp-confirm-row:last-child{border-bottom:none;}
-    .mfp-confirm-val{color:#92400e;font-weight:600;background:#fef3c7;padding:1px 7px;border-radius:4px;margin-left:4px;word-break:break-word;}
-    .mfp-btn-row{display:flex;gap:8px;flex-wrap:wrap;}
-    .mfp-success{display:flex;flex-direction:column;align-items:center;padding:24px 18px;text-align:center;gap:10px;}
-    .mfp-check{width:54px;height:54px;background:#22c55e;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;animation:popScale .4s cubic-bezier(.36,.07,.19,.97) both;}
-    .mfp-success-title{font-size:16px;font-weight:700;color:#166534;margin:0;}
-    .mfp-success-sub{font-size:13px;color:#555;margin:0;}
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(80,120,220,0.3); border-radius: 3px; }
+
+    /* ── Animations ── */
+    @keyframes fadeUp   { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:none; } }
+    @keyframes fadeIn   { from { opacity:0; } to { opacity:1; } }
+    @keyframes scaleIn  { from { opacity:0; transform:scale(0.93); } to { opacity:1; transform:none; } }
+    @keyframes spin     { to { transform:rotate(360deg); } }
+    @keyframes checkPop { 0%{transform:scale(0) rotate(-20deg);opacity:0;} 60%{transform:scale(1.15);opacity:1;} 100%{transform:scale(1);} }
+    @keyframes shimmer  { 0%{background-position:-200% center;} 100%{background-position:200% center;} }
+
+    /* ── Header ── */
+    #wc-header {
+      padding: 0 28px; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(14,27,61,0.75);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid rgba(100,150,255,0.1);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .hdr-left { display: flex; align-items: center; gap: 14px; }
+    .hdr-icon {
+      width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0;
+      background: rgba(59,111,212,0.15);
+      border: 1px solid rgba(100,150,255,0.25);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 20px rgba(59,111,212,0.2);
+    }
+    .hdr-title { font-weight:700; font-size:17px; letter-spacing:-0.3px; font-family:var(--font-display); }
+    .hdr-sub   { font-size:10.5px; color:rgba(150,180,240,0.45); margin-top:-1px; letter-spacing:0.5px; text-transform:uppercase; }
+    #new-check-btn {
+      display: none;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(150,180,240,0.75); padding: 8px 18px; border-radius: 10px;
+      font-size: 13px; font-weight:600; align-items:center; gap:7px;
+      transition: all 0.2s; font-family:var(--font);
+    }
+    #new-check-btn:hover { background:rgba(255,255,255,0.1); color:var(--text); }
+
+    /* ── Main ── */
+    #wc-main {
+      display: flex; justify-content: center; padding: 44px 20px 80px;
+      position: relative; z-index: 1; min-height: calc(100vh - 64px);
+    }
+
+    /* ── Upload view ── */
+    #view-upload {
+      display: flex; flex-direction:column; align-items:center;
+      justify-content:center; gap:32px; width:100%;
+      animation: fadeUp 0.5s ease both;
+    }
+    .up-heading { text-align: center; width: 100%; }
+    .up-tag {
+      display: inline-block; padding:5px 16px; border-radius:20px; margin-bottom:18px;
+      background: rgba(59,111,212,0.12); border:1px solid rgba(100,150,255,0.2);
+      font-size:12px; font-weight:600; color:rgba(150,200,255,0.8); letter-spacing:0.4px;
+    }
+    .up-h1 {
+      font-size:40px; font-weight:700; letter-spacing:-1px; line-height:1.1;
+      font-family:var(--font-display);
+      background: linear-gradient(135deg,#dde8ff 20%,#7aa5ff 80%);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+      margin-bottom:14px;
+    }
+    .up-p { font-size:15px; color:var(--text-muted); max-width:430px; line-height:1.65; margin:0 auto; }
+
+    .wc-dropzone {
+      position: relative; overflow:hidden;
+      border: 1.5px dashed rgba(100,150,255,0.2); border-radius:24px;
+      padding: 60px 36px;
+      display: flex; flex-direction:column; align-items:center; gap:20px;
+      background: rgba(255,255,255,0.03);
+      backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+      max-width:540px; width:100%;
+      box-shadow: 0 2px 20px rgba(0,0,20,0.2);
+    }
+    .wc-dropzone.drag-over {
+      border-color:rgba(100,160,255,0.7); background:rgba(59,111,212,0.1);
+      box-shadow:0 0 0 1px rgba(100,160,255,0.25),0 8px 40px rgba(59,111,212,0.12);
+    }
+    .dropzone-shimmer {
+      position:absolute; inset:0; pointer-events:none;
+      background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,0.03) 50%,transparent 62%);
+      background-size:200% 100%; animation:shimmer 4s ease infinite;
+    }
+    .dropzone-icon {
+      width:78px; height:78px; border-radius:20px;
+      background:linear-gradient(135deg,rgba(59,111,212,0.25),rgba(90,140,255,0.15));
+      border:1px solid rgba(100,150,255,0.2);
+      display:flex; align-items:center; justify-content:center;
+      color:#7aa5ff; font-size:28px;
+      box-shadow:0 4px 30px rgba(59,111,212,0.2);
+      transition:transform 0.25s;
+    }
+    .wc-dropzone.drag-over .dropzone-icon { transform:scale(1.08); }
+    .dropzone-title { font-size:19px; font-weight:700; color:var(--text); display:block; margin-bottom:6px; font-family:var(--font-display); }
+    .dropzone-sub   { font-size:13.5px; color:var(--text-muted); }
+    .dropzone-sub span { color:#7aa5ff; font-weight:600; }
+    .up-features { display:flex; gap:28px; font-size:12px; color:rgba(150,180,240,0.35); animation:fadeIn 0.8s ease both; animation-delay:0.4s; }
+
+    /* ── Loading (inside dropzone) ── */
+    .loading-inner { width:100%; text-align:center; }
+    .loading-spinner {
+      width:56px; height:56px; margin:0 auto 18px;
+      border:3px solid rgba(100,150,255,0.12); border-top-color:#7aa5ff;
+      border-radius:50%; animation:spin 0.75s linear infinite;
+      box-shadow:0 0 24px rgba(100,160,255,0.3);
+    }
+    .loading-title { font-weight:700; font-size:16px; color:var(--text); margin-bottom:5px; font-family:var(--font-display); }
+    .loading-sub   { font-size:13px; color:var(--text-muted); margin-bottom:20px; }
+    .loading-track { width:100%; height:3px; background:rgba(255,255,255,0.06); border-radius:2px; overflow:hidden; }
+    .loading-bar   { height:100%; border-radius:2px; background:linear-gradient(90deg,#3b6fd4,#7aa5ff); transition:width 0.3s ease; box-shadow:0 0 12px rgba(100,160,255,0.5); }
+    .loading-pct   { font-size:11px; color:rgba(150,180,240,0.35); margin-top:8px; }
+
+    /* ── Results view ── */
+    #view-results { display:none; flex-direction:column; align-items:center; width:100%; animation:fadeUp 0.45s ease both; }
+    .results-inner { max-width:760px; width:100%; }
+
+    /* Summary card */
+    .wc-summary {
+      border-radius:22px; padding:28px; margin-bottom:20px;
+      display:flex; align-items:center; gap:28px; flex-wrap:wrap;
+      background:rgba(30,55,120,0.2);
+      backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+      border:1px solid rgba(100,150,255,0.12);
+      box-shadow:0 8px 40px rgba(0,0,0,0.15);
+    }
+    .sum-file { flex:1; min-width:220px; }
+    .sum-file-row { display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+    .sum-file-icon {
+      width:46px; height:46px; border-radius:13px; flex-shrink:0;
+      background:rgba(248,113,113,0.15); border:1px solid rgba(248,113,113,0.2);
+      display:flex; align-items:center; justify-content:center; color:#fca5a5; font-size:20px;
+    }
+    .sum-filename { font-weight:700; font-size:15px; }
+    .sum-filesub  { font-size:12px; color:rgba(150,180,240,0.45); margin-top:1px; }
+    .sum-chips    { display:flex; gap:10px; flex-wrap:wrap; }
+    .sum-chip     { padding:8px 16px; border-radius:10px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px; }
+    .chip-green   { background:rgba(16,185,129,0.12); border:1px solid rgba(52,211,153,0.2); color:#34d399; }
+    .chip-red     { background:rgba(248,113,113,0.1);  border:1px solid rgba(248,113,113,0.2); color:#f87171; }
+
+    /* Results list */
+    .wc-list {
+      border-radius:22px; overflow:hidden;
+      background:rgba(25,48,110,0.18);
+      backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+      border:1px solid rgba(100,150,255,0.1);
+      box-shadow:0 8px 40px rgba(0,0,0,0.15);
+    }
+    .list-hdr {
+      padding:17px 22px; border-bottom:1px solid rgba(255,255,255,0.06);
+      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+    }
+    .list-title { font-weight:700; font-size:15px; font-family:var(--font-display); }
+
+    /* Filter tabs */
+    .filter-tabs { display:flex; gap:3px; background:rgba(255,255,255,0.04); border-radius:10px; padding:3px; border:1px solid rgba(255,255,255,0.07); }
+    .filter-btn  { padding:6px 14px; border-radius:8px; border:none; font-size:12.5px; font-weight:600; background:transparent; color:rgba(150,180,240,0.5); transition:all 0.2s; font-family:var(--font); }
+    .filter-btn.active { background:rgba(59,111,212,0.45); color:#9dc4ff; box-shadow:0 0 14px rgba(59,111,212,0.25); }
+
+    /* Rows */
+    .wc-row { border-bottom:1px solid rgba(255,255,255,0.05); animation:fadeUp 0.38s ease both; }
+    .wc-row:last-child { border-bottom:none; }
+    .row-hdr { display:flex; align-items:center; gap:14px; padding:15px 22px; background:transparent; transition:background 0.2s; }
+    .row-hdr.clickable { cursor:pointer !important; }
+    .row-hdr.clickable:hover { background:rgba(255,255,255,0.04); }
+    .row-hdr.is-expanded  { background:rgba(60,100,200,0.12); }
+    .row-icon {
+      width:40px; height:40px; border-radius:11px; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center; font-size:15px;
+      border:1px solid transparent; transition:all 0.3s;
+    }
+    .ri-found   { background:rgba(16,185,129,0.15);  color:#34d399; border-color:rgba(52,211,153,0.2); }
+    .ri-missing { background:rgba(248,113,113,0.12); color:#f87171; border-color:rgba(248,113,113,0.25); }
+    .row-label  { flex:1; font-weight:600; font-size:14px; }
+    .status-badge {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:4px 12px; border-radius:20px; font-size:11.5px; font-weight:600;
+      letter-spacing:0.1px; border:1px solid transparent; transition:all 0.4s ease;
+    }
+    .sb-found   { background:var(--green-bg); color:var(--green); border-color:var(--green-border); }
+    .sb-missing { background:var(--red-bg);   color:var(--red);   border-color:var(--red-border); }
+    .row-chevron { color:rgba(150,180,240,0.4); font-size:11px; margin-left:4px; transition:transform 0.2s; }
+    .row-chevron.open { transform:rotate(180deg); }
+
+    .row-detail { padding:0 22px 15px 76px; font-size:13px; color:rgba(180,205,255,0.75); line-height:1.65; animation:fadeUp 0.22s ease both; }
+    .wc-empty { padding:52px; text-align:center; color:rgba(150,180,240,0.35); font-size:14px; }
+
+    /* ── Missing Fields Card (Dark Glassmorphism) ── */
+    #mfp-container { margin-top: 24px; width: 100%; animation: fadeUp 0.4s ease both; }
+    .mfp-card {
+      background: rgba(30,55,120,0.2);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(100,150,255,0.12);
+      border-radius: 22px; box-shadow: 0 8px 40px rgba(0,0,0,0.15); overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .mfp-header {
+      background: rgba(245, 158, 11, 0.08); border-bottom: 1px solid rgba(245, 158, 11, 0.15);
+      padding: 20px 24px; display: flex; align-items: center; gap: 16px; transition: all 0.4s ease;
+    }
+    .mfp-header-icon {
+      width: 46px; height: 46px; border-radius: 12px;
+      background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.25);
+      color: #fbbf24; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      transition: all 0.4s ease;
+    }
+    .mfp-header-text strong { display: block; font-size: 16px; color: #fde68a; font-family: var(--font-display); transition: color 0.4s ease; }
+    .mfp-header-text .mfp-sub { font-size: 13px; color: rgba(253, 230, 138, 0.7); margin-top: 4px; transition: color 0.4s ease;}
+    .mfp-body { padding: 24px; }
+    .mfp-section { margin-bottom: 24px; }
+    .mfp-section:last-child { margin-bottom: 0; }
+    .mfp-section-title {
+      font-size: 12px; font-weight: 700; color: #7aa5ff; text-transform: uppercase;
+      letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding-bottom: 8px; margin-bottom: 16px; display: flex; align-items: center;
+    }
+    .mfp-field { margin-bottom: 16px; }
+    .mfp-label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .mfp-input {
+      width: 100%; padding: 10px 14px; font-family: var(--font);
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(100,150,255,0.2);
+      border-radius: 10px; font-size: 13px; color: var(--text); outline: none; transition: all 0.2s;
+    }
+    .mfp-input::placeholder { color: rgba(150,180,240,0.35); }
+    .mfp-input:focus { border-color: rgba(100,150,255,0.6); box-shadow: 0 0 0 3px rgba(60,100,220,0.12); }
+    .mfp-input.valid { border-color: rgba(16,185,129,0.5); box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
+    .mfp-input.invalid { border-color: rgba(248,113,113,0.5); box-shadow: 0 0 0 3px rgba(248,113,113,0.1); }
+    .mfp-error { color: #fca5a5; font-size: 12px; margin-top: 6px; display: none; }
+    
+    .mfp-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .mfp-chip {
+      padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; border: 1px solid transparent;
+    }
+    .mfp-chip.found { background: rgba(16,185,129,0.12); color: #34d399; border-color: rgba(52,211,153,0.2); }
+    .mfp-chip.option { background: rgba(255,255,255,0.05); color: rgba(150,180,240,0.7); border-color: rgba(255,255,255,0.1); }
+    .mfp-chip.option:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+    .mfp-chip.active { border-color: #3b6fd4; box-shadow: 0 0 0 2px rgba(59,111,212,0.25); color: var(--text); }
+
+    .mfp-btn-row { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+    .mfp-submit-btn, .mfp-dl-btn {
+      padding: 11px 24px; border-radius: 12px; border: none; font-family: var(--font);
+      background: linear-gradient(135deg,#3b6fd4,#5b8fff); color: #fff;
+      font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+      box-shadow: 0 4px 18px rgba(59,111,212,0.3); display: inline-flex; align-items: center; gap: 8px;
+    }
+    .mfp-submit-btn:hover, .mfp-dl-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .mfp-submit-btn:disabled, .mfp-dl-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+    .mfp-edit-btn {
+      padding: 11px 24px; border-radius: 12px; font-family: var(--font);
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(150,180,240,0.8); font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .mfp-edit-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+
+    .mfp-confirm { animation: fadeUp 0.3s ease both; }
+    .mfp-confirm-label { font-size: 13px; color: rgba(150,180,240,0.6); margin-bottom: 12px; }
+    .mfp-confirm-rows { max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+    .mfp-confirm-row { font-size: 13px; color: var(--text); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; }
+    .mfp-confirm-val { background: rgba(59,111,212,0.15); color: #9dc4ff; padding: 2px 8px; border-radius: 6px; margin-left: 8px; font-weight: 600; }
+
+    .mfp-success { text-align: center; padding: 32px 24px; animation: scaleIn 0.4s cubic-bezier(0.4,0,0.2,1) both; }
+    .mfp-check {
+      width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg,#059669,#34d399);
+      color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 28px;
+      margin-bottom: 16px; box-shadow: 0 0 30px rgba(52,211,153,0.35);
+      animation: checkPop 0.5s cubic-bezier(0.36,0.07,0.19,0.97) both; animation-delay: 0.1s;
+    }
+    .mfp-success-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; font-family: var(--font-display); }
+    .mfp-success-sub { font-size: 13px; color: rgba(150,180,240,0.6); margin-bottom: 24px; }
+    .mfp-reenter {
+      background: none; border: none; color: rgba(150,180,240,0.6); font-size: 13px; cursor: pointer;
+      text-decoration: underline; margin-top: 16px; display: block; width: 100%; font-family: var(--font);
+    }
+    .mfp-reenter:hover { color: var(--text); }
+    .btn-spin { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.6s linear infinite; }
+
+    /* Completion banner (when 100% found initially) */
+    .completion-banner {
+      background:linear-gradient(135deg,rgba(5,150,105,0.1),rgba(16,185,129,0.06));
+      border:1px solid rgba(16,185,129,0.2); border-radius:20px; padding:32px;
+      text-align:center; animation:scaleIn 0.45s cubic-bezier(0.4,0,0.2,1) both;
+      margin-top:24px; backdrop-filter:blur(20px);
+      box-shadow:0 8px 40px rgba(5,150,105,0.08);
+    }
+
+    /* Responsive */
+    @media (max-width:600px) {
+      .wc-summary { flex-direction:column; align-items:flex-start; }
+      #wc-main  { padding:24px 12px 60px; }
+      .up-h1    { font-size:30px; }
+      .wc-dropzone { padding:40px 24px; }
+      .row-detail { padding-left:22px; }
+      #wc-header { position: relative; }
+    }
   </style>
 </head>
 <body>
-  <input type="file" id="file-input" style="display:none"/>
-  <input type="file" id="zip-input" style="display:none" accept=".zip"/>
-  <div class="page-container">
-    <div class="container-fluid h-100 p-0">
-      <div class="row h-100 m-0">
-        <div class="col-12 p-0">
-          <div class="chat-container">
-            <div class="chat-header">
-              <div class="header-content">
-                <h1 class="chat-header-title">WildCatcher: Wildcat Syllabus Checker</h1>
-              </div>
-            </div>
-            <div class="chat-history" id="chat-history"></div>
-            <div class="input-area">
-              <div class="input-group">
-                <span class="input-group-text plus-symbol" id="plus-btn" style="cursor:pointer" title="Upload a file"><i class="fas fa-paperclip"></i></span>
-                <span class="input-group-text zip-symbol" id="zip-btn" style="cursor:pointer"><i class="fas fa-file-archive"></i></span>
-                <input type="text" id="user-input" class="form-control" placeholder="Type your text here..."/>
-                <button id="send-button" class="btn"><i class="fas fa-paper-plane"></i></button>
-              </div>
-            </div>
-            <input type="file" id="file-input-dup" style="display:none"/>
-          </div>
-        </div>
+  <canvas id="bg-canvas"></canvas>
+  <canvas id="cursor-canvas"></canvas>
+
+  <input type="file" id="file-input" accept=".pdf,.docx" style="display:none"/>
+
+  <header id="wc-header">
+    <div class="hdr-left">
+      <div class="hdr-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="#7aa5ff">
+          <path d="M12,13 C8.5,13 6,14.5 5.5,17.5 C5,20 7.5,21.5 12,21.5 C16.5,21.5 19,20 18.5,17.5 C18,14.5 15.5,13 12,13 Z" />
+          <ellipse cx="5.5" cy="10" rx="1.8" ry="2.5" transform="rotate(-30 5.5 10)"/>
+          <ellipse cx="9.5" cy="6.5" rx="1.8" ry="2.8" transform="rotate(-10 9.5 6.5)"/>
+          <ellipse cx="14.5" cy="6.5" rx="1.8" ry="2.8" transform="rotate(10 14.5 6.5)"/>
+          <ellipse cx="18.5" cy="10" rx="1.8" ry="2.5" transform="rotate(30 18.5 10)"/>
+        </svg>
+      </div>
+      <div>
+        <div class="hdr-title">WildCatcher</div>
+        <div class="hdr-sub">Syllabus Checker</div>
       </div>
     </div>
-  </div>
+    <button id="new-check-btn">
+      <i class="fas fa-rotate-left" style="font-size:11px"></i> New Check
+    </button>
+  </header>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-  const chatHistory = document.getElementById('chat-history');
-  const userInput   = document.getElementById('user-input');
-  const sendButton  = document.getElementById('send-button');
+  <div id="wc-main">
 
-  document.getElementById('plus-btn').addEventListener('click', () => document.getElementById('file-input').click());
-  document.getElementById('zip-btn').addEventListener('click',  () => document.getElementById('zip-input').click());
-  document.getElementById('zip-input').addEventListener('change', e => { if (e.target.files[0]) uploadZip(e.target.files[0]); });
+    <div id="view-upload">
+      <div class="up-heading">
+        <div class="up-tag">✦ NECHE Standards · 15 Requirements</div>
+        <h1 class="up-h1">Check Your Syllabus</h1>
+        <p class="up-p">Upload a syllabus and instantly see what's compliant with NECHE standards.</p>
+      </div>
+      <div class="wc-dropzone" id="dropzone">
+        <div class="dropzone-shimmer"></div>
+        <div class="dropzone-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+        <div style="text-align:center">
+          <strong class="dropzone-title">Drop your syllabus here</strong>
+          <div class="dropzone-sub">or <span>click to browse</span> · PDF or DOCX</div>
+        </div>
+      </div>
+      <div class="up-features">
+        <span><i class="fas fa-lock" style="margin-right:5px"></i>Secure</span>
+        <span><i class="fas fa-bolt" style="margin-right:5px"></i>Instant results</span>
+        <span><i class="fas fa-file-alt" style="margin-right:5px"></i>PDF &amp; DOCX</span>
+      </div>
+    </div>
 
-  window.addEventListener('load', () => {
-    addHTMLMessage(`<strong>Welcome to WildCatcher: Wildcat Syllabus Checker!</strong><br>
-      This tool will help you check Syllabi compliance with the NECHE standards.
-      To start, Upload a PDF or DOCX to be graded, or type "Help" to learn more about this tool!`, false);
-  });
+    <div id="view-results">
+      <div class="results-inner">
 
-  function addHTMLMessage(html, isUser) {
-    const msg = document.createElement('div');
-    msg.classList.add('message', isUser ? 'user-message' : 'assistant-message');
-    const content = document.createElement('div');
-    content.classList.add('message-content');
-    content.innerHTML = html;
-    msg.appendChild(content);
-    const avatar = document.createElement('div');
-    avatar.classList.add('message-avatar');
-    avatar.innerHTML = isUser ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>';
-    msg.appendChild(avatar);
-    if (isUser) addEditIcon(msg);
-    chatHistory.appendChild(msg);
-    chatHistory.scrollTop = chatHistory.scrollHeight;
-    if (msg.querySelector('.detector-tabs')) {
-      msg.querySelectorAll('[data-bs-toggle="tab"]').forEach(trigger => {
-        trigger.addEventListener('click', function(e) {
-          e.preventDefault();
-          const parent = trigger.closest('.detector-tabs');
-          parent.querySelectorAll('.nav-link').forEach(t => t.classList.remove('active'));
-          trigger.classList.add('active');
-          parent.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('show','active'));
-          parent.querySelector(trigger.getAttribute('data-bs-target')).classList.add('show','active');
-        });
-      });
-    }
-  }
-  function addMessage(text, isUser) { addHTMLMessage(text.replace(/\n/g,'<br>'), isUser); }
+        <div class="wc-summary">
+          <div class="sum-file">
+            <div class="sum-file-row">
+              <div class="sum-file-icon"><i class="fas fa-file-pdf"></i></div>
+              <div>
+                <div class="sum-filename" id="res-filename"></div>
+                <div class="sum-filesub">Analysis complete</div>
+              </div>
+            </div>
+            <div class="sum-chips">
+              <div class="sum-chip chip-green" id="chip-found">
+                <i class="fas fa-check-circle"></i><span id="chip-found-n">0</span> Found
+              </div>
+              <div class="sum-chip chip-red" id="chip-missing" style="display:none">
+                <i class="fas fa-circle-xmark"></i><span id="chip-missing-n">0</span> Not Found
+              </div>
+            </div>
+          </div>
+          <div>
+            <svg id="summary-ring" width="110" height="110" viewBox="0 0 100 100">
+              <defs>
+                <filter id="rglow">
+                  <feGaussianBlur stdDeviation="2.5" result="b"/>
+                  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+              <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="5"/>
+              <circle id="ring-arc" cx="50" cy="50" r="42" fill="none" stroke="#10b981"
+                stroke-width="5" stroke-linecap="round"
+                stroke-dasharray="263.9" stroke-dashoffset="263.9"
+                transform="rotate(-90 50 50)" filter="url(#rglow)"
+                style="transition:stroke-dashoffset 1.3s cubic-bezier(0.4,0,0.2,1),stroke 0.5s"/>
+              <text x="50" y="46" text-anchor="middle" dominant-baseline="central" id="ring-pct"
+                style="font-size:22px;font-weight:700;fill:#dde8ff;font-family:'Space Grotesk',sans-serif">0%</text>
+              <text x="50" y="63" text-anchor="middle"
+                style="font-size:8px;fill:rgba(150,180,240,0.6);font-family:'DM Sans',sans-serif;letter-spacing:1.5px">COMPLETE</text>
+            </svg>
+          </div>
+        </div>
 
-  function addEditIcon(messageDiv) {
-    messageDiv.style.position = 'relative';
-    const old = messageDiv.querySelector('.edit-icon-container'); if (old) old.remove();
-    const cont = document.createElement('div'); cont.classList.add('edit-icon-container');
-    const icon = document.createElement('div'); icon.classList.add('edit-icon'); icon.innerHTML = '<i class="fas fa-edit"></i>';
-    icon.addEventListener('click', () => startEditing(messageDiv));
-    cont.appendChild(icon); messageDiv.appendChild(cont);
-  }
+        <div class="wc-list">
+          <div class="list-hdr">
+            <div class="list-title">Detection Results</div>
+            <div class="filter-tabs">
+              <button class="filter-btn active" data-filter="all">All <span id="cnt-all"></span></button>
+              <button class="filter-btn" data-filter="found">Found <span id="cnt-found"></span></button>
+              <button class="filter-btn" data-filter="not_found">Not Found <span id="cnt-notfound"></span></button>
+            </div>
+          </div>
+          <div id="results-list"></div>
+        </div>
 
-  function addTypingIndicator() {
-    const t = document.createElement('div'); t.classList.add('typing-indicator'); t.id = 'typing-indicator';
-    t.innerHTML = 'Typing <div class="dot"></div><div class="dot"></div><div class="dot"></div>';
-    chatHistory.appendChild(t); chatHistory.scrollTop = chatHistory.scrollHeight;
-  }
-  function removeTypingIndicator() { const t = document.getElementById('typing-indicator'); if (t) t.remove(); }
+        <div id="mfp-container"></div>
 
-  sendButton.addEventListener('click', handleSend);
-  userInput.addEventListener('keypress', e => { if (e.key === 'Enter') handleSend(); });
+      </div>
+    </div>
 
-  async function handleSend() {
-    const message = userInput.value.trim(); if (!message) return;
-    addMessage(message, true); userInput.value = ''; addTypingIndicator();
-    const lc = message.toLowerCase().replace(/[.,!?]/g,'');
-    let response;
-    if (lc === 'help') {
-      response = `WildCatcher Help\n\nUpload a PDF or DOCX syllabus to check NECHE compliance.\nI check 15+ requirements and guide you through filling any missing information.\n\nHow to use:\n1. Click the paperclip icon to upload\n2. Wait for analysis\n3. Fill in any missing fields when prompted\n4. Download your completed template`;
-    } else {
-      response = `I'm here to help check syllabus compliance. Click the paperclip icon to upload a PDF or DOCX file. Type "Help" for more info.`;
-    }
-    removeTypingIndicator(); addMessage(response, false);
-  }
+  </div><script>
+  'use strict';
 
-  // ── detection renderers ──────────────────────────────────────────────────
-  function normalizeModality(data) {
-    if (data && data.modality) {
-      const m = data.modality;
-      return { status:m.status||(m.label?'PASS':'FAIL'), heading:m.heading||'Detected delivery', label:m.label||m.course_delivery||'Unknown', message:m.message||'', confidence:(typeof m.confidence==='number')?m.confidence:null, details:(m.details||(Array.isArray(m.evidence)?m.evidence.join('\n'):(m.evidence||''))) };
-    }
-    if (data) {
-      return { status:data.modality_status||(data.course_delivery?'PASS':'FAIL'), heading:'Detected delivery', label:data.course_delivery||'Unknown', message:data.course_delivery_message||'', confidence:null, details:Array.isArray(data.course_delivery_evidence)?data.course_delivery_evidence.join('\n'):(data.course_delivery_evidence||'') };
-    }
-    return null;
-  }
+  // ── State ──────────────────────────────────────────────────────────────────
+  let allItems    = [];
+  let activeFilter = 'all';
+  let expandedIds  = new Set();
+  let lastApiData  = null;
+  let uploading    = false;
 
-  function renderModalityCard(data) {
-    const m = normalizeModality(data); if (!m) return '';
-    const st = m.status==='PASS'?'<span class="status-pass"><i class="fas fa-check-circle"></i> PASS</span>':'<span class="status-fail"><i class="fas fa-times-circle"></i> FAIL</span>';
-    const conf = (m.confidence||m.confidence===0)?`<div>Confidence: ${m.confidence}</div>`:'';
-    const det = m.details?`<pre style="white-space:pre-wrap;font-size:12px;margin-top:6px;">${m.details}</pre>`:'';
-    return `<div class="upload-result" style="margin-top:12px;"><h4><i class="fas fa-chalkboard-teacher"></i> Course Delivery</h4><div class="analysis-summary"><div class="status-item"><strong>Result:</strong> ${st}</div><div><strong>${m.heading}</strong><br>${m.message||''}</div>${m.label?`<div><strong>Label:</strong> ${m.label}</div>`:''}${conf}${det}</div></div>`;
-  }
-
-  function pBox(label, val) {
-    return val ? `<div style="margin-top:10px;padding:10px;background:#f5f5f5;border-radius:5px;"><strong>${label}:</strong><pre style="white-space:pre-wrap;font-size:12px;margin-top:4px;">${val}</pre></div>` : '<div style="margin-top:10px;padding:10px;background:#f5f5f5;border-radius:5px;"><strong>Not found</strong></div>';
-  }
-
-  function displayDetections(data) {
-    function gs(val,p='PASS',f='FAIL'){return val?`<span class="status-pass"><i class="fas fa-check-circle"></i> ${p}</span>`:`<span class="status-fail"><i class="fas fa-times-circle"></i> ${f}</span>`;}
-
-    const ins=data.instructor||{}, off=data.office_information||{}, em=data.email_information||{};
-    const pref=data.preferred_information||{}, rt=data.response_time||{}, cl=data.class_location||{};
-    const cr=data.credit_hours||{}, wl=data.workload_information||{}, gsc=data.grading_scale||{};
-    const lt=data.late_information||{}, at=data.assignment_types||{}, ad=data.assignment_delivery||{};
-    const gp=data.grading_process||{};
-    const offFound=off.location||off.hours||off.phone;
-
-    const overviewHTML=`<div class="upload-result" style="margin-top:12px;"><h3><i class="fas fa-list"></i> Overview</h3><div class="analysis-summary">
-      <div><strong>Instructor:</strong> ${gs(ins.found)}</div><div><strong>Class Location:</strong> ${gs(cl.found)}</div>
-      <div><strong>Modality:</strong> ${gs(data.modality_status==='PASS')}</div><div><strong>Office:</strong> ${gs(offFound)}</div>
-      <div><strong>Email:</strong> ${gs(em.found)}</div><div><strong>Response Time:</strong> ${gs(rt.found)}</div>
-      <div><strong>Preferred Contact:</strong> ${gs(pref.found)}</div><div><strong>Credit Hours:</strong> ${gs(cr.found)}</div>
-      <div><strong>Workload:</strong> ${gs(wl.found)}</div><div><strong>SLOs:</strong> ${gs(data.slo_status==='PASS')}</div>
-      <div><strong>Grading Scale:</strong> ${gs(gsc.found)}</div><div><strong>Late Work:</strong> ${gs(lt.found)}</div>
-      <div><strong>Assignment Type:</strong> ${gs(at.found)}</div><div><strong>Assignment Deliverables:</strong> ${gs(ad.found)}</div>
-      <div><strong>Grading Process:</strong> ${gs(gp.found)}</div>
-    </div></div>`;
-
-    const sloSt=data.slo_status==='PASS'?'<span class="status-pass"><i class="fas fa-check-circle"></i> PASS</span>':'<span class="status-fail"><i class="fas fa-times-circle"></i> FAIL</span>';
-    const sloHTML=`<div class="upload-result"><h3><i class="fas fa-file-pdf"></i> ${data.filename||'Uploaded Document'}</h3><div class="analysis-summary"><div class="status-item"><strong>SLOs:</strong> ${sloSt}</div><div><strong>${data.slo_status==='PASS'?'Result:':'Missing Fields:'}</strong> ${data.message||''}</div>${data.slo_content?pBox('Content',data.slo_content):''}</div></div>`;
-    const insHTML=`<div class="upload-result"><h3><i class="fas fa-user-tie"></i> ${data.filename||'Uploaded Document'}</h3><div class="analysis-summary"><div class="status-item"><strong>Instructor:</strong> ${gs(ins.found,'FOUND','NOT FOUND')}</div><div><strong>Name:</strong> ${ins.name||'N/A'}<br><strong>Title:</strong> ${ins.title||'N/A'}<br><strong>Department:</strong> ${ins.department||'N/A'}</div></div></div>`;
-    const offHTML=`<div class="upload-result"><h3><i class="fas fa-building"></i> ${data.filename||'Uploaded Document'}</h3><div class="analysis-summary"><div class="status-item"><strong>Office:</strong> ${gs(offFound,'FOUND','NOT FOUND')}</div>${offFound?`<div style="margin-top:10px;padding:10px;background:#f5f5f5;border-radius:5px;"><pre style="white-space:pre-wrap;font-size:12px;">Location: ${off.location||'N/A'}\nHours: ${off.hours||'N/A'}\nPhone: ${off.phone||'N/A'}</pre></div>`:''}</div></div>`;
-    const emHTML=`<div class="upload-result"><h3><i class="fas fa-envelope"></i> ${data.filename||'Uploaded Document'}</h3><div class="analysis-summary"><div class="status-item"><strong>Email:</strong> ${gs(em.found,'FOUND','NOT FOUND')}</div>${em.email?pBox('Email',em.email):''}</div></div>`;
-    const prefPreview=(pref.preferred&&pref.preferred!=='Missing')?pBox('Preferred Contact',pref.preferred):'';
-    const prefHTML=`<div class="upload-result"><h3><i class="fas fa-inbox"></i> ${data.filename||'Uploaded Document'}</h3><div class="analysis-summary"><div class="status-item"><strong>Preferred Contact:</strong> ${gs(pref.found,'FOUND','NOT FOUND')}</div>${prefPreview}</div></div>`;
-    const crHTML=`<div class="upload-result"><h4><i class="fas fa-graduation-cap"></i> Credit Hours</h4><div class="analysis-summary"><div class="status-item"><strong>Credit Hours:</strong> ${gs(cr.found,'FOUND','NOT FOUND')}</div>${cr.hours?pBox('Hours',cr.hours):''}</div></div>`;
-    const wlHTML=`<div class="upload-result"><h4><i class="fas fa-tasks"></i> Workload</h4><div class="analysis-summary"><div class="status-item"><strong>Workload:</strong> ${gs(wl.found,'FOUND','NOT FOUND')}</div>${wl.description?pBox('Description',wl.description):''}</div></div>`;
-
-    const tabNames=[
-      {id:'overview',label:'Overview',icon:'fa-list',html:overviewHTML},
-      {id:'instructor',label:'Instructor',icon:'fa-user-tie',html:insHTML},
-      {id:'class_location',label:'Class Location',icon:'fa-map-marker-alt'},
-      {id:'modality',label:'Modality',icon:'fa-chalkboard-teacher',html:renderModalityCard(data)},
-      {id:'office',label:'Office',icon:'fa-building',html:offHTML},
-      {id:'email',label:'Email',icon:'fa-envelope',html:emHTML},
-      {id:'response_time',label:'Response Time',icon:'fa-clock'},
-      {id:'preferred',label:'Preferred',icon:'fa-inbox',html:prefHTML},
-      {id:'credit',label:'Credit Hours',icon:'fa-graduation-cap',html:crHTML},
-      {id:'workload',label:'Workload',icon:'fa-tasks',html:wlHTML},
-      {id:'slo',label:'SLOs',icon:'fa-file-pdf',html:sloHTML},
-      {id:'grade_scale',label:'Grading Scale',icon:'fa-percent',html:''},
-      {id:'late_work',label:'Late Work',icon:'fa-hourglass'},
-      {id:'assignment_type',label:'Assignment Type',icon:'fa-pencil'},
-      {id:'assignment_deliverable',label:'Assignment Deliverables',icon:'fa-paper-plane'},
-      {id:'grading_process',label:'Grading Process',icon:'fa-clipboard-list'},
+  // ── Build items from API payload ───────────────────────────────────────────
+  function buildItems(d) {
+    const off = d.office_information || {};
+    const offFound  = !!(off.location || off.hours || off.phone);
+    const offDetail = [off.location, off.hours, off.phone].filter(Boolean).join(' · ') || null;
+    return [
+      { id:'instructor',     label:'Instructor',        icon:'fa-user-tie',           found:!!d.instructor?.found,              detail:[d.instructor?.name,d.instructor?.title,d.instructor?.department].filter(Boolean).join(', ')||null },
+      { id:'class_location', label:'Class Location',    icon:'fa-map-marker-alt',     found:!!d.class_location?.found,          detail:d.class_location?.content||null },
+      { id:'modality',       label:'Modality',          icon:'fa-chalkboard-teacher', found:d.modality_status==='PASS',         detail:d.course_delivery||null },
+      { id:'office',         label:'Office Info',       icon:'fa-building',           found:offFound,                           detail:offDetail },
+      { id:'email',          label:'Email',             icon:'fa-envelope',           found:!!d.email_information?.found,       detail:d.email_information?.email||null },
+      { id:'response_time',  label:'Response Time',     icon:'fa-clock',              found:!!d.response_time?.found,           detail:d.response_time?.content||null },
+      { id:'preferred',      label:'Preferred Contact', icon:'fa-inbox',              found:!!d.preferred_information?.found,   detail:d.preferred_information?.preferred||null },
+      { id:'credit_hours',   label:'Credit Hours',      icon:'fa-graduation-cap',     found:!!d.credit_hours?.found,            detail:d.credit_hours?.hours||null },
+      { id:'workload',       label:'Workload',          icon:'fa-tasks',              found:!!d.workload_information?.found,    detail:d.workload_information?.description||null },
+      { id:'slo',            label:'Learning Outcomes', icon:'fa-bullseye',           found:d.slo_status==='PASS',              detail:d.slo_content||null },
+      { id:'grading_scale',  label:'Grading Scale',     icon:'fa-percent',            found:!!d.grading_scale?.found,           detail:d.grading_scale?.content||null },
+      { id:'late_work',      label:'Late Work Policy',  icon:'fa-hourglass-half',     found:!!d.late_information?.found,        detail:d.late_information?.late||null },
+      { id:'assign_types',   label:'Assignment Types',  icon:'fa-pencil-alt',         found:!!d.assignment_types?.found,        detail:d.assignment_types?.content||null },
+      { id:'assign_deliv',   label:'Deliverables',      icon:'fa-paper-plane',        found:!!d.assignment_delivery?.found,     detail:d.assignment_delivery?.content||null },
+      { id:'grading_proc',   label:'Grading Process',   icon:'fa-clipboard-list',     found:!!d.grading_process?.found,         detail:d.grading_process?.content||null },
     ];
-
-    let tabs='<div class="detector-tabs"><ul class="nav nav-tabs" role="tablist">';
-    tabNames.forEach((tab,idx)=>{tabs+=`<li class="nav-item" role="presentation"><button class="nav-link${idx===0?' active':''}" id="${tab.id}-tab" data-bs-toggle="tab" data-bs-target="#${tab.id}-panel" type="button" role="tab"><i class="fas ${tab.icon}"></i> ${tab.label}</button></li>`;});
-    tabs+='</ul><div class="tab-content" style="margin-top:10px;">';
-    tabNames.forEach((tab,idx)=>{
-      let content=tab.html||'';
-      function tabBlock(icon,title,key,statusHtml,bodyHtml){return `<div class="upload-result"><h4><i class="fas ${icon}"></i> ${title}</h4><div class="analysis-summary"><div class="status-item"><strong>${title}:</strong> ${statusHtml}</div>${bodyHtml}</div></div>`;}
-      const PASS='<span class="status-pass"><i class="fas fa-check-circle"></i> PASS</span>',FAIL='<span class="status-fail"><i class="fas fa-times-circle"></i> FAIL</span>';
-      if(tab.id==='grade_scale'){const g=data.grading_scale||{};content=tabBlock('fa-percent','Grading Scale','gs',g.found?PASS:FAIL,pBox('Scale',g.content||''));}
-      if(tab.id==='late_work'){const g=data.late_information||{};content=tabBlock('fa-hourglass','Late Work','lt',g.found?PASS:FAIL,pBox('Policy',g.late||''));}
-      if(tab.id==='assignment_type'){const g=data.assignment_types||{};content=tabBlock('fa-pencil','Assignment Types','at',g.found?PASS:FAIL,pBox('Types',g.content||''));}
-      if(tab.id==='assignment_deliverable'){const g=data.assignment_delivery||{};content=tabBlock('fa-paper-plane','Assignment Deliverables','ad',g.found?PASS:FAIL,pBox('Method',g.content||''));}
-      if(tab.id==='grading_process'){const g=data.grading_process||{};content=tabBlock('fa-clipboard-list','Grading Process','gp',g.found?PASS:FAIL,pBox('Process',g.content||''));}
-      if(tab.id==='response_time'){const g=data.response_time||{};content=tabBlock('fa-clock','Response Time','rt',g.found?PASS:FAIL,pBox('Policy',g.content||''));}
-      if(tab.id==='class_location'){const g=data.class_location||{};content=tabBlock('fa-map-marker-alt','Class Location','cl',g.found?PASS:FAIL,pBox('Location',g.content||''));}
-      tabs+=`<div class="tab-pane fade${idx===0?' show active':''}" id="${tab.id}-panel" role="tabpanel">${content}</div>`;
-    });
-    tabs+='</div></div>';
-    addHTMLMessage(tabs,false);
-
-    // ONE combined card for all missing fields
-    injectMissingFieldsCard(data);
   }
 
-  // ── session history ───────────────────────────────────────────────────────
-  if (typeof window._mfpLast === 'undefined') window._mfpLast = {};
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-  // ════════════════════════════════════════════════════════════════════════
-  //  SINGLE COMBINED MISSING FIELDS CARD
-  //  All missing values → one form → one confirm → one POST → one download
-  //  POST: /submit_missing_fields
-  //  Body: all field values + filename
-  // ════════════════════════════════════════════════════════════════════════
+  // ── Views ──────────────────────────────────────────────────────────────────
+  function showView(name) {
+    document.getElementById('view-upload').style.display  = name==='upload'  ? 'flex' : 'none';
+    document.getElementById('view-results').style.display = name==='results' ? 'flex' : 'none';
+    document.getElementById('new-check-btn').style.display= name==='results' ? 'inline-flex' : 'none';
+  }
+
+  function resetAll() {
+    allItems=[]; activeFilter='all'; expandedIds.clear(); lastApiData=null;
+    document.getElementById('results-list').innerHTML='';
+    document.getElementById('mfp-container').innerHTML='';
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.filter==='all'));
+    showView('upload');
+  }
+
+  // ── Counts & Ring ──────────────────────────────────────────────────────────
+  function updateCounts() {
+    const total = allItems.length;
+    const found = allItems.filter(i=>i.found).length;
+    const not_found = total - found;
+    
+    document.getElementById('cnt-all').textContent      = '('+total+')';
+    document.getElementById('cnt-found').textContent    = '('+found+')';
+    document.getElementById('cnt-notfound').textContent = '('+not_found+')';
+    document.getElementById('chip-found-n').textContent  = found;
+    document.getElementById('chip-missing-n').textContent= not_found;
+    document.getElementById('chip-missing').style.display= not_found>0 ? 'flex' : 'none';
+
+    const pct = total ? Math.round(found/total*100) : 0;
+    const C   = 2*Math.PI*42;
+    const offset = C-(pct/100)*C;
+    const color  = pct>=80 ? '#10b981' : pct>=50 ? '#60a5fa' : '#f87171';
+    const arc = document.getElementById('ring-arc');
+    arc.setAttribute('stroke-dashoffset', offset);
+    arc.setAttribute('stroke', color);
+    document.getElementById('ring-pct').textContent = pct+'%';
+  }
+
+  // ── Render rows ────────────────────────────────────────────────────────────
+  function renderResults() {
+    let filtered;
+    if (activeFilter==='found')          filtered=allItems.filter(i=>i.found);
+    else if (activeFilter==='not_found') filtered=allItems.filter(i=>!i.found);
+    else                                 filtered=allItems;
+
+    const list = document.getElementById('results-list');
+    list.innerHTML='';
+
+    if (!filtered.length) {
+      const el=document.createElement('div'); el.className='wc-empty';
+      el.innerHTML='<i class="fas fa-check-double" style="font-size:28px;display:block;margin-bottom:10px;color:#34d399"></i>All clear in this category';
+      list.appendChild(el);
+      return;
+    }
+
+    filtered.forEach((item, idx) => {
+      const canExpand = item.found && item.detail;
+      const isOpen    = expandedIds.has(item.id);
+
+      const iconCls  = item.found ? 'ri-found' : 'ri-missing';
+      const badgeCls = item.found ? 'sb-found'  : 'sb-missing';
+      const badgeIco = item.found ? 'fa-check-circle' : 'fa-circle-xmark';
+      const badgeTxt = item.found ? 'Found' : 'Not Found';
+
+      const row = document.createElement('div');
+      row.className='wc-row';
+      row.style.animationDelay=(idx*35)+'ms';
+
+      // Header
+      const hdr=document.createElement('div');
+      hdr.className='row-hdr'+(canExpand?' clickable':'')+(isOpen&&canExpand?' is-expanded':'');
+      hdr.innerHTML=`
+        <div class="row-icon ${iconCls}"><i class="fas ${esc(item.icon)}"></i></div>
+        <div class="row-label">${esc(item.label)}</div>
+        <span class="status-badge ${badgeCls}">
+          <i class="fas ${badgeIco}" style="font-size:11px"></i>${badgeTxt}
+        </span>
+        ${canExpand?`<i class="fas fa-chevron-down row-chevron${isOpen?' open':''}"></i>`:''}`;
+
+      if (canExpand) {
+        hdr.addEventListener('click',()=>{
+          expandedIds.has(item.id) ? expandedIds.delete(item.id) : expandedIds.add(item.id);
+          renderResults();
+        });
+      }
+      row.appendChild(hdr);
+
+      // Expanded: detail
+      if (isOpen && item.detail) {
+        const d=document.createElement('div'); d.className='row-detail';
+        d.innerHTML=esc(item.detail);
+        row.appendChild(d);
+      }
+      list.appendChild(row);
+    });
+  }
+
+  // ── Missing Fields Form (Consolidated) ─────────────────────────────────────
   function injectMissingFieldsCard(data) {
-    const ins=data.instructor||{}, off=data.office_information||{}, em=data.email_information||{};
-    const pref=data.preferred_information||{}, rt=data.response_time||{}, cl=data.class_location||{};
-    const cr=data.credit_hours||{}, wl=data.workload_information||{}, gsc=data.grading_scale||{};
-    const lt=data.late_information||{}, at=data.assignment_types||{}, ad=data.assignment_delivery||{};
-    const gp=data.grading_process||{};
-    const offFound=off.location||off.hours||off.phone;
+    const container = document.getElementById('mfp-container');
+    container.innerHTML = '';
 
-    // validation helpers
-    function isUNHEmail(v){const lc=v.toLowerCase();return lc.endsWith('@unh.edu')||lc.endsWith('@usnh.edu');}
+    const ins  = data.instructor         || {};
+    const off  = data.office_information || {};
+    const em   = data.email_information  || {};
+    const pref = data.preferred_information || {};
+    const rt   = data.response_time      || {};
+    const cl   = data.class_location     || {};
+    const cr   = data.credit_hours       || {};
+    const wl   = data.workload_information || {};
+    const gsc  = data.grading_scale      || {};
+    const lt   = data.late_information   || {};
+    const at   = data.assignment_types   || {};
+    const ad   = data.assignment_delivery || {};
+    const gp   = data.grading_process    || {};
 
-    // build sections with missing fields only
-    const sections=[];
+    function isUNHEmail(v) { const lc = v.toLowerCase(); return lc.endsWith('@unh.edu') || lc.endsWith('@usnh.edu'); }
 
-    // CONTACT
-    const cF=[];
-    if(!pref.found) cF.push({key:'preferred_contact_method',label:'Preferred Contact Method',
+    const sections = [];
+
+    // Contact
+    const cF = [];
+    if (!pref.found) cF.push({ key: 'preferred_contact_method', label: 'Preferred Contact Method',
       placeholder: off.phone ? 'e.g. email, Teams, office hours (phone must be 10 digits)' : 'e.g. email, Teams (phone must be 10 digits)',
-      chips:[
-        em.found&&em.email?{label:'Email',cls:'found',val:em.email,preview:em.email.length>22?em.email.slice(0,22)+'…':em.email}:null,
-        off.phone?{label:'Phone',cls:'found',val:off.phone,preview:off.phone}:null,
-        off.hours?{label:'Office Hours',cls:'found',val:off.hours,preview:off.hours.length>18?off.hours.slice(0,18)+'…':off.hours}:null,
-        {label:'Teams',cls:'option',val:'Teams',preview:''},{label:'Canvas',cls:'option',val:'Canvas',preview:''},
+      chips: [
+        em.found && em.email ? { label: 'Email', cls: 'found', val: em.email } : null,
+        off.phone  ? { label: 'Phone',        cls: 'found', val: off.phone } : null,
+        off.hours  ? { label: 'Office Hours', cls: 'found', val: off.hours } : null,
+        { label: 'Teams',  cls: 'option', val: 'Teams' },
+        { label: 'Canvas', cls: 'option', val: 'Canvas' },
       ].filter(Boolean),
       validate: v => {
         if (!v) return null;
-        const lc = String(v).toLowerCase();
-        // If value looks like an email, enforce UNH or USNH domains
-        if (lc.includes('@')) {
-          if (!isUNHEmail(v)) return 'Use your UNH/USNH email (@unh.edu or @usnh.edu)';
-          return null;
-        }
-        // If value includes digits (phone), require 10 digits
-        const digits = String(v).replace(/\D/g,'');
-        if (digits.length) {
-          if (digits.length !== 10) return 'Phone must be 10 digits';
-        }
+        if (v.includes('@')) return isUNHEmail(v) ? null : 'Use your UNH/USNH email (@unh.edu or @usnh.edu)';
+        const digits = v.replace(/\D/g, '');
+        if (digits.length && digits.length !== 10) return 'Phone must be 10 digits';
         return null;
       }
     });
-    if(!em.found) cF.push({key:'email',label:'Email Address',placeholder:'e.g. professor@unh.edu',chips:[],
-      validate:v=>{if(!v.includes('@'))return'Enter a valid email.';if(!isUNHEmail(v))return'Use your UNH email (@unh.edu or @usnh.edu)';return null;}});
-    if(!rt.found) cF.push({key:'response_time',label:'Response Time Policy',placeholder:'e.g. I respond within 48 hours on weekdays.',
-      chips:[{label:'24 hrs',cls:'option',val:'I respond within 24 hours on weekdays.',preview:''},{label:'48 hrs',cls:'option',val:'I respond within 48 hours on weekdays.',preview:''},{label:'72 hrs',cls:'option',val:'I respond within 72 hours.',preview:''}],validate:null});
-    if(cF.length) sections.push({title:'Contact Information',icon:'fa-address-card',fields:cF});
+    if (!em.found) cF.push({ key: 'email', label: 'Email Address', placeholder: 'e.g. professor@unh.edu', chips: [],
+      validate: v => { if (!v.includes('@')) return 'Enter a valid email.'; if (!isUNHEmail(v)) return 'Use your UNH email (@unh.edu or @usnh.edu)'; return null; }
+    });
+    if (!rt.found) cF.push({ key: 'response_time', label: 'Response Time Policy', placeholder: 'e.g. I respond within 48 hours on weekdays.',
+      chips: [
+        { label: '24 hrs', cls: 'option', val: 'I respond within 24 hours on weekdays.' },
+        { label: '48 hrs', cls: 'option', val: 'I respond within 48 hours on weekdays.' },
+        { label: '72 hrs', cls: 'option', val: 'I respond within 72 hours.' },
+      ], validate: null
+    });
+    if (cF.length) sections.push({ title: 'Contact Information', icon: 'fa-address-card', fields: cF });
 
-    // INSTRUCTOR — ask for any missing subfields (name, title, department)
-    const iF=[];
-    if(!ins.name) iF.push({key:'instructor_name',label:'Full Name',placeholder:'e.g. Dr. Jane Smith',chips:[],validate:null});
-    if(!ins.title) iF.push({key:'instructor_title',label:'Title/Rank',placeholder:'e.g. Professor',chips:[],validate:null});
-    if(!ins.department) iF.push({key:'instructor_department',label:'Department',placeholder:'e.g. Computer Science',chips:[],validate:null});
-    if(iF.length) sections.push({title:'Instructor Information',icon:'fa-user-tie',fields:iF});
+    // Instructor
+    const iF = [];
+    if (!ins.name)       iF.push({ key: 'instructor_name',       label: 'Full Name',   placeholder: 'e.g. Dr. Jane Smith',    chips: [], validate: null });
+    if (!ins.title)      iF.push({ key: 'instructor_title',      label: 'Title/Rank',  placeholder: 'e.g. Professor',         chips: [], validate: null });
+    if (!ins.department) iF.push({ key: 'instructor_department', label: 'Department',  placeholder: 'e.g. Computer Science',  chips: [], validate: null });
+    if (iF.length) sections.push({ title: 'Instructor Information', icon: 'fa-user-tie', fields: iF });
 
-    // OFFICE — ask for any missing subfields (location, hours, phone)
-    const oF=[];
-    if(!off.location) oF.push({key:'office_address',label:'Office Location',placeholder:'e.g. Kingsbury Hall, Room 201',chips:[],validate:null});
-    if(!off.hours) oF.push({key:'office_hours',label:'Office Hours',placeholder:'e.g. Mon/Wed 2:00PM–4:00PM',chips:[],validate:v=>(/\d/.test(v)?null:'Include a time with digits')});
-    if(!off.phone) oF.push({key:'office_phone',label:'Phone (optional)',placeholder:'e.g. 6035551234',chips:[],validate:v=>{if(!v)return null;const d=v.replace(/[\s\-\+\(\)]/g,'');return(/^\d+$/.test(d)&&d.length!==10)?'Enter a valid 10-digit number':null;}});
-    if(oF.length) sections.push({title:'Office Information',icon:'fa-building',fields:oF});
+    // Office
+    const oF = [];
+    if (!off.location) oF.push({ key: 'office_address', label: 'Office Location', placeholder: 'e.g. Kingsbury Hall, Room 201', chips: [], validate: null });
+    if (!off.hours)    oF.push({ key: 'office_hours',   label: 'Office Hours',    placeholder: 'e.g. Mon/Wed 2:00PM–4:00PM',  chips: [],
+      validate: v => /\d/.test(v) ? null : 'Include a time with digits' });
+    if (!off.phone)    oF.push({ key: 'office_phone',   label: 'Phone (optional)', placeholder: 'e.g. 6035551234',            chips: [],
+      validate: v => { if (!v) return null; const d = v.replace(/[\s\-\+\(\)]/g, ''); return /^\d+$/.test(d) && d.length !== 10 ? 'Enter a valid 10-digit number' : null; }
+    });
+    if (oF.length) sections.push({ title: 'Office Information', icon: 'fa-building', fields: oF });
 
-    // COURSE
-    const courseF=[];
-    if(!cl.found) courseF.push({key:'class_location',label:'Class Location',placeholder:'e.g. DeMeritt Hall 240 or Online',
-      chips:[{label:'Online',cls:'option',val:'Online',preview:''},{label:'Hybrid',cls:'option',val:'Hybrid',preview:''},{label:'In-Person',cls:'option',val:'In-Person',preview:''}],validate:null});
-    if(data.modality_status!=='PASS') courseF.push({key:'modality',label:'Course Modality',placeholder:'e.g. In-Person, Online, Hybrid',
-      chips:[{label:'In-Person',cls:'option',val:'In-Person',preview:''},{label:'Online',cls:'option',val:'Online',preview:''},{label:'Hybrid',cls:'option',val:'Hybrid',preview:''},{label:'Async',cls:'option',val:'Asynchronous',preview:''}],validate:null});
-    if(!cr.found) courseF.push({key:'credit_hour',label:'Credit Hours',placeholder:'e.g. 3',
-      chips:[{label:'1',cls:'option',val:'1',preview:''},{label:'2',cls:'option',val:'2',preview:''},{label:'3',cls:'option',val:'3',preview:'common'},{label:'4',cls:'option',val:'4',preview:''}],
-      validate:v=>(/^\d+(\.\d+)?$/.test(v)&&parseFloat(v)>0?null:'Enter a number, e.g. 3')});
-    if(!wl.found) courseF.push({key:'workload',label:'Expected Workload',placeholder:'e.g. 6–9 hours per week outside class.',chips:[],validate:null});
-    if(!data.course_code) courseF.push({key:'course_code',label:'Course Code',placeholder:'e.g. BIOT753',chips:[],validate:null});
-    if(!data.course_name) courseF.push({key:'course_name',label:'Course Name',placeholder:'e.g. Cell Culture (Lecture)',chips:[],validate:null});
-    if(!data.semester_year) courseF.push({key:'semester_year',label:'Semester and Year',placeholder:'e.g. Spring 2026',chips:[],validate:null});
-    if(courseF.length) sections.push({title:'Course Details',icon:'fa-book',fields:courseF});
+    // Course
+    const courseF = [];
+    if (!cl.found) courseF.push({ key: 'class_location', label: 'Class Location', placeholder: 'e.g. DeMeritt Hall 240 or Online',
+      chips: [{ label: 'Online', cls: 'option', val: 'Online' }, { label: 'Hybrid', cls: 'option', val: 'Hybrid' }, { label: 'In-Person', cls: 'option', val: 'In-Person' }], validate: null });
+    if (data.modality_status !== 'PASS') courseF.push({ key: 'modality', label: 'Course Modality', placeholder: 'e.g. In-Person, Online, Hybrid',
+      chips: [{ label: 'In-Person', cls: 'option', val: 'In-Person' }, { label: 'Online', cls: 'option', val: 'Online' }, { label: 'Hybrid', cls: 'option', val: 'Hybrid' }, { label: 'Async', cls: 'option', val: 'Asynchronous' }], validate: null });
+    if (!cr.found) courseF.push({ key: 'credit_hour', label: 'Credit Hours', placeholder: 'e.g. 3',
+      chips: [{ label: '1', cls: 'option', val: '1' }, { label: '2', cls: 'option', val: '2' }, { label: '3', cls: 'option', val: '3' }, { label: '4', cls: 'option', val: '4' }],
+      validate: v => /^\d+(\.\d+)?$/.test(v) && parseFloat(v) > 0 ? null : 'Enter a number, e.g. 3' });
+    if (!wl.found) courseF.push({ key: 'workload', label: 'Expected Workload', placeholder: 'e.g. 6–9 hours per week outside class.', chips: [], validate: null });
+    if (!data.course_code)    courseF.push({ key: 'course_code',    label: 'Course Code',        placeholder: 'e.g. BIOT753',          chips: [], validate: null });
+    if (!data.course_name)    courseF.push({ key: 'course_name',    label: 'Course Name',        placeholder: 'e.g. Cell Culture (Lecture)', chips: [], validate: null });
+    if (!data.semester_year)  courseF.push({ key: 'semester_year',  label: 'Semester and Year',  placeholder: 'e.g. Spring 2026',       chips: [], validate: null });
+    if (courseF.length) sections.push({ title: 'Course Details', icon: 'fa-book', fields: courseF });
 
-    // ACADEMIC
-    const aF=[];
-    if(data.slo_status!=='PASS') aF.push({key:'SLOs',label:'Student Learning Outcomes',placeholder:'e.g. 1. Students will...\n2. Students will...',chips:[],validate:null});
-    if(!gsc.found) aF.push({key:'final_grade_scale',label:'Grading Scale',placeholder:'e.g. A: 93–100, B: 83–92...',chips:[],validate:null});
-    if(!lt.found) aF.push({key:'deadline_expectations_title',label:'Late Work Policy',placeholder:'e.g. Late work not accepted without prior approval.',chips:[],validate:null});
-    if(!at.found) aF.push({key:'assignment_types_title',label:'Assignment Types',placeholder:'e.g. Exams, Papers, Projects',
-      chips:[{label:'Exams',cls:'option',val:'Exams',preview:''},{label:'Papers',cls:'option',val:'Research Papers',preview:''},{label:'Quizzes',cls:'option',val:'Quizzes',preview:''},{label:'Projects',cls:'option',val:'Group Projects',preview:''},{label:'Labs',cls:'option',val:'Lab Reports',preview:''}],validate:null});
-    if(!ad.found) aF.push({key:'assignment_delivery',label:'Submission Method',placeholder:'e.g. Submit via Canvas by 11:59 PM',
-      chips:[{label:'Canvas',cls:'option',val:'Submit via Canvas',preview:''},{label:'Email',cls:'option',val:'Submit via email',preview:''},{label:'In-person',cls:'option',val:'Submit in person',preview:''}],validate:null});
-    if(!gp.found) aF.push({key:'grading_process',label:'Grading Process',placeholder:'e.g. Graded within two weeks with rubrics provided.',chips:[],validate:null});
-    if(aF.length) sections.push({title:'Academic Policies & Assessments',icon:'fa-clipboard-list',fields:aF});
+    // Academic
+    const aF = [];
+    if (data.slo_status !== 'PASS') aF.push({ key: 'SLOs', label: 'Student Learning Outcomes', placeholder: 'e.g. 1. Students will...\n2. Students will...', chips: [], validate: null });
+    if (!gsc.found) aF.push({ key: 'final_grade_scale', label: 'Grading Scale',  placeholder: 'e.g. A: 93–100, B: 83–92...', chips: [], validate: null });
+    if (!lt.found)  aF.push({ key: 'deadline_expectations_title', label: 'Late Work Policy', placeholder: 'e.g. Late work not accepted without prior approval.', chips: [], validate: null });
+    if (!at.found)  aF.push({ key: 'assignment_types_title', label: 'Assignment Types', placeholder: 'e.g. Exams, Papers, Projects',
+      chips: [{ label: 'Exams', cls: 'option', val: 'Exams' }, { label: 'Papers', cls: 'option', val: 'Research Papers' }, { label: 'Quizzes', cls: 'option', val: 'Quizzes' }, { label: 'Projects', cls: 'option', val: 'Group Projects' }, { label: 'Labs', cls: 'option', val: 'Lab Reports' }], validate: null });
+    if (!ad.found)  aF.push({ key: 'assignment_delivery', label: 'Submission Method', placeholder: 'e.g. Submit via Canvas by 11:59 PM',
+      chips: [{ label: 'Canvas', cls: 'option', val: 'Submit via Canvas' }, { label: 'Email', cls: 'option', val: 'Submit via email' }, { label: 'In-person', cls: 'option', val: 'Submit in person' }], validate: null });
+    if (!gp.found)  aF.push({ key: 'grading_process', label: 'Grading Process', placeholder: 'e.g. Graded within two weeks with rubrics provided.', chips: [], validate: null });
+    if (aF.length) sections.push({ title: 'Academic Policies & Assessments', icon: 'fa-clipboard-list', fields: aF });
 
-    if(!sections.length) return; // nothing missing
+    // Scenario: Everything is found 100%
+    if (!sections.length) {
+      container.innerHTML = `
+        <div class="completion-banner">
+          <div class="cb-check" style="margin:0 auto 16px"><i class="fas fa-check"></i></div>
+          <div class="cb-title">Template is ready!</div>
+          <div class="cb-sub" style="color:rgba(150,180,240,0.6);margin-bottom:22px">All required fields were found in your syllabus.</div>
+          <button class="mfp-dl-btn" id="cb-dl-btn-all-found">
+            <i class="fas fa-download"></i> Download Template
+          </button>
+        </div>`;
+      document.getElementById('cb-dl-btn-all-found').addEventListener('click', () => doPost({}));
+      return;
+    }
 
-    const cid='mfp-'+Date.now();
-    const allFields=sections.flatMap(s=>s.fields);
-    const totalMissing=allFields.length;
-
-    // treat all fields as optional (validation will allow blanks)
+    const cid = 'mfp-' + Date.now();
+    const allFields = sections.flatMap(s => s.fields);
     const optional = new Set(allFields.map(f => f.key));
 
     function fieldHTML(f) {
-      const chips = f.chips.length ? `<div class="mfp-chips" id="${cid}-chips-${f.key}">${f.chips.map(c=>`<div class="mfp-chip ${c.cls}" data-key="${f.key}" data-val="${c.val.replace(/"/g,'&quot;')}">${c.label}${c.preview?` <span style="font-size:10px;font-weight:400;opacity:.7;">${c.preview}</span>`:''}</div>`).join('')}</div>` : '';
-      const opt = ''; // do not display "(optional)" — all fields behave equally
+      const chipsHTML = f.chips.length
+        ? `<div class="mfp-chips" id="${cid}-chips-${f.key}">${f.chips.map(c =>
+            `<div class="mfp-chip ${c.cls}" data-key="${esc(f.key)}" data-val="${esc(c.val)}">${esc(c.label)}</div>`
+          ).join('')}</div>`
+        : '';
       return `<div class="mfp-field">
-        <label class="mfp-label">${f.label}${opt}</label>
-        <input type="text" id="${cid}-${f.key}" class="mfp-input" placeholder="${f.placeholder}" autocomplete="off" value=""/>
+        <label class="mfp-label">${esc(f.label)}</label>
+        <input type="text" id="${cid}-${f.key}" class="mfp-input" placeholder="${esc(f.placeholder)}" autocomplete="off" value=""/>
         <div id="${cid}-err-${f.key}" class="mfp-error"></div>
-        ${chips}
+        ${chipsHTML}
       </div>`;
     }
 
-    let formHTML='';
-    sections.forEach(sec=>{
-      formHTML+=`<div class="mfp-section"><div class="mfp-section-title"><i class="fas ${sec.icon}" style="margin-right:5px;"></i>${sec.title}</div>`;
-      sec.fields.forEach(f=>{formHTML+=fieldHTML(f);});
-      formHTML+='</div>';
+    let formHTML = '';
+    sections.forEach(sec => {
+      formHTML += `<div class="mfp-section"><div class="mfp-section-title"><i class="fas ${sec.icon}" style="margin-right:8px"></i>${esc(sec.title)}</div>`;
+      sec.fields.forEach(f => { formHTML += fieldHTML(f); });
+      formHTML += '</div>';
     });
 
-    const cardHTML=`
+    container.innerHTML = `
       <div class="mfp-card" id="${cid}">
-        <div class="mfp-header">
-          <div class="mfp-header-icon"><i class="fas fa-exclamation-triangle"></i></div>
-          <div class="mfp-header-text">
-            <strong>Missing Information Detected</strong>
-            <div style="font-size:13px;color:#ffffff;opacity:0.95;margin-top:6px;">
-              <strong>Required fields are missing.</strong> Please complete the fields below and submit the form to download your template.
-              <div style="margin-top:6px;font-size:12px;opacity:0.95;">This feature helps you finalize your syllabus by collecting any missing instructor, contact, or course details. Once all fields are completed, your generated DOCX will include the full syllabus information.</div>
-            </div>
+        <div class="mfp-header" id="${cid}-header">
+          <div class="mfp-header-icon" id="${cid}-h-icon"><i class="fas fa-exclamation-triangle"></i></div>
+          <div class="mfp-header-text" id="${cid}-h-text">
+            <strong>Action Required</strong>
+            <div class="mfp-sub">Complete the missing fields below to download your template.</div>
           </div>
         </div>
         <div class="mfp-body" id="${cid}-body">
           ${formHTML}
-          <div id="${cid}-err-main" class="mfp-error" style="margin-bottom:8px;"></div>
+          <div id="${cid}-err-main" class="mfp-error" style="margin-bottom:12px;font-size:13px"></div>
           <div class="mfp-btn-row">
-            <button id="${cid}-submit" class="mfp-submit-btn"><i class="fas fa-paper-plane"></i> Submit All</button>
+            <button id="${cid}-submit" class="mfp-submit-btn"><i class="fas fa-paper-plane"></i> Review &amp; Submit</button>
           </div>
         </div>
       </div>`;
 
-    addHTMLMessage(cardHTML,false);
-    const body=document.getElementById(cid+'-body');
+    const body = document.getElementById(cid + '-body');
 
-    function wireAll(){
-      // chips
-      body.querySelectorAll('.mfp-chip').forEach(chip=>{
-        chip.addEventListener('click',function(){
-          const key=this.dataset.key,val=this.dataset.val;
-          const inp=document.getElementById(cid+'-'+key);if(!inp)return;
-          inp.value=val;
-          body.querySelectorAll(`.mfp-chip[data-key="${key}"]`).forEach(c=>c.classList.remove('active'));
+    function wireAll() {
+      body.querySelectorAll('.mfp-chip').forEach(chip => {
+        chip.addEventListener('click', function () {
+          const key = this.dataset.key, val = this.dataset.val;
+          const inp = document.getElementById(cid + '-' + key); if (!inp) return;
+          inp.value = val;
+          body.querySelectorAll(`.mfp-chip[data-key="${key}"]`).forEach(c => c.classList.remove('active'));
           this.classList.add('active');
           inp.dispatchEvent(new Event('input'));
         });
       });
-      // history feature removed (no "Last used / Use again")
-      // live validation with inline placeholder error for immediate feedback
-      allFields.forEach(f=>{
-        const inp=document.getElementById(cid+'-'+f.key);if(!inp)return;
-        // store original placeholder to restore later
-        if(!inp.dataset.origPlaceholder) inp.dataset.origPlaceholder = inp.placeholder || '';
-        inp.addEventListener('input',function(){
-          const v=this.value.trim();
-          const errEl = document.getElementById(cid+'-err-'+f.key);
-          if(!v){ this.classList.remove('valid','invalid'); this.placeholder = this.dataset.origPlaceholder; if(errEl){ errEl.style.display='none'; errEl.textContent=''; } return; }
-          if(f.validate){
+
+      allFields.forEach(f => {
+        const inp = document.getElementById(cid + '-' + f.key); if (!inp) return;
+        if (!inp.dataset.origPlaceholder) inp.dataset.origPlaceholder = inp.placeholder || '';
+        inp.addEventListener('input', function () {
+          const v = this.value.trim();
+          const errEl = document.getElementById(cid + '-err-' + f.key);
+          if (!v) { this.classList.remove('valid', 'invalid'); this.placeholder = this.dataset.origPlaceholder; if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; } return; }
+          if (f.validate) {
             const err = f.validate(v);
-            if(err){
-              this.classList.add('invalid'); this.classList.remove('valid');
-              // show immediate error in placeholder and error element
-              this.placeholder = err;
-              if(errEl){ errEl.textContent = err; errEl.style.display = 'block'; }
-            } else {
-              this.classList.remove('invalid'); this.classList.add('valid');
-              this.placeholder = this.dataset.origPlaceholder;
-              if(errEl){ errEl.style.display='none'; errEl.textContent=''; }
-            }
-          } else { this.classList.remove('valid','invalid'); }
+            if (err) { this.classList.add('invalid'); this.classList.remove('valid'); this.placeholder = err; if (errEl) { errEl.textContent = err; errEl.style.display = 'block'; } }
+            else     { this.classList.remove('invalid'); this.classList.add('valid'); this.placeholder = this.dataset.origPlaceholder; if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; } }
+          } else { this.classList.remove('valid', 'invalid'); }
         });
       });
-      // submit
-      const sb=document.getElementById(cid+'-submit');
-      if(sb) sb.addEventListener('click',function(){
-        const me=document.getElementById(cid+'-err-main');me.style.display='none';me.textContent='';
-        if(!validateAll()){me.textContent='Please fix the errors above before submitting.';me.style.display='block';return;}
+
+      const sb = document.getElementById(cid + '-submit');
+      if (sb) sb.addEventListener('click', function () {
+        const me = document.getElementById(cid + '-err-main'); me.style.display = 'none'; me.textContent = '';
+        if (!validateAll()) { me.textContent = 'Please fix the errors above before continuing.'; me.style.display = 'block'; return; }
         showConfirmView(collectValues());
       });
     }
 
-    function validateAll(){
-      let ok=true;
-      allFields.forEach(f=>{
-        const inp=document.getElementById(cid+'-'+f.key),err=document.getElementById(cid+'-err-'+f.key);
-        if(!inp||!err)return;
-        const v=inp.value.trim();err.style.display='none';err.textContent='';
-        if(optional.has(f.key)){if(v&&f.validate){const e=f.validate(v);if(e){err.textContent=e;err.style.display='block';ok=false;}}return;}
-        if(!v){err.textContent='Please fill in '+f.label.toLowerCase()+'.';err.style.display='block';ok=false;return;}
-        if(f.validate){const e=f.validate(v);if(e){err.textContent=e;err.style.display='block';ok=false;}}
+    function validateAll() {
+      let ok = true;
+      allFields.forEach(f => {
+        const inp = document.getElementById(cid + '-' + f.key), err = document.getElementById(cid + '-err-' + f.key);
+        if (!inp || !err) return;
+        const v = inp.value.trim(); err.style.display = 'none'; err.textContent = '';
+        if (optional.has(f.key)) { if (v && f.validate) { const e = f.validate(v); if (e) { err.textContent = e; err.style.display = 'block'; ok = false; } } return; }
+        if (!v) { err.textContent = 'Please fill in ' + f.label.toLowerCase() + '.'; err.style.display = 'block'; ok = false; return; }
+        if (f.validate) { const e = f.validate(v); if (e) { err.textContent = e; err.style.display = 'block'; ok = false; } }
       });
       return ok;
     }
 
-    function collectValues(){
-      const vals={};
-      allFields.forEach(f=>{const inp=document.getElementById(cid+'-'+f.key);if(inp)vals[f.key]=inp.value.trim();});
+    function collectValues() {
+      const vals = {};
+      allFields.forEach(f => { const inp = document.getElementById(cid + '-' + f.key); if (inp) vals[f.key] = inp.value.trim(); });
       return vals;
     }
 
     wireAll();
 
-    function showConfirmView(vals){
-      const filled=allFields.filter(f=>vals[f.key]);
-      const rows=filled.map(f=>`<div class="mfp-confirm-row"><strong>${f.label}:</strong><span class="mfp-confirm-val">${(vals[f.key]||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span></div>`).join('');
-      body.innerHTML=`
+    function showConfirmView(vals) {
+      const filled = allFields.filter(f => vals[f.key]);
+      const rows = filled.map(f =>
+        `<div class="mfp-confirm-row"><strong>${esc(f.label)}:</strong><span class="mfp-confirm-val">${esc(vals[f.key] || '')}</span></div>`
+      ).join('');
+      
+      body.innerHTML = `
         <div class="mfp-confirm">
-          <p class="mfp-confirm-label"><i class="fas fa-eye" style="margin-right:5px;"></i>Review before submitting (${filled.length} field${filled.length!==1?'s':''}):</p>
+          <div class="mfp-confirm-label"><i class="fas fa-eye" style="margin-right:5px"></i>Review before generating (${filled.length} field${filled.length !== 1 ? 's' : ''}):</div>
           <div class="mfp-confirm-rows">${rows}</div>
-          <div id="${cid}-post-err" class="mfp-error" style="margin-bottom:8px;"></div>
+          <div id="${cid}-post-err" class="mfp-error" style="margin-bottom:12px"></div>
           <div class="mfp-btn-row">
-            <button id="${cid}-confirm" class="mfp-submit-btn"><i class="fas fa-check"></i> Confirm & Submit</button>
-            <button id="${cid}-edit" class="mfp-edit-btn"><i class="fas fa-pencil-alt"></i> Edit</button>
+            <button id="${cid}-confirm" class="mfp-submit-btn"><i class="fas fa-check"></i> Generate Template</button>
+            <button id="${cid}-edit"    class="mfp-edit-btn"><i class="fas fa-pencil-alt"></i> Edit Details</button>
           </div>
         </div>`;
-      document.getElementById(cid+'-edit').addEventListener('click',()=>showInputView(vals));
-      document.getElementById(cid+'-confirm').addEventListener('click',()=>doPost(vals));
+      document.getElementById(cid + '-edit').addEventListener('click',    () => showInputView(vals));
+      document.getElementById(cid + '-confirm').addEventListener('click', () => doPost(vals));
     }
 
-    function showInputView(prefill){
-      let fh='';
-      sections.forEach(sec=>{
-        fh+=`<div class="mfp-section"><div class="mfp-section-title"><i class="fas ${sec.icon}" style="margin-right:5px;"></i>${sec.title}</div>`;
-        sec.fields.forEach(f=>{fh+=fieldHTML(f);});
-        fh+='</div>';
+    function showInputView(prefill) {
+      // Revert header to warning state if user clicks edit after it changed to success
+      const hdr = document.getElementById(cid + '-header');
+      if (hdr) {
+        hdr.style.background = 'rgba(245, 158, 11, 0.08)';
+        hdr.style.borderBottom = '1px solid rgba(245, 158, 11, 0.15)';
+        document.getElementById(cid + '-h-icon').innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+        document.getElementById(cid + '-h-icon').style.background = 'rgba(245, 158, 11, 0.15)';
+        document.getElementById(cid + '-h-icon').style.borderColor = 'rgba(245, 158, 11, 0.25)';
+        document.getElementById(cid + '-h-icon').style.color = '#fbbf24';
+        document.getElementById(cid + '-h-text').innerHTML = '<strong>Action Required</strong><div class="mfp-sub">Complete the missing fields below to download your template.</div>';
+      }
+
+      let fh = '';
+      sections.forEach(sec => {
+        fh += `<div class="mfp-section"><div class="mfp-section-title"><i class="fas ${sec.icon}" style="margin-right:8px"></i>${esc(sec.title)}</div>`;
+        sec.fields.forEach(f => { fh += fieldHTML(f); });
+        fh += '</div>';
       });
-      body.innerHTML=`${fh}
-        <div id="${cid}-err-main" class="mfp-error" style="margin-bottom:8px;"></div>
-        <div class="mfp-btn-row"><button id="${cid}-submit" class="mfp-submit-btn"><i class="fas fa-paper-plane"></i> Submit All</button></div>`;
-      allFields.forEach(f=>{const inp=document.getElementById(cid+'-'+f.key);if(inp&&prefill&&prefill[f.key])inp.value=prefill[f.key];});
+      body.innerHTML = `${fh}
+        <div id="${cid}-err-main" class="mfp-error" style="margin-bottom:12px;font-size:13px"></div>
+        <div class="mfp-btn-row"><button id="${cid}-submit" class="mfp-submit-btn"><i class="fas fa-paper-plane"></i> Review &amp; Submit</button></div>`;
+      allFields.forEach(f => { const inp = document.getElementById(cid + '-' + f.key); if (inp && prefill && prefill[f.key]) inp.value = prefill[f.key]; });
       wireAll();
-      const first=document.getElementById(cid+'-'+allFields[0].key);if(first)first.focus();
     }
 
-    async function doPost(vals){
-      const cb=document.getElementById(cid+'-confirm'),eb=document.getElementById(cid+'-edit');
-      cb.disabled=true;cb.innerHTML='<span class="spinner-border spinner-border-sm" style="width:14px;height:14px;border-width:2px;"></span> Generating…';eb.disabled=true;
-      try{
-        // send all values + filename to existing endpoint
-        const payload = { user_inputs: Object.assign({}, vals), filename: data.filename||'' };
-        // map credit_hour → the key backend expects
-        if (payload.user_inputs && payload.user_inputs.credit_hour) payload.user_inputs.credit_hours = payload.user_inputs.credit_hour;
+    async function doPost(vals) {
+      const cb = document.getElementById(cid + '-confirm') || document.getElementById('cb-dl-btn-all-found');
+      const eb = document.getElementById(cid + '-edit');
+      
+      if (cb) {
+        cb.disabled = true;
+        cb.innerHTML = '<span class="btn-spin"></span> Generating…';
+      }
+      if (eb) eb.disabled = true;
 
-        const response = await fetch(window.location.origin + '/submit_missing_fields', {
+      try {
+        const payload = { user_inputs: Object.assign({}, vals), filename: (lastApiData && lastApiData.filename) || '' };
+        if (payload.user_inputs && payload.user_inputs.credit_hour) payload.user_inputs.credit_hours = payload.user_inputs.credit_hour;
+        
+        const response = await fetch('/submit_missing_fields', {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
         });
-        if(!response.ok){const e=await response.json().catch(()=>({}));throw new Error(e.error||'Server error. Please try again.');}
+        if (!response.ok) { const e = await response.json().catch(() => ({})); throw new Error(e.error || 'Server error. Please try again.'); }
+        
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const dlFilename = ((lastApiData && lastApiData.filename) ? lastApiData.filename.replace(/\.[^/.]+$/, '') : 'syllabus') + '_updated.docx';
+        const filled = Object.values(vals).filter(v => v).length;
+        
+        if (container.querySelector('.completion-banner')) {
+          // If all found path
+          const a = document.createElement('a'); a.href = blobUrl; a.download = dlFilename;
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          URL.revokeObjectURL(blobUrl);
+          if(cb) { cb.disabled = true; cb.innerHTML = '<i class="fas fa-check"></i> Downloaded!'; }
+        } else {
+          // Change the header to green success state
+          const hdr = document.getElementById(cid + '-header');
+          if (hdr) {
+            hdr.style.background = 'rgba(16, 185, 129, 0.08)';
+            hdr.style.borderBottom = '1px solid rgba(16, 185, 129, 0.15)';
+            document.getElementById(cid + '-h-icon').innerHTML = '<i class="fas fa-check-circle"></i>';
+            document.getElementById(cid + '-h-icon').style.background = 'rgba(16, 185, 129, 0.15)';
+            document.getElementById(cid + '-h-icon').style.borderColor = 'rgba(16, 185, 129, 0.25)';
+            document.getElementById(cid + '-h-icon').style.color = '#34d399';
+            document.getElementById(cid + '-h-text').innerHTML = '<strong style="color: #6ee7b7;">Submission Confirmed</strong><div class="mfp-sub" style="color: rgba(110, 231, 183, 0.7);">Your updated syllabus template is generated and ready for download.</div>';
+          }
 
-        const blob=await response.blob();
-        const blobUrl=URL.createObjectURL(blob);
-        const dlFilename=(data.filename?data.filename.replace(/\.[^/.]+$/,''):'syllabus')+'_updated.docx';
-
-        // history feature removed: do not save last-used values
-
-        const filled=Object.values(vals).filter(v=>v).length;
-        body.innerHTML=`
-          <div class="mfp-success">
-            <div class="mfp-check"><i class="fas fa-check"></i></div>
-            <p class="mfp-success-title">Your syllabus template is ready!</p>
-            <p class="mfp-success-sub">${filled} field${filled!==1?'s':''} added to your template.</p>
-            <button id="${cid}-dl" class="mfp-dl-btn"><i class="fas fa-download"></i> Download Updated Syllabus</button>
-            <button class="mfp-reenter" id="${cid}-reenter"><i class="fas fa-pencil-alt"></i> Re-enter values</button>
-          </div>`;
-        document.getElementById(cid+'-dl').addEventListener('click',function(){
-          const a=document.createElement('a');a.href=blobUrl;a.download=dlFilename;
-          document.body.appendChild(a);a.click();document.body.removeChild(a);
-          URL.revokeObjectURL(blobUrl);this.disabled=true;this.innerHTML='<i class="fas fa-check"></i> Downloaded!';
-        });
-        document.getElementById(cid+'-reenter').addEventListener('click',function(){URL.revokeObjectURL(blobUrl);showInputView(vals);});
-      }catch(err){
-        cb.disabled=false;cb.innerHTML='<i class="fas fa-check"></i> Confirm & Submit';eb.disabled=false;
-        const errEl=document.getElementById(cid+'-post-err');
-        if(errEl){errEl.textContent=err.message||'An unexpected error occurred. Please try again.';errEl.style.display='block';}
+          // Render Success Body
+          body.innerHTML = `
+            <div class="mfp-success">
+              <div class="mfp-check"><i class="fas fa-check"></i></div>
+              <div class="mfp-success-title">Your template is ready!</div>
+              <div class="mfp-success-sub">${filled} field${filled !== 1 ? 's' : ''} added to your syllabus.</div>
+              <button id="${cid}-dl" class="mfp-dl-btn"><i class="fas fa-download"></i> Download Template</button>
+              <button class="mfp-reenter" id="${cid}-reenter"><i class="fas fa-pencil-alt" style="font-size:11px;margin-right:4px"></i> Re-enter values</button>
+            </div>`;
+          document.getElementById(cid + '-dl').addEventListener('click', function () {
+            const a = document.createElement('a'); a.href = blobUrl; a.download = dlFilename;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(blobUrl); this.disabled = true; this.innerHTML = '<i class="fas fa-check"></i> Downloaded!';
+          });
+          document.getElementById(cid + '-reenter').addEventListener('click', () => { URL.revokeObjectURL(blobUrl); showInputView(vals); });
+        }
+      } catch (err) {
+        if (cb) { cb.disabled = false; cb.innerHTML = '<i class="fas fa-check"></i> Generate Template'; }
+        if (eb) eb.disabled = false;
+        const errEl = document.getElementById(cid + '-post-err');
+        if (errEl) { errEl.textContent = err.message || 'An unexpected error occurred. Please try again.'; errEl.style.display = 'block'; }
+        else alert('Download failed: ' + (err.message || 'Please try again.'));
       }
     }
   }
 
-  // ── upload handlers ──────────────────────────────────────────────────────
-  function displaySelectedFile(file){addMessage(`Selected document: ${file.name}`,true);}
+  // ── Show results ───────────────────────────────────────────────────────────
+  function showResults(data, filename) {
+    lastApiData=data;
+    allItems=buildItems(data);
+    document.getElementById('res-filename').textContent=filename||data.filename||'Syllabus';
+    updateCounts();
+    renderResults();
+    injectMissingFieldsCard(data);
+    showView('results');
+  }
 
-  document.getElementById('file-input').addEventListener('change',e=>{
-    const file=e.target.files[0];if(!file)return;
-    displaySelectedFile(file);
+  // ── Upload / loading ───────────────────────────────────────────────────────
+  let _progressTimer=null;
+  let _progress=0;
+  const DROPZONE_IDLE=`
+    <div class="dropzone-shimmer"></div>
+    <div class="dropzone-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+    <div style="text-align:center">
+      <strong class="dropzone-title">Drop your syllabus here</strong>
+      <div class="dropzone-sub">or <span>click to browse</span> · PDF or DOCX</div>
+    </div>`;
+
+  function startLoading() {
+    uploading=true; _progress=0;
+    const dz=document.getElementById('dropzone');
+    dz.style.padding='44px 36px';
+    dz.innerHTML=`
+      <div class="loading-inner">
+        <div class="loading-spinner"></div>
+        <div class="loading-title">Analyzing your syllabus…</div>
+        <div class="loading-sub">Scanning 15 NECHE compliance requirements</div>
+        <div class="loading-track"><div class="loading-bar" id="loading-bar" style="width:0%"></div></div>
+        <div class="loading-pct" id="loading-pct">0%</div>
+      </div>`;
+    _progressTimer=setInterval(()=>{
+      _progress=_progress>=93?93:_progress+Math.random()*11;
+      const b=document.getElementById('loading-bar');
+      const p=document.getElementById('loading-pct');
+      if(b) b.style.width=_progress+'%';
+      if(p) p.textContent=Math.round(_progress)+'%';
+    },230);
+  }
+
+  function stopLoading() {
+    clearInterval(_progressTimer); uploading=false;
+    const dz=document.getElementById('dropzone');
+    dz.style.padding='60px 36px';
+    dz.innerHTML=DROPZONE_IDLE;
+  }
+
+  async function handleFile(file) {
+    if (!file) return;
     const ext=file.name.split('.').pop().toLowerCase();
-    if(ext==='zip')uploadZip(file);
-    else if(ext==='pdf'||ext==='docx')uploadPDF(file);
-    else addMessage('Unsupported file type. Please upload a PDF, DOCX, or ZIP file.',false);
+    if (!['pdf','docx'].includes(ext)){alert('Please upload a PDF or DOCX file.');return;}
+    startLoading();
+    const fd=new FormData(); fd.append('file',file);
+    try {
+      const res=await fetch('/upload',{method:'POST',body:fd});
+      const data=await res.json();
+      stopLoading();
+      if (!res.ok){alert('Error: '+(data.error||'Upload failed.'));return;}
+      showResults(data,file.name);
+    } catch(e){
+      console.error(e); stopLoading();
+      alert('Failed to upload. Please try again.');
+    }
+  }
+
+  // ── Dropzone wiring ────────────────────────────────────────────────────────
+  const dropzone=document.getElementById('dropzone');
+  const fileInput=document.getElementById('file-input');
+
+  dropzone.addEventListener('click',()=>{ if(!uploading) fileInput.click(); });
+  fileInput.addEventListener('change',e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); e.target.value=''; });
+  dropzone.addEventListener('dragover', e=>{ e.preventDefault(); if(!uploading) dropzone.classList.add('drag-over'); });
+  dropzone.addEventListener('dragleave',()=>dropzone.classList.remove('drag-over'));
+  dropzone.addEventListener('drop',e=>{
+    e.preventDefault(); dropzone.classList.remove('drag-over');
+    if(!uploading&&e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+  document.getElementById('new-check-btn').addEventListener('click',resetAll);
+
+  // ── Filter tabs ────────────────────────────────────────────────────────────
+  document.querySelectorAll('.filter-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      activeFilter=btn.dataset.filter;
+      document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b===btn));
+      renderResults();
+    });
   });
 
-  async function uploadZip(zipFile){
-    const formData=new FormData();formData.append('file',zipFile);
-    const msg=document.createElement('div');msg.classList.add('message','assistant-message');
-    msg.innerHTML=`<div class="message-content">Uploading ZIP: <strong>${zipFile.name}</strong>…</div>`;
-    chatHistory.appendChild(msg);chatHistory.scrollTop=chatHistory.scrollHeight;
-    try{
-      const response=await fetch('/upload',{method:'POST',body:formData});
-      const d=await response.json();
-      if(!response.ok){addMessage(`Error: ${d.error||'Failed to process ZIP.'}`,false);return;}
-      msg.querySelector('.message-content').innerHTML=`✅ Uploaded ZIP: <strong>${zipFile.name}</strong>`;
-      const list=d.results||d.extracted_information||[];
-      addMessage(`Processed ${list.length} files.`,false);
-      if(Array.isArray(list)&&list.length&&('slo_status' in list[0]||'modality' in list[0]||'course_delivery' in list[0])){list.forEach(displayDetections);return;}
-      addMessage('Legacy ZIP format detected.',false);
-    }catch(err){console.error(err);addMessage('Failed to upload ZIP. Please try again.',false);}
-  }
+  // ── Background canvas + cursor ─────────────────────────────────────────────
+  (function(){
+    const bgCv=document.getElementById('bg-canvas');
+    const bgCx=bgCv.getContext('2d');
+    const curCv=document.getElementById('cursor-canvas');
+    const curCx=curCv.getContext('2d');
+    let W,H;
+    function resize(){
+      W=bgCv.width=curCv.width=window.innerWidth;
+      H=bgCv.height=curCv.height=window.innerHeight;
+    }
+    resize(); window.addEventListener('resize',resize);
 
-  async function uploadPDF(file){
-    const allowed=['pdf','docx','zip'];const ext=file.name.split('.').pop().toLowerCase();
-    if(!allowed.includes(ext)){addMessage('Unsupported file type.',false);return;}
-    const formData=new FormData();formData.append('file',file);
-    const msg=document.createElement('div');msg.classList.add('message','assistant-message');
-    msg.innerHTML=`<div class="message-content">Uploading: <strong>${file.name}</strong>…</div>`;
-    chatHistory.appendChild(msg);chatHistory.scrollTop=chatHistory.scrollHeight;
-    try{
-      const response=await fetch('/upload',{method:'POST',body:formData});
-      const d=await response.json();
-      if(!response.ok){addMessage(`Error: ${d.error||'Upload failed.'}`,false);return;}
-      if(d.slo_status||d.modality||d.course_delivery){
-        d.filename=d.filename||file.name;
-        displayDetections(d);
-        msg.querySelector('.message-content').innerHTML=`✅ Uploaded: <strong>${file.name}</strong>`;
-        addMessage('You can upload more files for analysis.',false);
-        return;
+    const N=70;
+    const pts=Array.from({length:N},()=>({
+      x:Math.random()*window.innerWidth, y:Math.random()*window.innerHeight,
+      vx:(Math.random()-0.5)*0.3, vy:(Math.random()-0.5)*0.3,
+      r:Math.random()*2+0.5, a:Math.random()*0.25+0.05
+    }));
+
+    let mx=-200, my=-200, cursorOn=false;
+    document.addEventListener('mousemove',e=>{ mx=e.clientX; my=e.clientY; cursorOn=true; });
+    document.addEventListener('mouseleave',()=>{ cursorOn=false; });
+    document.addEventListener('mouseenter',()=>{ cursorOn=true; });
+
+    const CONTENT_SEL='#wc-header,.up-heading,.wc-dropzone,.up-features,.results-inner';
+    function overContent(){
+      if(!cursorOn) return true;
+      const el=document.elementFromPoint(mx,my);
+      return el ? !!el.closest(CONTENT_SEL) : false;
+    }
+
+    function drawCursor(x,y){
+      // 1. Soft Cyan Glow underneath
+      const g = curCx.createRadialGradient(x, y, 0, x, y, 25);
+      g.addColorStop(0, 'rgba(56, 189, 248, 0.4)');
+      g.addColorStop(1, 'rgba(56, 189, 248, 0)');
+      curCx.beginPath(); curCx.arc(x, y, 25, 0, Math.PI*2);
+      curCx.fillStyle = g; curCx.fill();
+
+      curCx.save();
+      curCx.translate(x, y);
+
+      // 2. Sleek Arrowhead Base (Cyan Border)
+      curCx.beginPath();
+      curCx.moveTo(0, 0);       // Tip
+      curCx.lineTo(14, 6);      // Right wing
+      curCx.lineTo(8, 8);       // Inner joint
+      curCx.lineTo(6, 14);      // Left wing / Tail
+      curCx.closePath();
+
+      curCx.fillStyle = 'rgba(230, 245, 255, 0.95)';
+      curCx.fill();
+      
+      curCx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
+      curCx.lineWidth = 1.5;
+      curCx.lineJoin = 'round';
+      curCx.stroke();
+
+      // 3. Central Bright Dot at the exact tip
+      curCx.beginPath(); curCx.arc(0, 0, 1.5, 0, Math.PI*2);
+      curCx.fillStyle = '#fff'; curCx.fill();
+      
+      curCx.restore();
+    }
+
+    function draw(){
+      bgCx.clearRect(0,0,W,H);
+      curCx.clearRect(0,0,W,H);
+
+      pts.forEach(p=>{
+        p.x+=p.vx; p.y+=p.vy;
+        if(p.x<0||p.x>W) p.vx*=-1;
+        if(p.y<0||p.y>H) p.vy*=-1;
+        bgCx.beginPath(); bgCx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        bgCx.fillStyle=`rgba(100,150,255,${p.a})`; bgCx.fill();
+      });
+
+      for(let i=0;i<N;i++) for(let j=i+1;j<N;j++){
+        const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
+        const d=Math.sqrt(dx*dx+dy*dy);
+        if(d<120){
+          bgCx.beginPath(); bgCx.moveTo(pts[i].x,pts[i].y); bgCx.lineTo(pts[j].x,pts[j].y);
+          bgCx.strokeStyle=`rgba(100,150,255,${0.06*(1-d/120)})`; bgCx.lineWidth=0.5; bgCx.stroke();
+        }
       }
-      addMessage('Legacy format detected; please update backend.',false);
-      msg.querySelector('.message-content').innerHTML=`✅ Uploaded: <strong>${file.name}</strong>`;
-    }catch(err){console.error(err);addMessage('Failed to upload file. Please try again.',false);}
-  }
 
-  // ── editing ──────────────────────────────────────────────────────────────
-  let editingMessageElement=null;
-  function startEditing(messageElement){
-    if(!messageElement)return;
-    if(editingMessageElement&&editingMessageElement!==messageElement)cancelEditing();
-    editingMessageElement=messageElement;
-    const contentSpan=messageElement.querySelector('.message-content span');if(!contentSpan)return;
-    const original=contentSpan.textContent;
-    if(!messageElement.hasAttribute('data-original-content'))messageElement.setAttribute('data-original-content',original);
-    const editDiv=document.createElement('div');editDiv.contentEditable=true;editDiv.textContent=original;
-    editDiv.classList.add('form-control','edit-input');
-    editDiv.style.cssText='display:inline-block;min-width:50px;max-width:100%;white-space:pre-wrap;word-break:break-word;border:1px solid #ccc;padding:5px;';
-    function ah(){editDiv.style.height='auto';editDiv.style.height=editDiv.scrollHeight+'px';}
-    editDiv.addEventListener('input',ah);
-    const actions=document.createElement('div');actions.classList.add('action-buttons');
-    const cancelBtn=document.createElement('button');cancelBtn.textContent='Cancel';cancelBtn.classList.add('cancel-button');cancelBtn.addEventListener('click',cancelEditing);
-    const sendBtn=document.createElement('button');sendBtn.textContent='Send';sendBtn.classList.add('send-button');sendBtn.addEventListener('click',()=>saveEditing(messageElement,editDiv.textContent));
-    actions.appendChild(cancelBtn);actions.appendChild(sendBtn);
-    const container=messageElement.querySelector('.message-content');container.innerHTML='';container.appendChild(editDiv);container.appendChild(actions);
-    editDiv.focus();moveCaretToEnd(editDiv);ah();
-  }
-  function moveCaretToEnd(el){const r=document.createRange(),s=window.getSelection();r.selectNodeContents(el);r.collapse(false);s.removeAllRanges();s.addRange(r);}
-  function saveEditing(messageElement,newContent){
-    if(!messageElement||!newContent.trim()){cancelEditing();return;}
-    const mc=messageElement.querySelector('.message-content');
-    const span=document.createElement('span');span.textContent=newContent.trim();
-    mc.innerHTML='';mc.appendChild(span);addEditIcon(messageElement);
-    const all=Array.from(chatHistory.querySelectorAll('.message'));let after=false;
-    for(const m of all){if(m===messageElement)after=true;else if(after)m.remove();}
-    editingMessageElement=null;handleResend(newContent.trim());
-  }
-  function cancelEditing(){
-    if(!editingMessageElement)return;
-    const original=editingMessageElement.getAttribute('data-original-content');
-    const mc=editingMessageElement.querySelector('.message-content');
-    const span=document.createElement('span');span.textContent=original;
-    addEditIcon(editingMessageElement);mc.innerHTML='';mc.appendChild(span);
-    editingMessageElement.removeAttribute('data-original-content');editingMessageElement=null;
-  }
-  async function handleResend(editedMessage){
-    try{
-      addTypingIndicator();
-      const response=await fetch('/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:editedMessage})});
-      removeTypingIndicator();
-      if(response.ok){const d=await response.json();addMessage(d.response,false);}
-      else addMessage('Error: Unable to get a response.',false);
-    }catch(e){removeTypingIndicator();addMessage('Error: Unable to communicate with the server.',false);}
-  }
+      if(cursorOn && !overContent()){
+        pts.forEach(p=>{
+          const dx=mx-p.x, dy=my-p.y;
+          const d=Math.sqrt(dx*dx+dy*dy);
+          if(d<200){
+            bgCx.beginPath(); bgCx.moveTo(mx,my); bgCx.lineTo(p.x,p.y);
+            bgCx.strokeStyle=`rgba(140,185,255,${0.45*(1-d/200)})`;
+            bgCx.lineWidth=0.9; bgCx.stroke();
+          }
+        });
+      }
 
-  let currentReportFilename='';
-  function viewReport(){alert('Legacy report view path.');}
-  function isValidUNHEmail(email){return typeof email==='string'&&(email.toLowerCase().endsWith('@unh.edu')||email.toLowerCase().endsWith('@usnh.edu'));}
-  async function shareReportByEmail(){alert('Share via Email: use backend /email_report.');}
-  function downloadReportFromModal(){alert('Download PDF: hook html2pdf to the DOM.');}
+      if(cursorOn) drawCursor(mx,my);
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  showView('upload');
   </script>
-
-  <div class="modal fade" id="viewReportModal" tabindex="-1" aria-labelledby="viewReportModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg"><div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title" id="viewReportModalLabel">NECHE Compliance Report Viewer</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
-      <div class="modal-body" id="reportContent"></div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" onclick="downloadReportFromModal()">Download PDF</button>
-        <button type="button" class="btn btn-success" onclick="shareReportByEmail()">Share via Email</button>
-      </div>
-    </div></div>
-  </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
 </body>
 </html>

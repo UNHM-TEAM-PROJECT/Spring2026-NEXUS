@@ -111,9 +111,9 @@ class InstructorDetector:
             'Homeland Security',
             # ── Business ─────────────────────────────────────────────────────────
             'Business & Economics',
+            'Department of Business and Public Affairs',
             'Business and Public Affairs',
             'Business and Pubic Affairs',
-            'Personal Finance',
             # ── Social Sciences ──────────────────────────────────────────────────
             'Division of Social Science',
             # ── History ──────────────────────────────────────────────────────────
@@ -123,13 +123,18 @@ class InstructorDetector:
             'Department of Mathematics and Statistics',
             'Mathematics and Statistics',
             'of Mathematics',
+            # ── Psychology ───────────────────────────────────────────────────────
+            'Department of Psychology',
+            'of Psychology',
+            # ── Professional Studies ─────────────────────────────────────────────
+            'Professional Studies',
             # ── Other ────────────────────────────────────────────────────────────
             'Department of English',
             'Department of Biology',
         ]
 
         self.name_stopwords = set([
-            'of', 'in', 'on', 'for', 'to', 'by', 'with', 'security', 'studies', 'department', 'college', 'school', 'division', 'program', 'phd', 'ph.d', 'professor', 'lecturer', 'assistant', 'associate', 'adjunct', 'mr', 'ms', 'mrs', 'dr'
+            'of', 'in', 'on', 'for', 'to', 'by', 'with', 'security', 'studies', 'senior', 'department', 'college', 'school', 'division', 'program', 'phd', 'ph.d', 'professor', 'lecturer', 'assistant', 'associate', 'adjunct', 'mr', 'ms', 'mrs', 'dr'
         ])
         self.name_non_personal = set([
             'internship', 'practice', 'course', 'syllabus', 'description', 'outcomes', 'policy', 'schedule', 'grading', 'assignment', 'exam', 'final', 'midterm', 'attendance', 'office', 'email', 'phone', 'building', 'room', 'hall', 'mill', 'university', 'college', 'school', 'class', 'section', 'semester', 'year', 'hours', 'days', 'spring', 'summer', 'fall', 'winter', 'ta', 'teaching', 'staff', 'master', "master's", 'capstone', 'project', 'thesis', 'dissertation', 'portfolio',
@@ -140,7 +145,10 @@ class InstructorDetector:
             'step-by-step', 'face-to-face', 'one-on-one', 'real-world', 'problem-solving', 'decision-making',
             'help', 'session', 'manufacturing', 'learning', 'goals', 'special', 'accommodations', 'user', 'control',
             'openstax', 'rice', 'communicate', 'professionally', 'lathi', 'radar', 'range', 'equation',
-            'writing', 'intensive', 'laboratory', 'friday', 'projection', 'methods', 'ph', 'first-year'
+            'writing', 'intensive', 'laboratory', 'friday', 'projection', 'methods', 'ph', 'first-year',
+            'shell', 'syslog', 'repository', 'python', 'discord', 'groover', 'pearson', 'widom',
+            'perf', 'monitoring', 'performance', 'linux', 'unix', 'software', 'virtualization',
+            'hardware', 'firmware', 'storage', 'security', 'protocols', 'wireless'
         ])
 
     def clean_name_candidate(self, candidate):
@@ -227,6 +235,7 @@ class InstructorDetector:
                         continue
                     else:
                         candidate = after[1].strip() if len(after) > 1 else ''
+                        candidate = re.split(r'\s+(?:E-?mail|Phone|Room|Office|Tel|Fax)\s*:', candidate, flags=re.IGNORECASE)[0].strip()
                     if not candidate:
                         if i + NEXT_LINE_OFFSET < len(lines):
                             candidate = lines[i + NEXT_LINE_OFFSET].strip()
@@ -410,6 +419,8 @@ class InstructorDetector:
             r'\b(class|course|section)\b.{0,30}\b(professor|instructor|lecturer)\b',
             # block "Prof. Troy has..." — prof used as name prefix with verb
             r'\bprof\.\s+[a-z]+\s+(has|will|is|was|can|may|would|should|does|did)\b',
+            # block sentence fragments starting with title word used as subject
+            r'^(professor|instructor|lecturer|adjunct)\s+(is|are|was|were|will|would|can|may|should|has|have)\b',
             # ── THE TWO NEW LINES ────────────────────────────────────────────
             # block "Professor Hopper" / "Prof. Troy" — 2-word name-prefix lines
             r'^professor\s+[a-z]+$',
@@ -421,7 +432,10 @@ class InstructorDetector:
 
         for line in lines:
             if '@' in line:
-                continue
+                # Strip email addresses; skip if nothing remains
+                line = re.sub(r'\S+@\S+', '', line).strip()
+                if not line:
+                    continue
 
             line_stripped = line.strip()
             line_lower = line_stripped.lower()
@@ -449,6 +463,26 @@ class InstructorDetector:
                     if re.match(r'^[A-Z][a-z]+$', after):
                         continue
                     return keyword.title() if keyword.islower() else keyword
+
+        # For long lines (>15 words), still catch first-person title introductions
+        for line in lines:
+            line_stripped = line.strip()
+            if not line_stripped:
+                continue
+            if '@' in line_stripped:
+                line_stripped = re.sub(r'\S+@\S+', '', line_stripped).strip()
+            if len(line_stripped.split()) <= 15:
+                continue  # already handled above
+            line_lower = line_stripped.lower()
+            intro_m = re.search(
+                r'\bi am an?\s+([a-z][a-z\s]*?)(?:\s+(?:member|at|in|of|for|who|and|teaching)\b)',
+                line_lower
+            )
+            if intro_m:
+                candidate = intro_m.group(1).strip()
+                for kw in sorted_keywords:
+                    if kw.lower() == candidate:
+                        return kw.title() if kw.islower() else kw
 
         return None
 
@@ -498,7 +532,7 @@ class InstructorDetector:
                 'community', 'the', 'and', 'with', 'for', 'to', 'from', 'at',
                 'management at', 'cornell', 'university',
                 'grading scale', 'grading', 'completion of', 'completion',
-                'unh manchester', 'unh', 'professional studies grading',
+                'unh manchester', 'unh', 'professional studies grading', 'professional studies',
             ]
             if any(kw in low for kw in invalid_keywords):
                 continue
@@ -571,14 +605,14 @@ class InstructorDetector:
 
         lines = text.split('\n')[:LINES_TO_SCAN]
         name = self.extract_name(lines)
-        title = self.extract_title(lines)
+        title = self.extract_title(text.split('\n')[:80])
         department = self.extract_department(lines)
 
         if not department:
             department = self._search_known_departments(text)
 
         if not name:
-            all_lines = text.split('\n')
+            all_lines = text.split('\n')[:60]
             dr_pattern = re.compile(r"\bDr\.?\s+([A-Z][a-zA-Z\-]+)\b")
             for i in range(0, len(all_lines), PAGE_SIZE):
                 page = all_lines[i:i+PAGE_SIZE]
@@ -589,6 +623,18 @@ class InstructorDetector:
                         break
                 if name:
                     break
+
+        if not name:
+            prof_pattern = re.compile(r"\bProfessor\s+([A-Z][a-zA-Z\-]+)\b")
+            for page_line in text.split('\n')[:30]:
+                prof_match = prof_pattern.search(page_line)
+                if prof_match:
+                    last = prof_match.group(1)
+                    if (len(last) >= 3 and
+                            last.lower() not in self.name_non_personal and
+                            last.lower() not in self.name_stopwords):
+                        name = f"Professor {last}"
+                        break
 
         found = bool(name and name != 'Missing' and name != 'N/A')
 

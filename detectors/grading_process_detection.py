@@ -238,46 +238,56 @@ class GradingProcessDetector:
             # Non-% non-heading description line — keep looking
         return False
 
+    def _extract_label(self, between: str) -> str:
+        """Extract a clean label from text immediately preceding a percentage match."""
+        lines = [l.strip() for l in between.split('\n')]
+        lines = [l for l in lines if l]
+        if not lines:
+            return ""
+        label = lines[-1]
+        # Remove trailing colons, dashes, pipes
+        label = re.sub(r'[\s:–—|\-]+$', '', label).strip()
+        # Remove leading bullets, numbers, dashes
+        label = re.sub(r'^[\s\d\.\-\*•\(\)]+', '', label).strip()
+        # Cap length to avoid noise from long paragraph fragments
+        if len(label) > 60:
+            label = label[-60:].strip()
+        return label
+
     def _format_grading_output(self, raw_text: str) -> str:
         """
-        Extract percentages from grading process context only.
+        Extract labeled percentages from grading process context.
 
-        Rules:
-        - Only extracts % values (points-only → missing)
-        - Sum of raw percentages must not exceed 200 (sanity check); if it does → missing
-        - Returns comma-separated list sorted descending (deduped)
+        Returns comma-separated "Label: XX%" entries sorted descending.
+        Falls back to bare "XX%" if no label can be extracted.
         """
         if not raw_text or not isinstance(raw_text, str):
             return ""
 
         text = raw_text.lower()
-        # Support decimal percentages (e.g. "47.5 %", "12.5%")
         pct_pattern = re.compile(r'(\d+(?:\.\d+)?)\s*%')
         matches = list(pct_pattern.finditer(text))
 
         if not matches:
             return ""
 
-        # Lines that indicate a grand total, scale reference, or course modality —
-        # 100% on these lines is not a category weight and should be excluded.
         total_line_pattern = re.compile(
             r'\b(total|online\s*course|asynchronous|hybrid|in.person|'
             r'out\s+of\s+100|scale|counted\s+as)\b'
         )
-        # Lines that contain a grade scale context (e.g. "90% attendance required")
         scale_context_pattern = re.compile(
-            r'\b(attendance\s*required|must\s*attend|letter\s*grade|earn\s*an?\s*[a-f])\b'
+            r'\b(attendance\s*required|must\s*attend|letter\s*grade|earn\s*an?\s*[a-f]|'
+            r'will\s+earn\s+[a-f][+-]?|and\s+above\s+will\s+earn)\b'
         )
-        # Lines describing attendance credit (e.g. "80% for being late, 100% for full attendance")
         attendance_credit_pattern = re.compile(
             r'\b(for\s*(being\s*)?late|for\s*full\s*attendance|for\s*absence|for\s*tardy)\b'
         )
-        # Lines with passing-threshold context (e.g. "earn a minimum of 75%", "required to pass")
         threshold_pattern = re.compile(
             r'\b(minimum\s+of\s+\d|required\s+to\s+pass|to\s+pass\s+the\s+course|'
             r'earn\s+at\s+least|pass\s+the\s+course|fail\s+to\s+earn)\b'
         )
-        percentages = []
+
+        valid_matches = []  # (pct_val, match_object)
         for match in matches:
             pct_val = float(match.group(1))
             if 1 <= pct_val <= 100:
@@ -286,55 +296,64 @@ class GradingProcessDetector:
                 if line_end == -1:
                     line_end = len(text)
                 line_text = text[line_start:line_end]
-                # Skip 100% on total/modality lines
                 if pct_val == 100 and total_line_pattern.search(line_text):
                     continue
-                # Skip percentages on grade-scale context lines
                 if scale_context_pattern.search(line_text):
                     continue
-                # Skip attendance credit lines
                 if attendance_credit_pattern.search(line_text):
                     continue
-                # Skip passing-threshold lines
                 if threshold_pattern.search(line_text):
                     continue
-                # Skip THIS specific % if immediately followed by "or better/above/higher"
-                # e.g. "earn 82% or better" — only the threshold value is skipped,
-                # not other weights that happen to be on the same line.
-                lookahead = text[match.end():min(len(text), match.end() + 20)].lower()
+                lookahead = text[match.end():min(len(text), match.end() + 20)]
                 if re.match(r'\s*or\s+(better|above|higher|more)\b', lookahead):
                     continue
-                percentages.append(pct_val)
+                if re.match(r'\s*and\s+above\b', lookahead):
+                    continue
+                valid_matches.append((pct_val, match))
 
-        if not percentages:
+        if not valid_matches:
             return ""
 
-        raw_count = len(percentages)  # count before dedup
+        raw_count = len(valid_matches)
 
-        # Dedup first — duplicated sections inflate raw sum
-        percentages = sorted(set(percentages), reverse=True)
+        # Extract labels using text between consecutive matches (original case)
+        labeled = []  # (pct_val, label)
+        prev_end = 0
+        for pct_val, match in valid_matches:
+            between = raw_text[prev_end:match.start()]
+            label = self._extract_label(between)
+            labeled.append((pct_val, label))
+            prev_end = match.end()
 
-        # If 100 is present and remaining values already sum to 70–130,
-        # it's a "TOTAL = 100%" line — remove it as it's not a category weight
-        if 100 in percentages and len(percentages) > 1:
-            rest_sum = sum(p for p in percentages if p != 100)
+        # Dedup by pct_val — keep first label seen for each unique value
+        seen: dict = {}
+        for pct_val, label in labeled:
+            if pct_val not in seen:
+                seen[pct_val] = label
+
+        if 100 in seen and len(seen) > 1:
+            rest_sum = sum(p for p in seen if p != 100)
             if 70 <= rest_sum <= 130:
-                percentages = [p for p in percentages if p != 100]
+                seen = {p: l for p, l in seen.items() if p != 100}
 
-        # Require at least 2 raw occurrences — allows "Midterm: 50%, Final: 50%"
-        # where both have the same value but are genuinely different assignments
         if raw_count < 2:
             return ""
 
-        # Sanity check: sum must not exceed 200
-        if sum(percentages) > 200:
+        if sum(seen.keys()) > 200:
             return ""
 
-        # Format: use integer if whole number, one decimal place otherwise
+        sorted_items = sorted(seen.items(), key=lambda x: x[0], reverse=True)
+
         def fmt(p):
             return f"{int(p)}%" if p == int(p) else f"{p:.1f}%"
-        formatted = ", ".join(fmt(pct) for pct in percentages)
-        return formatted
+
+        parts = []
+        for pct_val, label in sorted_items:
+            if label:
+                parts.append(f"{label}: {fmt(pct_val)}")
+            else:
+                parts.append(fmt(pct_val))
+        return ", ".join(parts)
 
     def detect(self, text: str) -> Dict[str, Any]:
         """Detect grading process and return a result dict with keys:

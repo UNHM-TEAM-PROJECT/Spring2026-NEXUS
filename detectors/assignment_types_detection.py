@@ -35,15 +35,17 @@ class AssignmentTypesDetector:
             (r"(?i)^\s*homework\s+quizzes\s*:\s*literature-?based\s+assignments?\s*:?\s*$", 146),
             (r"(?i)^\s*weekly\s+homework\s*\(online\)\s*:?\s*$", 146),
             (r"(?i)^\s*course\s+schedule\s+and\s+assignments?\s*:?\s*$", 145),
-            (r"(?i)^\s*independent\s+study\.\s*$", 147),
+            (r"(?i)^\s*independent\s+study\.\s*$", 145),
             (r"(?i)^\s*lab\s+work\s*:?\s*$", 145),
+            (r"(?i)^\s*general\s+overview\s+of\s+required\s+work\s*:?\s*$", 145),
+            (r"(?i)^\s*method\s+of\s+course\s+evaluation\s*:?\s*$", 145),
             (r"(?i)^\s*programming\s+homework\s*\(40%\)\s*:?\s*$", 145),
             (r"(?i)^\s*homework\s+and\s+reading\s+for\s+class\s*:?\s*$", 145),
             (r"(?i)^\s*selected\s+readings\s*/\s*assignments?\s*:?\s*$", 145),
             (r"(?i)^\s*participation\s+assignments?\s*:?\s*$", 145),
             (r"(?i)^\s*course\s+text\s*&\s*resources\s*:?\s*$", 145),
             (r"(?i)^\s*method\s+of\s+evaluation\s*:?\s*$", 145),
-            (r"(?i)^\s*weekly\s+learning\s+plans?\.?\s*$", 145),
+            (r"(?i)^\s*weekly\s+learning\s+plans?\.?\s*$", 147),
             (r"(?i)^\s*grading\s+explanations?\(%values?\s+are\s+out\s+of\s+100%\)\s*:?\s*$", 145),
             (r"(?i)^\s*homework\s*:\s*25%\s*$", 145),
             (r"(?i)^\s*homework\s*\(25%\)\s*,\s*labs\s*\(25%\)\s*:?\s*$", 145),
@@ -73,6 +75,10 @@ class AssignmentTypesDetector:
             (r"(?i)^\s*homework\s+assignments?\s*(?:\([^)]+\))?\s*:?\s*$", 110),
             (r"(?i)^\s*course\s+assignments?\s*(?:\([^)]+\))?\s*:?\s*$", 108),
             (r"(?i)^\s*class\s+assignments?\s*(?:\([^)]+\))?\s*:?\s*$", 108),
+            (r"(?i)^\s*course\s+assignments?\s*/\s*assessments?\s*:?\s*$", 110),
+            (r"(?i)^\s*course\s+evaluation\s*:?\s*$", 100),
+            (r"(?i)^\s*capstone\s+journal\s*:?\s*$", 108),
+            (r"(?i)^\s*(?:\w+\s+){1,2}lab\s+assignments?\s*:?\s*$", 108),
             (r"(?i)^\s*assessment\s+overview\s*:?\s*$", 106),
             (r"(?i)^\s*major\s+projects?\s*:?\s*$", 105),
             (r"(?i)^\s*course\s+activities\s*:?\s*$", 105),
@@ -107,11 +113,17 @@ class AssignmentTypesDetector:
             (r"(?i)^\s*(quizzes\s+and\s+exams?)\s*:", 75),
             (r"(?i)^\s*(assignments?\s+and\s+grading)\s*:", 73),
             (r"(?i)^\s*(methods\s+of\s+testing\s*/\s*evaluation)\s*:", 130),
+            (r"(?i)^\s*(method\s+of\s+course\s+evaluation)\s*:", 130),
+            (r"(?i)^\s*(types\s+of\s+assessments?\s+used)\s*:", 130),
+            (r"(?i)^\s*(capstone\s+journal)\s*:", 142),
+            (r"(?i)^\s*(course\s+evaluation)\s*:", 78),
+            (r"(?i)^\s*(assignments?)\s+(?:and|&)\s+\w.{3,50}:", 55),
         ]
 
         # Singleword standalone - one word on its own line (higher scores)
         self.singleword_standalone = [
             (r"(?i)^\s*assessment\s*:?\s*$", 70),
+            (r"(?i)^\s*assessments?\s*:?\s*$", 72),
             (r"(?i)^\s*homework\s*(?:\([^)]+\))?\s*:?\s*$", 65),
             (r"(?i)^\s*assignments?\s*:?\s*$", 60),
             (r"(?i)^\s*evaluation\s*:?\s*$", 50),
@@ -175,6 +187,7 @@ class AssignmentTypesDetector:
             r"(?i)final\s+grade\s+(calculation|scale)",
             r"(?i)course\s+grading",
             r"(?i)rubric\s+and\s+evaluation",
+            r"(?i)academic\s+integrity",
         ]
 
     def _is_in_schedule(self, line: str, context: str) -> bool:
@@ -222,9 +235,11 @@ class AssignmentTypesDetector:
 
     def _is_valid_with_content(self, line: str) -> bool:
         """Check if line with content after header is valid (not schedule-like)"""
-        if len(line) > 500:
+        if len(line) > 2000:
             return False
-        if re.search(r"(?i)(complete|work\s+on|due|week\s+\d+)", line):
+        # Only check the first 150 chars for schedule-like patterns (descriptions can be long)
+        check = line[:150]
+        if re.search(r"(?i)(\bcomplete\b|work\s+on\b|due\s+(?:by|next)\b|week\s+\d+)", check):
             return False
         return True
 
@@ -272,7 +287,7 @@ class AssignmentTypesDetector:
         for i, line in enumerate(lines):
             l = self._clean_line(line)
 
-            if len(l) < 2 or len(l) > 500:
+            if len(l) < 2 or len(l) > 1500:
                 continue
 
             # CRITICAL: Skip grading-related headers first

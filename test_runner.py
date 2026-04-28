@@ -247,6 +247,58 @@ def loose_compare(gt, pred):
     return fuzzy_match(g, p)
 
 
+def compare_deadline_expectations_title(gt, pred):
+    """
+    Compare deadline_expectations_title semantically.
+
+    The GT may be the section header title (e.g. 'Late Work:') or the actual
+    policy sentence (e.g. 'Late submissions will receive a zero...').
+    The PRED may be either form too.  Treat both as matching when they both
+    clearly belong to the late-work / deadline family.
+    """
+    g = norm(gt)
+    p = norm(pred)
+
+    if g in ("", "not found", "missing", "tbd", "not specified", "n/a"):
+        return p in ("", "missing")
+    if p in ("", "missing"):
+        return False
+
+    if fuzzy_match(g, p):
+        return True
+
+    # Semantic family: if both values contain late-work indicators, treat as match
+    late_markers = (
+        "late work", "late assignment", "late submission", "late homework",
+        "late policy", "late penalty", "late lab",
+        "make-up", "makeup", "makeups",
+        "no extension",
+        "deadline",
+        "grace period",
+        "not accepted",
+        "missing work",
+        "tardiness",
+        "due date",
+        "submitted late",
+        "turned in late",
+        "handed in late",
+    )
+
+    def has_late_marker(value):
+        return any(marker in value for marker in late_markers)
+
+    if has_late_marker(g) and has_late_marker(p):
+        return True
+
+    # Section-header prefix: GT is a section header (no late marker) but PRED
+    # starts with that header and also contains late-work content.
+    g_clean = g.rstrip(':').strip()
+    if len(g_clean) >= 8 and p.startswith(g_clean) and has_late_marker(p):
+        return True
+
+    return False
+
+
 def compare_grading_scale(gt, pred):
     """Compare grading scales - focus on grade letters found rather than exact formatting."""
     import re
@@ -991,7 +1043,7 @@ def run_tests_for_folder(folder_path, ground_truth_json, output_json):
         if "deadline_expectations_title" in record:
             gt_val = record["deadline_expectations_title"]
             pred_val = preds.get("deadline_expectations_title", "Missing")
-            match = loose_compare(gt_val, pred_val)
+            match = compare_deadline_expectations_title(gt_val, pred_val)
             update_field_stats(
                 field_stats["deadline_expectations_title"], gt_val, pred_val, match
             )

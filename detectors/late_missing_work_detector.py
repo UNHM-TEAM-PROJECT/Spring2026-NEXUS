@@ -70,6 +70,8 @@ class LateDetector:
             "deadline policy",
             "expectations regarding assignment deadlines, late, or missing work",
             "grading (late policy: 10% deduction per day, up to 5 days)",
+            "no extensions, no make ups",
+            "no extensions no make ups",
             "late assignments",
             "late assignments and make-up exams",
             "late homework policy",
@@ -113,9 +115,7 @@ class LateDetector:
             "homework assignments",
             "homework",
             "course policies",
-            "course administration",
             "quizzes",
-            "evaluation",
         ]
         # Score assigned to conditional-title matches.  Must be ≥ threshold
         # but < the minimum approved-title score (~5) so they never override.
@@ -354,7 +354,7 @@ class LateDetector:
                     is_ct_header = (lw == norm_ct)
 
                     if not is_ct_header and lw.startswith(norm_ct):
-                        if self._conditional_kw.search(line_normalized):
+                        if ':' in line and self._conditional_kw.search(line_normalized):
                             potential_matches.append((self._CONDITIONAL_SCORE, i, line))
                         break
 
@@ -472,6 +472,35 @@ class LateDetector:
                     break
 
             content = '\n'.join(content_lines)
+
+            # For conditional title matches: if the extracted content lacks a
+            # late-work keyword, scan the validation window and append the first
+            # line that has one.  This ensures the PRED contains enough signal
+            # for the semantic compare function when the actual policy sentence
+            # lives beyond the first MAX_CONTENT_LINES lines of the section.
+            norm_best = self._normalize_text(best_line.strip()).replace(':', '').replace('.', '')
+            is_conditional_match = (
+                best_score == self._CONDITIONAL_SCORE and
+                any(
+                    norm_best == self._normalize_text(ct) or
+                    norm_best.startswith(self._normalize_text(ct))
+                    for ct in self.conditional_titles
+                )
+            )
+            if is_conditional_match:
+                _lc = re.compile(
+                    r'\b(late|deadline|due\s+date|make.?ups?|grace period|no extensions?)\b'
+                    r'|not accepted',
+                    re.IGNORECASE,
+                )
+                if not _lc.search(content):
+                    for j in range(best_i + 1,
+                                   min(best_i + self._CONDITIONAL_WINDOW + 1, len(lines))):
+                        lj = lines[j].strip()
+                        if lj and _lc.search(lj):
+                            content += '\n' + lj
+                            break
+
             return True, content
 
         return False, ""
@@ -522,6 +551,7 @@ class LateDetector:
             r"(?:homework|assignments).*?submitted late.*?(?:deduct|reduce|lose).*?\d+",  # Must have penalty amount
             r"(?:one|1).*?late.*?(?:homework|assignment).*?(?:allowed|accepted)",
             r"late assignments? will not be accepted",
+            r"no\s+late\s+(?:work|assignments?)\s+will\s+be\s+accepted",
             r"late assignments? will be (?:reduced|penalized)",
             r"work not handed in.*?will not be accepted",
             r"(?:late|considered late).*?subject to.*?\d+%",
@@ -539,6 +569,7 @@ class LateDetector:
             r"you will receive.*?(?:grade of 0|zero).*?for.*?(?:quiz|exam).*?(?:miss|late)",
             r"you will receive a grade of 0 for any (?:quiz|exam|assignment) that you miss",  # Very specific pattern
             r"late submissions.*?no assignment will be accepted after.*?deadline.*?grade",  # Combined title+content pattern
+            r"\bno extensions?,\s*no make.?ups?\b",  # Inline "No Extensions, No Make Ups" policy statement
         ]
 
         lines = text.split('\n')
@@ -586,7 +617,16 @@ class LateDetector:
                         content = ' '.join(content_lines)
                         # Clean up extra whitespace
                         content = re.sub(r'\s+', ' ', content).strip()
-                        
+
+                        # Require the extracted content to mention a late-work concept
+                        # (prevents "grade deduction" or unrelated text from matching)
+                        _late_check = re.compile(
+                            r'\b(late|deadline|due\s+date|make.?ups?|grace period|no extensions?)\b|not accepted',
+                            re.IGNORECASE,
+                        )
+                        if not _late_check.search(content):
+                            continue
+
                         # More reasonable length limits
                         if 20 < len(content) <= 350:  # Between 20-350 characters
                             return True, content

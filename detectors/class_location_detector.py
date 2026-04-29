@@ -191,6 +191,7 @@ class ClassLocationDetector:
 
         # NEGATIVE indicators: non-class location contexts (REJECT these)
         self.non_class_keywords = [
+            r'^\s*office\b',
             r'office\s+hours?',
             r'office\s+location',
             r'instructor\s+office',
@@ -468,6 +469,21 @@ class ClassLocationDetector:
                 if any(keyword in context_before for keyword in product_keywords):
                     continue  # Skip product models
 
+                # REJECT if preceded by office-related keywords (e.g., "Office: P569")
+                # Check text before match for office indicators
+                office_context_check = text[max(0, match.start()-50):match.start()].lower()
+                office_context_keywords = ['office:', 'office location', 'instructor office', 'my office', 'professor office']
+                if any(keyword in office_context_check for keyword in office_context_keywords):
+                    # Only reject if office keyword is very close (within last 30 chars)
+                    recent_context = text[max(0, match.start()-30):match.start()].lower()
+                    if any(keyword in recent_context for keyword in office_context_keywords):
+                        continue  # Skip if part of office section
+
+                # Also reject plain "Office P569" style context without colon.
+                recent_context = text[max(0, match.start()-30):match.start()].lower()
+                if re.search(r'\boffice\b', recent_context):
+                    continue
+
                 # For pattern6 (single letter + digits), only accept if NOT a course code context
                 if pattern == self.room_patterns[9][0] or pattern == self.room_patterns[10][0]:  # Pattern 6 or 6b (single letter patterns)
                     # Check if this is in a course code context (e.g., "COMP 405")
@@ -492,6 +508,24 @@ class ClassLocationDetector:
 
         for i, line in enumerate(lines):
             line_lower = line.lower()
+
+            # FIRST: Explicit check - REJECT if line contains "Office:" or office-related keywords
+            # This catches cases like "Office: P569" where room is on same line as office label
+            office_keywords_on_line = [
+                r'^\s*office\b',      # "Office" at start (with or without colon)
+                r'^\s*office\s*[:=]',  # "Office:" or "Office =" at start of line
+                r'\boffice\s+(?:location|address|room|hours)',  # "Office location", "Office address", etc.
+                r'instructor\s+office',
+                r'my\s+office',
+                r'professor\s+office',
+            ]
+            has_office_label = any(
+                re.search(pattern, line_lower)
+                for pattern in office_keywords_on_line
+            )
+            if has_office_label:
+                self.logger.debug(f"Line {i}: Rejected (office label on line) - {line[:50]}")
+                continue
 
             # Check context of this line
             context_type = self._check_line_context(lines, i)
@@ -638,6 +672,13 @@ class ClassLocationDetector:
                     else:
                         location = "UNH MyCourses (online)"
 
+                # LMS platforms are not valid class locations by themselves.
+                # If only Canvas/MyCourses is detected (without a meeting platform), skip it.
+                location_lower = location.lower()
+                if ("canvas" in location_lower or "mycourses" in location_lower) and "zoom" not in location_lower and "teams" not in location_lower:
+                    self.logger.info(f"Skipping LMS-only location match: '{location}'")
+                    continue
+
                 # Clean up the location string
                 location = re.sub(r'\s+', ' ', location)
                 location = location.strip(',;:')
@@ -752,6 +793,13 @@ class ClassLocationDetector:
 
             if result:
                 location, confidence = result
+
+                # Safety guard: LMS-only values are not valid class meeting locations.
+                location_lower = location.lower()
+                if ("canvas" in location_lower or "mycourses" in location_lower) and "zoom" not in location_lower and "teams" not in location_lower:
+                    self.logger.info(f"NOT_FOUND: {self.field_name} (rejected LMS-only location '{location}')")
+                    return self._not_found()
+
                 self.logger.info(f"FOUND: {self.field_name} = '{location}' (confidence: {confidence})")
                 return {
                     'field_name': self.field_name,

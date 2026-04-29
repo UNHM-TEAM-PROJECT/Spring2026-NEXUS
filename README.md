@@ -218,8 +218,8 @@ python main.py
 ssh username@whitemount.sr.unh.edu
 
 # 2. Clone the repository
-git clone git@github.com:UNHM-TEAM-PROJECT/Fall2025-Team-Alpha.git
-cd Fall2025-Team-Alpha
+git clone git@github.com:UNHM-TEAM-PROJECT/Spring2026-NEXUS.git
+cd Spring2026-NEXUS
 
 # 3. Build Docker image
 docker build -t syllabus-checker .

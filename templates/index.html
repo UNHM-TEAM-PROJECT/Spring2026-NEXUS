@@ -1,1124 +1,701 @@
-<!--
-File: index.html
-Design: WildCatcher
-Authors: Hemasri Muddam (Spring 2025), Jacqueline Ebel (Fall 2025), Srujan Reddy (Spring 2026)
-Contributors: Sindhu Priya Itukulapati (Spring 2025), Erik Baily (Fall 2025)
--->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>WildCatcher: Syllabus Checker</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
+  <title>WildCatcher | Syllabus Checker</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --blue: #3b6fd4;
-      --green: #10b981;
-      --green-bg: rgba(5,150,105,0.15);
-      --green-border: rgba(16,185,129,0.3);
-      --red: #f87171;
-      --red-bg: rgba(239,68,68,0.12);
-      --red-border: rgba(248,113,113,0.25);
-      --amber: #f59e0b;
-      --amber-bg: rgba(245,158,11,0.08);
-      --amber-border: rgba(245,158,11,0.15);
-      --sky: #0ea5e9;
-      --bg: #0e1b3d;
-      --text: #dde8ff;
-      --text-muted: rgba(150,180,240,0.55);
-      --font: 'DM Sans', system-ui, sans-serif;
-      --font-display: 'Space Grotesk', system-ui, sans-serif;
+      --navy:       #041E42;
+      --navy-mid:   #00356B;
+      --navy-deep:  #041E42;
+      --white:      #FFFFFF;
+      --off-white:  #F5F6F8;
+      --border:     #E4E7EC;
+      --text-muted: #6B7280;
+      --text-dim:   #9CA3AF;
+      --success:    #16A34A;
+      --success-bg: #F0FDF4;
+      --error:      #DC2626;
+      --error-bg:   #FEF2F2;
+      --font:       'DM Sans', system-ui, sans-serif;
+      --font-disp:  'Space Grotesk', system-ui, sans-serif;
+      --shadow-sm:  0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+      --shadow-lg:  0 12px 40px rgba(0,0,0,.18), 0 4px 12px rgba(0,0,0,.1);
+      --radius-sm:  8px;
+      --radius-md:  14px;
+      --radius-lg:  22px;
     }
-    html, body { height: 100%; margin: 0; }
-    body {
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--text);
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-      cursor: none;
-    }
-    * { cursor: none !important; }
-
-    /* ── Cursor & Canvas ── */
-    #cursor-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
-    #bg-canvas { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
-
-    /* ── Scrollbar ── */
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(80,120,220,0.3); border-radius: 3px; }
-
-    /* ── Animations ── */
-    @keyframes fadeUp   { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:none; } }
-    @keyframes fadeIn   { from { opacity:0; } to { opacity:1; } }
-    @keyframes scaleIn  { from { opacity:0; transform:scale(0.93); } to { opacity:1; transform:none; } }
-    @keyframes spin     { to { transform:rotate(360deg); } }
-    @keyframes checkPop { 0%{transform:scale(0) rotate(-20deg);opacity:0;} 60%{transform:scale(1.15);opacity:1;} 100%{transform:scale(1);} }
-    @keyframes shimmer  { 0%{background-position:-200% center;} 100%{background-position:200% center;} }
-
-    /* ── Header ── */
-    #wc-header {
-      padding: 0 28px; height: 64px;
-      display: flex; align-items: center; justify-content: space-between;
-      background: rgba(14,27,61,0.75);
-      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-      border-bottom: 1px solid rgba(100,150,255,0.1);
-      position: sticky; top: 0; z-index: 50;
-    }
+    html, body { height: 100%; font-family: var(--font); background: var(--navy-deep); color: var(--white); -webkit-font-smoothing: antialiased; }
+    body.upload-active { overflow: hidden; }
+    #wc-header { height: 72px; padding: 0 36px; display: flex; align-items: center; justify-content: space-between; background: rgba(4,30,66,0.92); backdrop-filter: blur(16px) saturate(1.4); border-bottom: 1px solid rgba(255,255,255,0.08); position: sticky; top: 0; z-index: 100; }
     .hdr-left { display: flex; align-items: center; gap: 14px; }
-    .hdr-icon {
-      width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0;
-      background: rgba(59,111,212,0.15);
-      border: 1px solid rgba(100,150,255,0.25);
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 20px rgba(59,111,212,0.2);
-    }
-    .hdr-title { font-weight:700; font-size:17px; letter-spacing:-0.3px; font-family:var(--font-display); }
-    .hdr-sub   { font-size:10.5px; color:rgba(150,180,240,0.45); margin-top:-1px; letter-spacing:0.5px; text-transform:uppercase; }
-    #new-check-btn {
-      display: none;
-      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-      color: rgba(150,180,240,0.75); padding: 8px 18px; border-radius: 10px;
-      font-size: 13px; font-weight:600; align-items:center; gap:7px;
-      transition: all 0.2s; font-family:var(--font);
-    }
-    #new-check-btn:hover { background:rgba(255,255,255,0.1); color:var(--text); }
-
-    /* ── Main ── */
-    #wc-main {
-      display: flex; justify-content: center; padding: 44px 20px 80px;
-      position: relative; z-index: 1; min-height: calc(100vh - 64px);
-    }
-
-    /* ── Upload view ── */
-    #view-upload {
-      display: flex; flex-direction:column; align-items:center;
-      justify-content:center; gap:32px; width:100%;
-      animation: fadeUp 0.5s ease both;
-    }
-    .up-heading { text-align: center; width: 100%; }
-    .up-tag {
-      display: inline-block; padding:5px 16px; border-radius:20px; margin-bottom:18px;
-      background: rgba(59,111,212,0.12); border:1px solid rgba(100,150,255,0.2);
-      font-size:12px; font-weight:600; color:rgba(150,200,255,0.8); letter-spacing:0.4px;
-    }
-    .up-h1 {
-      font-size:40px; font-weight:700; letter-spacing:-1px; line-height:1.1;
-      font-family:var(--font-display);
-      background: linear-gradient(135deg,#dde8ff 20%,#7aa5ff 80%);
-      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-      margin-bottom:14px;
-    }
-    .up-p { font-size:15px; color:var(--text-muted); max-width:430px; line-height:1.65; margin:0 auto; }
-
-    .wc-dropzone {
-      position: relative; overflow:hidden;
-      border: 1.5px dashed rgba(100,150,255,0.2); border-radius:24px;
-      padding: 60px 36px;
-      display: flex; flex-direction:column; align-items:center; gap:20px;
-      background: rgba(255,255,255,0.03);
-      backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
-      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-      max-width:540px; width:100%;
-      box-shadow: 0 2px 20px rgba(0,0,20,0.2);
-    }
-    .wc-dropzone.drag-over {
-      border-color:rgba(100,160,255,0.7); background:rgba(59,111,212,0.1);
-      box-shadow:0 0 0 1px rgba(100,160,255,0.25),0 8px 40px rgba(59,111,212,0.12);
-    }
-    .dropzone-shimmer {
-      position:absolute; inset:0; pointer-events:none;
-      background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,0.03) 50%,transparent 62%);
-      background-size:200% 100%; animation:shimmer 4s ease infinite;
-    }
-    .dropzone-icon {
-      width:78px; height:78px; border-radius:20px;
-      background:linear-gradient(135deg,rgba(59,111,212,0.25),rgba(90,140,255,0.15));
-      border:1px solid rgba(100,150,255,0.2);
-      display:flex; align-items:center; justify-content:center;
-      color:#7aa5ff; font-size:28px;
-      box-shadow:0 4px 30px rgba(59,111,212,0.2);
-      transition:transform 0.25s;
-    }
-    .wc-dropzone.drag-over .dropzone-icon { transform:scale(1.08); }
-    .dropzone-title { font-size:19px; font-weight:700; color:var(--text); display:block; margin-bottom:6px; font-family:var(--font-display); }
-    .dropzone-sub   { font-size:13.5px; color:var(--text-muted); }
-    .dropzone-sub span { color:#7aa5ff; font-weight:600; }
-    .up-features { display:flex; gap:28px; font-size:12px; color:rgba(150,180,240,0.35); animation:fadeIn 0.8s ease both; animation-delay:0.4s; }
-
-    /* ── Loading (inside dropzone) ── */
-    .loading-inner { width:100%; text-align:center; }
-    .loading-spinner {
-      width:56px; height:56px; margin:0 auto 18px;
-      border:3px solid rgba(100,150,255,0.12); border-top-color:#7aa5ff;
-      border-radius:50%; animation:spin 0.75s linear infinite;
-      box-shadow:0 0 24px rgba(100,160,255,0.3);
-    }
-    .loading-title { font-weight:700; font-size:16px; color:var(--text); margin-bottom:5px; font-family:var(--font-display); }
-    .loading-sub   { font-size:13px; color:var(--text-muted); margin-bottom:20px; }
-    .loading-track { width:100%; height:3px; background:rgba(255,255,255,0.06); border-radius:2px; overflow:hidden; }
-    .loading-bar   { height:100%; border-radius:2px; background:linear-gradient(90deg,#3b6fd4,#7aa5ff); transition:width 0.3s ease; box-shadow:0 0 12px rgba(100,160,255,0.5); }
-    .loading-pct   { font-size:11px; color:rgba(150,180,240,0.35); margin-top:8px; }
-
-    /* ── Results view ── */
-    #view-results { display:none; flex-direction:column; align-items:center; width:100%; animation:fadeUp 0.45s ease both; }
-    .results-inner { max-width:760px; width:100%; }
-
-    /* Summary card */
-    .wc-summary {
-      border-radius:22px; padding:28px; margin-bottom:20px;
-      display:flex; align-items:center; gap:28px; flex-wrap:wrap;
-      background:rgba(30,55,120,0.2);
-      backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
-      border:1px solid rgba(100,150,255,0.12);
-      box-shadow:0 8px 40px rgba(0,0,0,0.15);
-    }
-    .sum-file { flex:1; min-width:220px; }
-    .sum-file-row { display:flex; align-items:center; gap:12px; margin-bottom:18px; }
-    .sum-file-icon {
-      width:46px; height:46px; border-radius:13px; flex-shrink:0;
-      background:rgba(248,113,113,0.15); border:1px solid rgba(248,113,113,0.2);
-      display:flex; align-items:center; justify-content:center; color:#fca5a5; font-size:20px;
-    }
-    .sum-filename { font-weight:700; font-size:15px; }
-    .sum-filesub  { font-size:12px; color:rgba(150,180,240,0.45); margin-top:1px; }
-    .sum-chips    { display:flex; gap:10px; flex-wrap:wrap; }
-    .sum-chip     { padding:8px 16px; border-radius:10px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px; }
-    .chip-green   { background:rgba(16,185,129,0.12); border:1px solid rgba(52,211,153,0.2); color:#34d399; }
-    .chip-red     { background:rgba(248,113,113,0.1);  border:1px solid rgba(248,113,113,0.2); color:#f87171; }
-
-    /* Results list */
-    .wc-list {
-      border-radius:22px; overflow:hidden;
-      background:rgba(25,48,110,0.18);
-      backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
-      border:1px solid rgba(100,150,255,0.1);
-      box-shadow:0 8px 40px rgba(0,0,0,0.15);
-    }
-    .list-hdr {
-      padding:17px 22px; border-bottom:1px solid rgba(255,255,255,0.06);
-      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
-    }
-    .list-title { font-weight:700; font-size:15px; font-family:var(--font-display); }
-
-    /* Filter tabs */
-    .filter-tabs { display:flex; gap:3px; background:rgba(255,255,255,0.04); border-radius:10px; padding:3px; border:1px solid rgba(255,255,255,0.07); }
-    .filter-btn  { padding:6px 14px; border-radius:8px; border:none; font-size:12.5px; font-weight:600; background:transparent; color:rgba(150,180,240,0.5); transition:all 0.2s; font-family:var(--font); }
-    .filter-btn.active { background:rgba(59,111,212,0.45); color:#9dc4ff; box-shadow:0 0 14px rgba(59,111,212,0.25); }
-
-    /* Rows */
-    .wc-row { border-bottom:1px solid rgba(255,255,255,0.05); animation:fadeUp 0.38s ease both; }
-    .wc-row:last-child { border-bottom:none; }
-    .row-hdr { display:flex; align-items:center; gap:14px; padding:15px 22px; background:transparent; transition:background 0.2s; }
-    .row-hdr.clickable { cursor:pointer !important; }
-    .row-hdr.clickable:hover { background:rgba(255,255,255,0.04); }
-    .row-hdr.is-expanded  { background:rgba(60,100,200,0.12); }
-    .row-icon {
-      width:40px; height:40px; border-radius:11px; flex-shrink:0;
-      display:flex; align-items:center; justify-content:center; font-size:15px;
-      border:1px solid transparent; transition:all 0.3s;
-    }
-    .ri-found   { background:rgba(16,185,129,0.15);  color:#34d399; border-color:rgba(52,211,153,0.2); }
-    .ri-missing { background:rgba(248,113,113,0.12); color:#f87171; border-color:rgba(248,113,113,0.25); }
-    .row-label  { flex:1; font-weight:600; font-size:14px; }
-    .status-badge {
-      display:inline-flex; align-items:center; gap:5px;
-      padding:4px 12px; border-radius:20px; font-size:11.5px; font-weight:600;
-      letter-spacing:0.1px; border:1px solid transparent; transition:all 0.4s ease;
-    }
-    .sb-found   { background:var(--green-bg); color:var(--green); border-color:var(--green-border); }
-    .sb-missing { background:var(--red-bg);   color:var(--red);   border-color:var(--red-border); }
-    .row-chevron { color:rgba(150,180,240,0.4); font-size:11px; margin-left:4px; transition:transform 0.2s; }
-    .row-chevron.open { transform:rotate(180deg); }
-
-    .row-detail { padding:0 22px 15px 76px; font-size:13px; color:rgba(180,205,255,0.75); line-height:1.65; animation:fadeUp 0.22s ease both; }
-    .wc-empty { padding:52px; text-align:center; color:rgba(150,180,240,0.35); font-size:14px; }
-
-    /* ── Missing Fields Card (Dark Glassmorphism) ── */
-    #mfp-container { margin-top: 24px; width: 100%; animation: fadeUp 0.4s ease both; }
-    .mfp-card {
-      background: rgba(30,55,120,0.2);
-      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-      border: 1px solid rgba(100,150,255,0.12);
-      border-radius: 22px; box-shadow: 0 8px 40px rgba(0,0,0,0.15); overflow: hidden;
-      transition: all 0.3s ease;
-    }
-    .mfp-header {
-      background: rgba(245, 158, 11, 0.08); border-bottom: 1px solid rgba(245, 158, 11, 0.15);
-      padding: 20px 24px; display: flex; align-items: center; gap: 16px; transition: all 0.4s ease;
-    }
-    .mfp-header-icon {
-      width: 46px; height: 46px; border-radius: 12px;
-      background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.25);
-      color: #fbbf24; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-      transition: all 0.4s ease;
-    }
-    .mfp-header-text strong { display: block; font-size: 16px; color: #fde68a; font-family: var(--font-display); transition: color 0.4s ease; }
-    .mfp-header-text .mfp-sub { font-size: 13px; color: rgba(253, 230, 138, 0.7); margin-top: 4px; transition: color 0.4s ease;}
-    .mfp-body { padding: 24px; }
-    .mfp-section { margin-bottom: 24px; }
-    .mfp-section:last-child { margin-bottom: 0; }
-    .mfp-section-title {
-      font-size: 12px; font-weight: 700; color: #7aa5ff; text-transform: uppercase;
-      letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.06);
-      padding-bottom: 8px; margin-bottom: 16px; display: flex; align-items: center;
-    }
+    .hdr-icon img { height: 40px; width: auto; display: block; }
+    .hdr-title { font-weight: 700; font-size: 22px; font-family: var(--font-disp); color: var(--white); letter-spacing: -0.3px; line-height: 1; }
+    .hdr-sub { font-size: 11px; color: rgba(255,255,255,0.45); letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600; margin-top: 3px; }
+    .hdr-right { display: flex; align-items: center; gap: 12px; }
+    #new-check-btn { display: none; align-items: center; gap: 8px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); color: var(--white); padding: 9px 20px; border-radius: 50px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: var(--font); }
+    #new-check-btn:hover { background: rgba(255,255,255,0.2); }
+    #new-check-btn i { font-size: 12px; }
+    #wc-main { display: flex; flex-direction: column; align-items: center; width: 100%; }
+    #view-upload { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: calc(100vh - 72px); padding: 24px; position: relative; overflow: hidden; }
+    #view-upload::before { content: ''; position: absolute; width: 900px; height: 700px; background: radial-gradient(ellipse at center, rgba(37,99,235,0.12) 0%, transparent 70%); top: 50%; left: 50%; transform: translate(-50%, -60%); pointer-events: none; }
+    .orb { position: absolute; border-radius: 50%; pointer-events: none; filter: blur(80px); opacity: 0.25; }
+    .orb-1 { width: 400px; height: 400px; background: #1d4ed8; top: -100px; right: -80px; }
+    .orb-2 { width: 300px; height: 300px; background: #0891b2; bottom: -60px; left: -60px; }
+    .up-content { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; max-width: 780px; width: 100%; }
+    .up-badge { display: inline-flex; align-items: center; gap: 8px; padding: 7px 18px; border-radius: 50px; margin-bottom: 28px; background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.16); font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.8); }
+    .up-h1 { font-size: clamp(38px, 5vw, 58px); font-weight: 700; letter-spacing: -1.5px; line-height: 1.15; font-family: var(--font-disp); color: var(--white); text-align: center; margin-bottom: 18px; }
+    .up-h1 span { color: rgba(255,255,255,0.35); }
+    .up-p { font-size: 17px; color: rgba(255,255,255,0.58); max-width: 520px; line-height: 1.65; text-align: center; margin-bottom: 44px; font-weight: 400; }
+    .wc-dropzone { width: 100%; border: 1.5px dashed rgba(255,255,255,0.18); border-radius: var(--radius-lg); padding: 64px 40px; display: flex; flex-direction: column; align-items: center; gap: 20px; background: rgba(255,255,255,0.03); cursor: pointer; transition: all 0.25s cubic-bezier(.4,0,.2,1); position: relative; overflow: hidden; }
+    .wc-dropzone::before { content: ''; position: absolute; inset: 0; opacity: 0; background: radial-gradient(ellipse at center, rgba(37,99,235,0.1) 0%, transparent 65%); transition: opacity 0.3s; }
+    .wc-dropzone:hover::before, .wc-dropzone.drag-over::before { opacity: 1; }
+    .wc-dropzone:hover, .wc-dropzone.drag-over { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.05); transform: translateY(-2px); }
+    .wc-dropzone.drag-over { border-style: solid; border-color: rgba(255,255,255,0.7); }
+    .dz-icon-wrap { width: 72px; height: 72px; border-radius: 18px; background: var(--white); color: var(--navy); display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 8px 24px rgba(0,0,0,0.25); transition: transform 0.2s; }
+    .wc-dropzone:hover .dz-icon-wrap { transform: scale(1.05) translateY(-2px); }
+    .dz-title { font-size: 22px; font-weight: 700; font-family: var(--font-disp); color: var(--white); letter-spacing: -0.3px; }
+    .dz-sub { font-size: 15px; color: rgba(255,255,255,0.5); }
+    .dz-sub span { color: rgba(255,255,255,0.85); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+    .dz-formats { display: flex; gap: 8px; margin-top: 4px; }
+    .dz-fmt { padding: 4px 12px; border-radius: 6px; background: rgba(255,255,255,0.08); font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.1); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pulse { 0%,100% { opacity:.6; } 50% { opacity:1; } }
+    .loading-ring { width: 64px; height: 64px; border: 3px solid rgba(255,255,255,0.12); border-top-color: var(--white); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    .loading-dots span { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.5); margin: 0 3px; animation: pulse 1.2s ease infinite; }
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+    #view-results { display: none; flex-direction: column; align-items: center; width: 100%; padding: 48px 24px 120px; background: var(--off-white); color: var(--navy); }
+    .results-inner { max-width: 880px; width: 100%; }
+    @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
+    .anim-up { animation: slideUp 0.4s cubic-bezier(.4,0,.2,1) both; }
+    .anim-up:nth-child(2) { animation-delay: 0.08s; }
+    .anim-up:nth-child(3) { animation-delay: 0.14s; }
+    .wc-summary { background: var(--white); border-radius: var(--radius-lg); padding: 36px 40px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 32px; flex-wrap: wrap; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+    .sum-left { flex: 1; min-width: 260px; }
+    .sum-filename { font-weight: 700; font-size: 26px; font-family: var(--font-disp); color: var(--navy); letter-spacing: -0.5px; margin-bottom: 10px; word-break: break-all; }
+    .sum-meta { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+    .sum-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--text-muted); background: var(--off-white); border-radius: 6px; padding: 5px 12px; }
+    .sum-chip i { font-size: 11px; }
+    .sum-progress-label { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+    .sum-progress-track { height: 7px; border-radius: 99px; background: var(--border); overflow: hidden; }
+    .sum-progress-fill { height: 100%; border-radius: 99px; background: var(--navy); transition: width 1s cubic-bezier(.4,0,.2,1); width: 0%; }
+    .sum-ring-wrapper { position: relative; width: 140px; height: 140px; flex-shrink: 0; }
+    .ring-bg { fill: none; stroke: var(--border); stroke-width: 10; }
+    .ring-fg { fill: none; stroke: var(--navy); stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1s cubic-bezier(.4,0,.2,1); }
+    .ring-text-container { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .ring-pct { font-size: 36px; font-weight: 700; color: var(--navy); font-family: var(--font-disp); line-height: 1; }
+    .ring-lbl { font-size: 10px; color: var(--text-muted); font-weight: 700; letter-spacing: 1.5px; margin-top: 2px; }
+    .stat-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .stat-card { flex: 1; min-width: 120px; background: var(--white); border-radius: var(--radius-md); padding: 18px 22px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+    .stat-val { font-size: 30px; font-weight: 700; font-family: var(--font-disp); color: var(--navy); line-height: 1; margin-bottom: 4px; }
+    .stat-val.green { color: var(--success); }
+    .stat-val.red { color: var(--error); }
+    .stat-label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+    .wc-list { background: var(--white); border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); overflow: hidden; }
+    .list-hdr { padding: 24px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .list-title { font-weight: 700; font-size: 20px; font-family: var(--font-disp); color: var(--navy); }
+    .filter-tabs { display: flex; gap: 6px; background: var(--off-white); border-radius: 10px; padding: 4px; border: 1px solid var(--border); }
+    .filter-btn { background: transparent; border: none; color: var(--text-muted); padding: 7px 16px; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.18s; font-family: var(--font); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+    .filter-btn:hover:not(.active) { color: var(--navy); background: rgba(4,30,66,0.05); }
+    .filter-btn.active { background: var(--navy); color: var(--white); box-shadow: 0 1px 4px rgba(4,30,66,0.2); }
+    .filter-btn .fcnt { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 99px; background: rgba(255,255,255,0.2); min-width: 20px; text-align: center; }
+    .filter-btn:not(.active) .fcnt { background: rgba(4,30,66,0.08); color: var(--text-muted); }
+    .wc-row-container { border-bottom: 1px solid var(--border); }
+    .wc-row-container:last-child { border-bottom: none; }
+    .wc-row-header { display: flex; align-items: center; gap: 16px; padding: 20px 32px; background: var(--white); cursor: pointer; transition: background 0.15s; user-select: none; }
+    .wc-row-header:hover { background: var(--off-white); }
+    .row-label { font-weight: 600; font-size: 15px; color: var(--navy); flex: 1; }
+    .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 99px; font-size: 12px; font-weight: 700; letter-spacing: 0.3px; flex-shrink: 0; }
+    .sb-found { color: var(--success); background: var(--success-bg); }
+    .sb-missing { color: var(--error); background: var(--error-bg); }
+    .sb-found i, .sb-missing i { font-size: 10px; }
+    .row-chevron { width: 20px; height: 20px; flex-shrink: 0; color: var(--text-dim); display: flex; align-items: center; justify-content: center; font-size: 11px; transition: transform 0.25s cubic-bezier(.4,0,.2,1); }
+    .wc-row-container.open .row-chevron { transform: rotate(180deg); }
+    .row-content { max-height: 0; overflow: hidden; transition: max-height 0.35s cubic-bezier(.4,0,.2,1); background: #FAFBFC; border-top: 1px solid transparent; }
+    .row-content.open { max-height: 600px; border-top-color: var(--border); }
+    .row-content-inner { padding: 24px 32px 28px; }
+    .found-lbl { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+    .found-val { font-size: 14px; color: var(--navy); font-weight: 500; line-height: 1.6; }
+    .form-instruction { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+    .form-instruction i { color: var(--error); }
     .mfp-field { margin-bottom: 16px; }
-    .mfp-label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
-    .mfp-input {
-      width: 100%; padding: 10px 14px; font-family: var(--font);
-      background: rgba(255,255,255,0.05); border: 1px solid rgba(100,150,255,0.2);
-      border-radius: 10px; font-size: 13px; color: var(--text); outline: none; transition: all 0.2s;
-    }
-    .mfp-input::placeholder { color: rgba(150,180,240,0.35); }
-    .mfp-input:focus { border-color: rgba(100,150,255,0.6); box-shadow: 0 0 0 3px rgba(60,100,220,0.12); }
-    .mfp-input.valid { border-color: rgba(16,185,129,0.5); box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
-    .mfp-input.invalid { border-color: rgba(248,113,113,0.5); box-shadow: 0 0 0 3px rgba(248,113,113,0.1); }
-    .mfp-error { color: #fca5a5; font-size: 12px; margin-top: 6px; display: none; }
-    
-    .mfp-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-    .mfp-chip {
-      padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
-      cursor: pointer; transition: all 0.2s; border: 1px solid transparent;
-    }
-    .mfp-chip.found { background: rgba(16,185,129,0.12); color: #34d399; border-color: rgba(52,211,153,0.2); }
-    .mfp-chip.option { background: rgba(255,255,255,0.05); color: rgba(150,180,240,0.7); border-color: rgba(255,255,255,0.1); }
-    .mfp-chip.option:hover { background: rgba(255,255,255,0.1); color: var(--text); }
-    .mfp-chip.active { border-color: #3b6fd4; box-shadow: 0 0 0 2px rgba(59,111,212,0.25); color: var(--text); }
-
-    .mfp-btn-row { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
-    .mfp-submit-btn, .mfp-dl-btn {
-      padding: 11px 24px; border-radius: 12px; border: none; font-family: var(--font);
-      background: linear-gradient(135deg,#3b6fd4,#5b8fff); color: #fff;
-      font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
-      box-shadow: 0 4px 18px rgba(59,111,212,0.3); display: inline-flex; align-items: center; gap: 8px;
-    }
-    .mfp-submit-btn:hover, .mfp-dl-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-    .mfp-submit-btn:disabled, .mfp-dl-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
-    .mfp-edit-btn {
-      padding: 11px 24px; border-radius: 12px; font-family: var(--font);
-      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-      color: rgba(150,180,240,0.8); font-size: 14px; font-weight: 600; cursor: pointer;
-      transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
-    }
-    .mfp-edit-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
-
-    .mfp-confirm { animation: fadeUp 0.3s ease both; }
-    .mfp-confirm-label { font-size: 13px; color: rgba(150,180,240,0.6); margin-bottom: 12px; }
-    .mfp-confirm-rows { max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-    .mfp-confirm-row { font-size: 13px; color: var(--text); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; }
-    .mfp-confirm-val { background: rgba(59,111,212,0.15); color: #9dc4ff; padding: 2px 8px; border-radius: 6px; margin-left: 8px; font-weight: 600; }
-
-    .mfp-success { text-align: center; padding: 32px 24px; animation: scaleIn 0.4s cubic-bezier(0.4,0,0.2,1) both; }
-    .mfp-check {
-      width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg,#059669,#34d399);
-      color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 28px;
-      margin-bottom: 16px; box-shadow: 0 0 30px rgba(52,211,153,0.35);
-      animation: checkPop 0.5s cubic-bezier(0.36,0.07,0.19,0.97) both; animation-delay: 0.1s;
-    }
-    .mfp-success-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; font-family: var(--font-display); }
-    .mfp-success-sub { font-size: 13px; color: rgba(150,180,240,0.6); margin-bottom: 24px; }
-    .mfp-reenter {
-      background: none; border: none; color: rgba(150,180,240,0.6); font-size: 13px; cursor: pointer;
-      text-decoration: underline; margin-top: 16px; display: block; width: 100%; font-family: var(--font);
-    }
-    .mfp-reenter:hover { color: var(--text); }
-    .btn-spin { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.6s linear infinite; }
-
-    /* Completion banner (when 100% found initially) */
-    .completion-banner {
-      background:linear-gradient(135deg,rgba(5,150,105,0.1),rgba(16,185,129,0.06));
-      border:1px solid rgba(16,185,129,0.2); border-radius:20px; padding:32px;
-      text-align:center; animation:scaleIn 0.45s cubic-bezier(0.4,0,0.2,1) both;
-      margin-top:24px; backdrop-filter:blur(20px);
-      box-shadow:0 8px 40px rgba(5,150,105,0.08);
-    }
-
-    /* Responsive */
-    @media (max-width:600px) {
-      .wc-summary { flex-direction:column; align-items:flex-start; }
-      #wc-main  { padding:24px 12px 60px; }
-      .up-h1    { font-size:30px; }
-      .wc-dropzone { padding:40px 24px; }
-      .row-detail { padding-left:22px; }
-      #wc-header { position: relative; }
-    }
+    .mfp-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 7px; }
+    /* req-badge: visible when field is empty, hidden once user fills it */
+    .req-badge { font-size: 11px; font-weight: 700; color: var(--error); background: var(--error-bg); padding: 2px 8px; border-radius: 4px; flex-shrink: 0; transition: opacity 0.15s; }
+    .opt-badge { font-size: 11px; font-weight: 700; color: var(--text-muted); background: var(--off-white); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border); flex-shrink: 0; }
+    .mfp-input { width: 100%; padding: 11px 14px; font-family: var(--font); background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; color: var(--navy); outline: none; transition: border-color 0.18s, box-shadow 0.18s; }
+    .mfp-input::placeholder { color: var(--text-dim); }
+    .mfp-input:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(4,30,66,0.08); }
+    .mfp-input.invalid { border-color: var(--error); box-shadow: 0 0 0 3px rgba(220,38,38,0.08); }
+    .mfp-input.filled { border-color: var(--success); }
+    .list-footer { padding: 24px 32px; background: var(--white); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .footer-note { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+    .global-error { color: var(--error); font-weight: 700; font-size: 13px; display: none; align-items: center; gap: 6px; }
+    .global-error i { font-size: 14px; }
+    .open-review-btn { padding: 13px 28px; border-radius: 10px; border: none; font-family: var(--font); background: var(--navy); color: var(--white); font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 2px 8px rgba(4,30,66,0.25); }
+    .open-review-btn:hover { background: var(--navy-mid); transform: translateY(-1px); }
+    .open-review-btn i { font-size: 13px; }
+    .review-panel { display: none; border-top: 2px solid var(--border); background: var(--off-white); }
+    .review-panel.open { display: block; }
+    .review-panel-inner { padding: 32px; }
+    .review-panel-title { font-size: 18px; font-weight: 700; color: var(--navy); font-family: var(--font-disp); margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
+    .review-panel-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+    .review-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 28px; }
+    .review-row { background: var(--white); border-radius: var(--radius-sm); border: 1px solid var(--border); overflow: hidden; transition: border-color 0.18s; }
+    .review-row.editing { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(4,30,66,0.08); }
+    .review-row-view { display: flex; align-items: center; gap: 16px; padding: 14px 18px; }
+    .review-row-label { font-size: 12px; font-weight: 700; color: var(--text-muted); width: 200px; flex-shrink: 0; }
+    .review-row-val { font-size: 14px; font-weight: 500; color: var(--navy); flex: 1; line-height: 1.5; word-break: break-word; }
+    .edit-btn { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 7px; border: 1.5px solid var(--border); background: var(--off-white); color: var(--navy); font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--font); transition: all 0.18s; white-space: nowrap; }
+    .edit-btn:hover { background: var(--navy); color: var(--white); border-color: var(--navy); }
+    .edit-btn i { font-size: 10px; }
+    .review-row-edit { padding: 14px 18px; display: flex; flex-direction: column; gap: 10px; }
+    .review-row-edit-label { font-size: 12px; font-weight: 700; color: var(--navy); }
+    .review-inline-input { width: 100%; padding: 9px 12px; font-family: var(--font); background: var(--white); border: 1.5px solid var(--navy); border-radius: var(--radius-sm); font-size: 14px; color: var(--navy); outline: none; box-shadow: 0 0 0 3px rgba(4,30,66,0.08); }
+    .review-inline-input::placeholder { color: var(--text-dim); }
+    .review-row-edit-actions { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+    .save-inline-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 7px; border: none; background: var(--navy); color: var(--white); font-size: 13px; font-weight: 700; cursor: pointer; font-family: var(--font); transition: all 0.18s; }
+    .save-inline-btn:hover { background: var(--navy-mid); }
+    .cancel-inline-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 7px; border: 1.5px solid var(--border); background: var(--white); color: var(--text-muted); font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--font); transition: all 0.18s; }
+    .cancel-inline-btn:hover { background: var(--off-white); color: var(--navy); }
+    .review-actions { display: flex; align-items: center; justify-content: flex-end; }
+    .review-btn { padding: 13px 28px; border-radius: 10px; border: none; font-family: var(--font); background: var(--navy); color: var(--white); font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 2px 8px rgba(4,30,66,0.25); }
+    .review-btn:hover { background: var(--navy-mid); transform: translateY(-1px); }
+    .review-btn.success-state { background: var(--success); }
+    .review-btn:disabled { background: #9CA3AF; cursor: not-allowed; transform: none; box-shadow: none; }
+    .review-btn i { font-size: 13px; }
+    .empty-state { text-align: center; padding: 48px; color: var(--text-muted); }
+    .empty-state i { font-size: 28px; margin-bottom: 12px; display: block; opacity: 0.4; }
+    .empty-state p { font-size: 15px; font-weight: 500; }
+    #toast-container { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+    .toast { padding: 13px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; pointer-events: all; display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow-lg); animation: toastIn 0.3s cubic-bezier(.4,0,.2,1) both; white-space: nowrap; }
+    @keyframes toastIn { from { opacity:0; transform:translateY(12px) scale(.96); } to { opacity:1; transform:none; } }
+    .toast-success { background: #1a1a2e; color: var(--white); border: 1px solid rgba(255,255,255,0.1); }
+    .toast-error { background: #450a0a; color: #fca5a5; border: 1px solid rgba(252,165,165,0.2); }
+    .toast i { font-size: 13px; }
   </style>
 </head>
-<body>
-  <canvas id="bg-canvas"></canvas>
-  <canvas id="cursor-canvas"></canvas>
-
+<body class="upload-active">
   <input type="file" id="file-input" accept=".pdf,.docx" style="display:none"/>
-
+  <div id="toast-container"></div>
   <header id="wc-header">
     <div class="hdr-left">
-      <div class="hdr-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="#7aa5ff">
-          <path d="M12,13 C8.5,13 6,14.5 5.5,17.5 C5,20 7.5,21.5 12,21.5 C16.5,21.5 19,20 18.5,17.5 C18,14.5 15.5,13 12,13 Z" />
-          <ellipse cx="5.5" cy="10" rx="1.8" ry="2.5" transform="rotate(-30 5.5 10)"/>
-          <ellipse cx="9.5" cy="6.5" rx="1.8" ry="2.8" transform="rotate(-10 9.5 6.5)"/>
-          <ellipse cx="14.5" cy="6.5" rx="1.8" ry="2.8" transform="rotate(10 14.5 6.5)"/>
-          <ellipse cx="18.5" cy="10" rx="1.8" ry="2.5" transform="rotate(30 18.5 10)"/>
-        </svg>
-      </div>
-      <div>
+      <div class="hdr-icon"><img src="static/wildcat.png" alt="Wildcat Logo" onerror="this.style.display='none'"/></div>
+      <div class="hdr-title-stack">
         <div class="hdr-title">WildCatcher</div>
         <div class="hdr-sub">Syllabus Checker</div>
       </div>
     </div>
-    <button id="new-check-btn">
-      <i class="fas fa-rotate-left" style="font-size:11px"></i> New Check
-    </button>
+    <div class="hdr-right">
+      <button id="new-check-btn"><i class="fas fa-plus"></i> New Check</button>
+    </div>
   </header>
-
   <div id="wc-main">
-
     <div id="view-upload">
-      <div class="up-heading">
-        <div class="up-tag">✦ NECHE Standards · 15 Requirements</div>
-        <h1 class="up-h1">Check Your Syllabus</h1>
-        <p class="up-p">Upload a syllabus and instantly see what's compliant with NECHE standards.</p>
-      </div>
-      <div class="wc-dropzone" id="dropzone">
-        <div class="dropzone-shimmer"></div>
-        <div class="dropzone-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-        <div style="text-align:center">
-          <strong class="dropzone-title">Drop your syllabus here</strong>
-          <div class="dropzone-sub">or <span>click to browse</span> · PDF or DOCX</div>
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="up-content">
+        <div class="up-badge">NECHE Standards · 19 Requirements</div>
+        <h1 class="up-h1">Check Your Syllabus<br/><span>in seconds.</span></h1>
+        <p class="up-p">Upload your syllabus and instantly see which NECHE compliance requirements are met and which need attention.</p>
+        <div class="wc-dropzone" id="dropzone">
+          <div class="dz-icon-wrap"><i class="fas fa-file-arrow-up"></i></div>
+          <div style="text-align:center">
+            <div class="dz-title">Drop your syllabus here</div>
+            <div class="dz-sub" style="margin-top:4px;">or <span>click to browse</span></div>
+          </div>
+          <div class="dz-formats"><span class="dz-fmt">PDF</span><span class="dz-fmt">DOCX</span></div>
         </div>
-      </div>
-      <div class="up-features">
-        <span><i class="fas fa-lock" style="margin-right:5px"></i>Secure</span>
-        <span><i class="fas fa-bolt" style="margin-right:5px"></i>Instant results</span>
-        <span><i class="fas fa-file-alt" style="margin-right:5px"></i>PDF &amp; DOCX</span>
       </div>
     </div>
-
     <div id="view-results">
       <div class="results-inner">
-
-        <div class="wc-summary">
-          <div class="sum-file">
-            <div class="sum-file-row">
-              <div class="sum-file-icon"><i class="fas fa-file-pdf"></i></div>
-              <div>
-                <div class="sum-filename" id="res-filename"></div>
-                <div class="sum-filesub">Analysis complete</div>
-              </div>
+        <div class="wc-summary anim-up">
+          <div class="sum-left">
+            <div class="sum-filename" id="res-filename">Syllabus.pdf</div>
+            <div class="sum-meta">
+              <span class="sum-chip"><i class="fas fa-circle-check"></i> Analysis complete</span>
             </div>
-            <div class="sum-chips">
-              <div class="sum-chip chip-green" id="chip-found">
-                <i class="fas fa-check-circle"></i><span id="chip-found-n">0</span> Found
-              </div>
-              <div class="sum-chip chip-red" id="chip-missing" style="display:none">
-                <i class="fas fa-circle-xmark"></i><span id="chip-missing-n">0</span> Not Found
-              </div>
+            <div class="sum-progress-label">
+              <span>Compliance Score</span>
+              <span id="progress-label-pct">0 / 19</span>
+            </div>
+            <div class="sum-progress-track">
+              <div class="sum-progress-fill" id="sum-progress-fill"></div>
             </div>
           </div>
-          <div>
-            <svg id="summary-ring" width="110" height="110" viewBox="0 0 100 100">
-              <defs>
-                <filter id="rglow">
-                  <feGaussianBlur stdDeviation="2.5" result="b"/>
-                  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-                </filter>
-              </defs>
-              <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="5"/>
-              <circle id="ring-arc" cx="50" cy="50" r="42" fill="none" stroke="#10b981"
-                stroke-width="5" stroke-linecap="round"
-                stroke-dasharray="263.9" stroke-dashoffset="263.9"
-                transform="rotate(-90 50 50)" filter="url(#rglow)"
-                style="transition:stroke-dashoffset 1.3s cubic-bezier(0.4,0,0.2,1),stroke 0.5s"/>
-              <text x="50" y="46" text-anchor="middle" dominant-baseline="central" id="ring-pct"
-                style="font-size:22px;font-weight:700;fill:#dde8ff;font-family:'Space Grotesk',sans-serif">0%</text>
-              <text x="50" y="63" text-anchor="middle"
-                style="font-size:8px;fill:rgba(150,180,240,0.6);font-family:'DM Sans',sans-serif;letter-spacing:1.5px">COMPLETE</text>
+          <div class="sum-ring-wrapper">
+            <svg viewBox="0 0 100 100" width="140" height="140">
+              <circle class="ring-bg" cx="50" cy="50" r="42"/>
+              <circle id="ring-arc" class="ring-fg" cx="50" cy="50" r="42" stroke-dasharray="263.9" stroke-dashoffset="263.9" transform="rotate(-90 50 50)"/>
             </svg>
+            <div class="ring-text-container">
+              <div class="ring-pct" id="ring-pct">0%</div>
+              <div class="ring-lbl">COMPLETE</div>
+            </div>
           </div>
         </div>
-
-        <div class="wc-list">
+        <div class="stat-row anim-up">
+          <div class="stat-card"><div class="stat-val" id="stat-total">19</div><div class="stat-label">Requirements</div></div>
+          <div class="stat-card"><div class="stat-val green" id="stat-found">—</div><div class="stat-label">Found</div></div>
+          <div class="stat-card"><div class="stat-val red" id="stat-missing">—</div><div class="stat-label">Missing</div></div>
+        </div>
+        <div class="wc-list anim-up">
           <div class="list-hdr">
             <div class="list-title">Detection Results</div>
             <div class="filter-tabs">
-              <button class="filter-btn active" data-filter="all">All <span id="cnt-all"></span></button>
-              <button class="filter-btn" data-filter="found">Found <span id="cnt-found"></span></button>
-              <button class="filter-btn" data-filter="not_found">Not Found <span id="cnt-notfound"></span></button>
+              <button class="filter-btn active" data-filter="all">All <span class="fcnt" id="fcnt-all">19</span></button>
+              <button class="filter-btn" data-filter="found">Found <span class="fcnt" id="fcnt-found">—</span></button>
+              <button class="filter-btn" data-filter="not_found">Missing <span class="fcnt" id="fcnt-missing">—</span></button>
             </div>
           </div>
           <div id="results-list"></div>
+          <div class="list-footer" id="list-footer" style="display:none;">
+            <div>
+              <div class="global-error" id="global-error"><i class="fas fa-circle-exclamation"></i> Please fill in all required fields.</div>
+              <div class="footer-note" id="footer-note">Fill in the missing fields above, then review before generating.</div>
+            </div>
+            <button class="open-review-btn" id="open-review-btn"><i class="fas fa-list-check"></i> Review &amp; Submit</button>
+          </div>
+          <div class="review-panel" id="review-panel">
+            <div class="review-panel-inner">
+              <div class="review-panel-title"><i class="fas fa-list-check"></i> Review Your Inputs</div>
+              <div class="review-panel-sub">Check all entries. Click <strong>Edit</strong> on any row to update it inline.</div>
+              <div class="review-grid" id="review-grid"></div>
+              <div class="review-actions">
+                <button class="review-btn" id="generate-btn"><i class="fas fa-wand-magic-sparkles"></i> Generate Updated Template</button>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <div id="mfp-container"></div>
-
       </div>
     </div>
-
-  </div><script>
+  </div>
+  <script>
   'use strict';
+  const TOTAL = 19;
+  let allItems = [], lastApiData = null, uploading = false, activeFilter = 'all';
+  const savedInputs = {};
 
-  // ── State ──────────────────────────────────────────────────────────────────
-  let allItems    = [];
-  let activeFilter = 'all';
-  let expandedIds  = new Set();
-  let lastApiData  = null;
-  let uploading    = false;
-
-  // ── Build items from API payload ───────────────────────────────────────────
-  function buildItems(d) {
-    const off = d.office_information || {};
-    const offFound  = !!(off.location || off.hours || off.phone);
-    const offDetail = [off.location, off.hours, off.phone].filter(Boolean).join(' · ') || null;
-    return [
-      { id:'instructor',     label:'Instructor',        icon:'fa-user-tie',           found:!!d.instructor?.found,              detail:[d.instructor?.name,d.instructor?.title,d.instructor?.department].filter(Boolean).join(', ')||null },
-      { id:'class_location', label:'Class Location',    icon:'fa-map-marker-alt',     found:!!d.class_location?.found,          detail:d.class_location?.content||null },
-      { id:'modality',       label:'Modality',          icon:'fa-chalkboard-teacher', found:d.modality_status==='PASS',         detail:d.course_delivery||null },
-      { id:'office',         label:'Office Info',       icon:'fa-building',           found:offFound,                           detail:offDetail },
-      { id:'email',          label:'Email',             icon:'fa-envelope',           found:!!d.email_information?.found,       detail:d.email_information?.email||null },
-      { id:'response_time',  label:'Response Time',     icon:'fa-clock',              found:!!d.response_time?.found,           detail:d.response_time?.content||null },
-      { id:'preferred',      label:'Preferred Contact', icon:'fa-inbox',              found:!!d.preferred_information?.found,   detail:d.preferred_information?.preferred||null },
-      { id:'credit_hours',   label:'Credit Hours',      icon:'fa-graduation-cap',     found:!!d.credit_hours?.found,            detail:d.credit_hours?.hours||null },
-      { id:'workload',       label:'Workload',          icon:'fa-tasks',              found:!!d.workload_information?.found,    detail:d.workload_information?.description||null },
-      { id:'slo',            label:'Learning Outcomes', icon:'fa-bullseye',           found:d.slo_status==='PASS',              detail:d.slo_content||null },
-      { id:'grading_scale',  label:'Grading Scale',     icon:'fa-percent',            found:!!d.grading_scale?.found,           detail:d.grading_scale?.content||null },
-      { id:'late_work',      label:'Late Work Policy',  icon:'fa-hourglass-half',     found:!!d.late_information?.found,        detail:d.late_information?.late||null },
-      { id:'assign_types',   label:'Assignment Types',  icon:'fa-pencil-alt',         found:!!d.assignment_types?.found,        detail:d.assignment_types?.content||null },
-      { id:'assign_deliv',   label:'Deliverables',      icon:'fa-paper-plane',        found:!!d.assignment_delivery?.found,     detail:d.assignment_delivery?.content||null },
-      { id:'grading_proc',   label:'Grading Process',   icon:'fa-clipboard-list',     found:!!d.grading_process?.found,         detail:d.grading_process?.content||null },
-    ];
+  function isValidVal(v) {
+    if (v === null || v === undefined) return false;
+    const s = String(v).trim().toLowerCase();
+    return s !== '' && s !== 'missing' && s !== 'n/a' && s !== 'none' && s !== 'null' && s !== 'not found';
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  const COMPLIANCES = [
+    { id:'instructor_name', name:'Instructor Name', checkFound:(d)=>isValidVal(d.instructor?.name), getDetail:(d)=>isValidVal(d.instructor?.name)?d.instructor?.name:null, inputs:[{key:'instructor_name',label:'Full Name',placeholder:'e.g. Dr. Jane Smith',req:true}] },
+    { id:'instructor_title', name:'Instructor Title', checkFound:(d)=>isValidVal(d.instructor?.title), getDetail:(d)=>isValidVal(d.instructor?.title)?d.instructor?.title:null, inputs:[{key:'instructor_title',label:'Instructor Title',placeholder:'e.g. Associate Professor',req:true}] },
+    { id:'instructor_department', name:'Instructor Department', checkFound:(d)=>isValidVal(d.instructor?.department), getDetail:(d)=>isValidVal(d.instructor?.department)?d.instructor?.department:null, inputs:[{key:'instructor_department',label:'Department',placeholder:'e.g. Computer Science',req:true}] },
+    { id:'class_location', name:'Class Location', checkFound:(d)=>isValidVal(d.class_location?.content), getDetail:(d)=>isValidVal(d.class_location?.content)?d.class_location?.content:null, inputs:[{key:'class_location',label:'Class Location',placeholder:'e.g. DeMeritt Hall 240',req:true}] },
+    { id:'modality', name:'Course Modality', checkFound:(d)=>d.modality_status==='PASS'&&isValidVal(d.course_delivery), getDetail:(d)=>isValidVal(d.course_delivery)?d.course_delivery:null, inputs:[{key:'modality',label:'Course Modality',placeholder:'e.g. In-Person, Online, Hybrid',req:true}] },
+    { id:'office_location', name:'Office Address', checkFound:(d)=>isValidVal(d.office_information?.location), getDetail:(d)=>isValidVal(d.office_information?.location)?d.office_information?.location:null, inputs:[{key:'office_address',label:'Office Address',placeholder:'e.g. Kingsbury Hall 201',req:true}] },
+    { id:'office_hours', name:'Office Hours', checkFound:(d)=>isValidVal(d.office_information?.hours), getDetail:(d)=>isValidVal(d.office_information?.hours)?d.office_information?.hours:null, inputs:[{key:'office_hours',label:'Office Hours',placeholder:'e.g. Mon/Wed 2:00–4:00 PM',req:true}] },
+    { id:'office_phone', name:'Office Phone', checkFound:(d)=>isValidVal(d.office_information?.phone), getDetail:(d)=>isValidVal(d.office_information?.phone)?d.office_information?.phone:null, inputs:[{key:'office_phone',label:'Phone Number',placeholder:'e.g. 603-555-1234',req:false}] },
+    { id:'email', name:'Email', checkFound:(d)=>isValidVal(d.email_information?.email), getDetail:(d)=>isValidVal(d.email_information?.email)?d.email_information?.email:null, inputs:[{key:'email',label:'Email',placeholder:'e.g. professor@unh.edu',req:true}] },
+    { id:'response_time', name:'Response Time', checkFound:(d)=>isValidVal(d.response_time?.content), getDetail:(d)=>isValidVal(d.response_time?.content)?d.response_time?.content:null, inputs:[{key:'response_time',label:'Response Time',placeholder:'e.g. Within 48 hours on weekdays.',req:true}] },
+    { id:'preferred', name:'Preferred Contact Method', checkFound:(d)=>isValidVal(d.preferred_information?.preferred), getDetail:(d)=>isValidVal(d.preferred_information?.preferred)?d.preferred_information?.preferred:null, inputs:[{key:'preferred_contact_method',label:'Preferred Contact Method',placeholder:'e.g. Canvas or Email',req:true}] },
+    { id:'credit_hours', name:'Credit Hours', checkFound:(d)=>isValidVal(d.credit_hours?.hours), getDetail:(d)=>isValidVal(d.credit_hours?.hours)?d.credit_hours?.hours:null, inputs:[{key:'credit_hour',label:'Credit Hours',placeholder:'e.g. 3',req:true}] },
+    { id:'workload', name:'Expected Workload', checkFound:(d)=>isValidVal(d.workload_information?.description), getDetail:(d)=>isValidVal(d.workload_information?.description)?d.workload_information?.description:null, inputs:[{key:'workload',label:'Expected Workload',placeholder:'e.g. 6–9 hours per week.',req:true}] },
+    { id:'slo', name:'Student Learning Outcomes', checkFound:(d)=>d.slo_status==='PASS'&&isValidVal(d.slo_content), getDetail:(d)=>isValidVal(d.slo_content)?d.slo_content:null, inputs:[{key:'SLOs',label:'Student Learning Outcomes',placeholder:'e.g. 1. Students will be able to…',req:true}] },
+    { id:'grading_scale', name:'Final Grade Scale', checkFound:(d)=>isValidVal(d.grading_scale?.content), getDetail:(d)=>isValidVal(d.grading_scale?.content)?d.grading_scale?.content:null, inputs:[{key:'final_grade_scale',label:'Final Grade Scale',placeholder:'e.g. A: 93–100, B: 83–92…',req:true}] },
+    { id:'late_work', name:'Late Work Policy', checkFound:(d)=>isValidVal(d.late_information?.late), getDetail:(d)=>isValidVal(d.late_information?.late)?d.late_information?.late:null, inputs:[{key:'deadline_expectations_title',label:'Late Work Policy',placeholder:'e.g. Late work is not accepted.',req:true}] },
+    { id:'assign_types', name:'Assignment Types Title', checkFound:(d)=>isValidVal(d.assignment_types?.content), getDetail:(d)=>isValidVal(d.assignment_types?.content)?d.assignment_types?.content:null, inputs:[{key:'assignment_types_title',label:'Assignment Types Title',placeholder:'e.g. Exams, Papers, Projects',req:true}] },
+    { id:'assign_deliv', name:'Assignment Delivery', checkFound:(d)=>isValidVal(d.assignment_delivery?.content), getDetail:(d)=>isValidVal(d.assignment_delivery?.content)?d.assignment_delivery?.content:null, inputs:[{key:'assignment_delivery',label:'Assignment Delivery',placeholder:'e.g. Canvas by 11:59 PM',req:true}] },
+    { id:'grading_proc', name:'Grading Process', checkFound:(d)=>isValidVal(d.grading_process?.content), getDetail:(d)=>isValidVal(d.grading_process?.content)?d.grading_process?.content:null, inputs:[{key:'grading_process',label:'Grading Process',placeholder:'e.g. Graded within two weeks.',req:true}] }
+  ];
 
-  // ── Views ──────────────────────────────────────────────────────────────────
-  function showView(name) {
-    document.getElementById('view-upload').style.display  = name==='upload'  ? 'flex' : 'none';
-    document.getElementById('view-results').style.display = name==='results' ? 'flex' : 'none';
-    document.getElementById('new-check-btn').style.display= name==='results' ? 'inline-flex' : 'none';
+  function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function showToast(msg,type='success'){
+    const c=document.getElementById('toast-container');
+    const t=document.createElement('div');
+    t.className=`toast toast-${type}`;
+    t.innerHTML=`<i class="fas ${type==='success'?'fa-circle-check':'fa-circle-exclamation'}"></i> ${msg}`;
+    c.appendChild(t);
+    setTimeout(()=>{ t.style.transition='opacity .3s'; t.style.opacity='0'; setTimeout(()=>t.remove(),300); },3200);
   }
 
-  function resetAll() {
-    allItems=[]; activeFilter='all'; expandedIds.clear(); lastApiData=null;
+  function showView(name){
+    document.getElementById('view-upload').style.display = name==='upload'?'flex':'none';
+    document.getElementById('view-results').style.display = name==='results'?'flex':'none';
+    document.getElementById('new-check-btn').style.display = name==='results'?'flex':'none';
+    document.body.classList.toggle('upload-active', name==='upload');
+  }
+
+  function resetAll(){
+    allItems=[]; lastApiData=null; activeFilter='all';
+    Object.keys(savedInputs).forEach(k=>delete savedInputs[k]);
     document.getElementById('results-list').innerHTML='';
-    document.getElementById('mfp-container').innerHTML='';
+    document.getElementById('list-footer').style.display='none';
+    document.getElementById('review-panel').classList.remove('open');
     document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.filter==='all'));
-    showView('upload');
+    showView('upload'); renderDropzone();
   }
 
-  // ── Counts & Ring ──────────────────────────────────────────────────────────
-  function updateCounts() {
-    const total = allItems.length;
-    const found = allItems.filter(i=>i.found).length;
-    const not_found = total - found;
-    
-    document.getElementById('cnt-all').textContent      = '('+total+')';
-    document.getElementById('cnt-found').textContent    = '('+found+')';
-    document.getElementById('cnt-notfound').textContent = '('+not_found+')';
-    document.getElementById('chip-found-n').textContent  = found;
-    document.getElementById('chip-missing-n').textContent= not_found;
-    document.getElementById('chip-missing').style.display= not_found>0 ? 'flex' : 'none';
-
-    const pct = total ? Math.round(found/total*100) : 0;
-    const C   = 2*Math.PI*42;
-    const offset = C-(pct/100)*C;
-    const color  = pct>=80 ? '#10b981' : pct>=50 ? '#60a5fa' : '#f87171';
-    const arc = document.getElementById('ring-arc');
-    arc.setAttribute('stroke-dashoffset', offset);
-    arc.setAttribute('stroke', color);
-    document.getElementById('ring-pct').textContent = pct+'%';
+  function renderDropzone(){
+    document.getElementById('dropzone').innerHTML=`
+      <div class="dz-icon-wrap"><i class="fas fa-file-arrow-up"></i></div>
+      <div style="text-align:center">
+        <div class="dz-title">Drop your syllabus here</div>
+        <div class="dz-sub" style="margin-top:4px;">or <span>click to browse</span></div>
+      </div>
+      <div class="dz-formats"><span class="dz-fmt">PDF</span><span class="dz-fmt">DOCX</span></div>`;
   }
 
-  // ── Render rows ────────────────────────────────────────────────────────────
-  function renderResults() {
-    let filtered;
-    if (activeFilter==='found')          filtered=allItems.filter(i=>i.found);
-    else if (activeFilter==='not_found') filtered=allItems.filter(i=>!i.found);
-    else                                 filtered=allItems;
+  function updateCounts(){
+    const found=allItems.filter(i=>i.found).length;
+    const missing=TOTAL-found;
+    const pct=Math.round(found/TOTAL*100);
+    const C=2*Math.PI*42;
+    requestAnimationFrame(()=>{
+      document.getElementById('ring-arc').setAttribute('stroke-dashoffset',C-(pct/100)*C);
+      document.getElementById('ring-pct').textContent=pct+'%';
+    });
+    document.getElementById('sum-progress-fill').style.width=pct+'%';
+    document.getElementById('progress-label-pct').textContent=`${found} / ${TOTAL}`;
+    document.getElementById('stat-found').textContent=found;
+    document.getElementById('stat-missing').textContent=missing;
+    document.getElementById('fcnt-all').textContent=TOTAL;
+    document.getElementById('fcnt-found').textContent=found;
+    document.getElementById('fcnt-missing').textContent=missing;
+    document.getElementById('list-footer').style.display=missing>0?'flex':'none';
+    const fill=document.getElementById('sum-progress-fill');
+    fill.style.background=pct>=80?'var(--success)':pct>=50?'var(--navy)':'var(--error)';
+  }
 
-    const list = document.getElementById('results-list');
+  // ── Hides "Please fill in all required fields" once all required inputs have values ──
+  function updateGlobalError(){
+    const errorMsg=document.getElementById('global-error');
+    const footerNote=document.getElementById('footer-note');
+    if (!errorMsg || errorMsg.style.display==='none') return;
+    const stillEmpty=allItems.filter(i=>!i.found).some(item=>
+      item.inputs.some(f=>{
+        if (!f.req) return false;
+        const inp=document.getElementById(`input-${f.key}`);
+        return inp && !inp.value.trim();
+      })
+    );
+    if (!stillEmpty){
+      errorMsg.style.display='none';
+      if (footerNote) footerNote.style.display='';
+    }
+  }
+
+  function navigateToNextField(currentKey){
+    const fields=[];
+    allItems.filter(i=>!i.found).forEach(mi=>mi.inputs.forEach(mf=>fields.push({key:mf.key})));
+    const idx=fields.findIndex(x=>x.key===currentKey);
+    for (let i=idx+1;i<fields.length;i++){
+      const nextInp=document.getElementById(`input-${fields[i].key}`);
+      if (nextInp){
+        const nc=nextInp.closest('.wc-row-container');
+        if (nc&&!nc.classList.contains('open')){ nc.classList.add('open'); nc.querySelector('.row-content').classList.add('open'); }
+        setTimeout(()=>{ nextInp.focus(); window.scrollTo({top:nc.getBoundingClientRect().top+window.scrollY-110,behavior:'smooth'}); },50);
+        return;
+      }
+    }
+    setTimeout(()=>document.getElementById('open-review-btn').click(),200);
+  }
+
+  function renderResults(){
+    const list=document.getElementById('results-list');
     list.innerHTML='';
-
-    if (!filtered.length) {
-      const el=document.createElement('div'); el.className='wc-empty';
-      el.innerHTML='<i class="fas fa-check-double" style="font-size:28px;display:block;margin-bottom:10px;color:#34d399"></i>All clear in this category';
-      list.appendChild(el);
-      return;
-    }
-
-    filtered.forEach((item, idx) => {
-      const canExpand = item.found && item.detail;
-      const isOpen    = expandedIds.has(item.id);
-
-      const iconCls  = item.found ? 'ri-found' : 'ri-missing';
-      const badgeCls = item.found ? 'sb-found'  : 'sb-missing';
-      const badgeIco = item.found ? 'fa-check-circle' : 'fa-circle-xmark';
-      const badgeTxt = item.found ? 'Found' : 'Not Found';
-
-      const row = document.createElement('div');
-      row.className='wc-row';
-      row.style.animationDelay=(idx*35)+'ms';
-
-      // Header
-      const hdr=document.createElement('div');
-      hdr.className='row-hdr'+(canExpand?' clickable':'')+(isOpen&&canExpand?' is-expanded':'');
-      hdr.innerHTML=`
-        <div class="row-icon ${iconCls}"><i class="fas ${esc(item.icon)}"></i></div>
-        <div class="row-label">${esc(item.label)}</div>
-        <span class="status-badge ${badgeCls}">
-          <i class="fas ${badgeIco}" style="font-size:11px"></i>${badgeTxt}
-        </span>
-        ${canExpand?`<i class="fas fa-chevron-down row-chevron${isOpen?' open':''}"></i>`:''}`;
-
-      if (canExpand) {
-        hdr.addEventListener('click',()=>{
-          expandedIds.has(item.id) ? expandedIds.delete(item.id) : expandedIds.add(item.id);
-          renderResults();
+    document.getElementById('review-panel').classList.remove('open');
+    let items=allItems;
+    if (activeFilter==='found') items=allItems.filter(i=>i.found);
+    if (activeFilter==='not_found') items=allItems.filter(i=>!i.found);
+    if (items.length===0){ list.innerHTML=`<div class="empty-state"><i class="fas fa-inbox"></i><p>No items in this category.</p></div>`; return; }
+    items.forEach((item)=>{
+      const container=document.createElement('div');
+      container.className='wc-row-container';
+      const badgeCls=item.found?'sb-found':'sb-missing';
+      const badgeIcon=item.found?'fa-check':'fa-xmark';
+      const badgeTxt=item.found?'Found':'Not Found';
+      const header=document.createElement('div');
+      header.className='wc-row-header';
+      header.innerHTML=`
+        <span class="row-label">${esc(item.name)}</span>
+        <span class="status-badge ${badgeCls}"><i class="fas ${badgeIcon}"></i>${badgeTxt}</span>
+        <span class="row-chevron"><i class="fas fa-chevron-down"></i></span>`;
+      const content=document.createElement('div');
+      content.className='row-content';
+      let html='<div class="row-content-inner">';
+      if (item.found){
+        html+=`<div><div class="found-lbl">Detected in syllabus</div><div class="found-val">${esc(item.detail||'Confirmed present in syllabus.')}</div></div>`;
+      } else {
+        html+=`<div class="form-instruction"><i class="fas fa-pen-to-square"></i> Provide the missing information to include it in the updated template.</div>`;
+        item.inputs.forEach(f=>{
+          // req-badge is shown for required fields; hidden once user types a value
+          const badge=f.req
+            ?`<span class="req-badge" id="reqbadge-${f.key}">Required</span>`
+            :`<span class="opt-badge">Optional</span>`;
+          html+=`<div class="mfp-field">
+            <label class="mfp-label">${badge}<span>${esc(f.label)}</span></label>
+            <input type="text" id="input-${f.key}" class="mfp-input" placeholder="${esc(f.placeholder)}" data-req="${f.req}" autocomplete="off"/>
+          </div>`;
+          // NOTE: "This field is required." error message removed — red border + req-badge is sufficient
         });
       }
-      row.appendChild(hdr);
-
-      // Expanded: detail
-      if (isOpen && item.detail) {
-        const d=document.createElement('div'); d.className='row-detail';
-        d.innerHTML=esc(item.detail);
-        row.appendChild(d);
+      html+='</div>';
+      content.innerHTML=html;
+      header.addEventListener('click',()=>{
+        const isOpen=container.classList.contains('open');
+        container.classList.toggle('open',!isOpen);
+        content.classList.toggle('open',!isOpen);
+        if (!isOpen&&!item.found) setTimeout(()=>{ const f=content.querySelector('.mfp-input'); if(f) f.focus(); },300);
+      });
+      if (!item.found){
+        item.inputs.forEach(f=>{
+          setTimeout(()=>{
+            const inp=document.getElementById(`input-${f.key}`);
+            if (!inp) return;
+            // Restore saved value; if already has content hide the req-badge
+            if (savedInputs[f.key]!==undefined && savedInputs[f.key]!==''){
+              inp.value=savedInputs[f.key];
+              inp.classList.add('filled');
+              if (f.req){
+                const badge=document.getElementById(`reqbadge-${f.key}`);
+                if (badge) badge.style.display='none';
+              }
+            }
+            inp.addEventListener('input',()=>{
+              const v=inp.value.trim();
+              savedInputs[f.key]=inp.value;
+              inp.classList.toggle('filled',v.length>0);
+              if (v.length) inp.classList.remove('invalid');
+              // ── Hide "Required" badge while field has content; restore when cleared ──
+              if (f.req){
+                const badge=document.getElementById(`reqbadge-${f.key}`);
+                if (badge) badge.style.display=v.length>0?'none':'';
+              }
+              // ── Hide global error once all required fields filled ──
+              updateGlobalError();
+            });
+            inp.addEventListener('keydown',(e)=>{
+              if (e.key!=='Enter') return;
+              e.preventDefault();
+              savedInputs[f.key]=inp.value;
+              navigateToNextField(f.key);
+            });
+          },0);
+        });
       }
-      list.appendChild(row);
+      container.appendChild(header);
+      container.appendChild(content);
+      list.appendChild(container);
     });
   }
 
-  // ── Missing Fields Form (Consolidated) ─────────────────────────────────────
-  function injectMissingFieldsCard(data) {
-    const container = document.getElementById('mfp-container');
-    container.innerHTML = '';
-
-    const ins  = data.instructor         || {};
-    const off  = data.office_information || {};
-    const em   = data.email_information  || {};
-    const pref = data.preferred_information || {};
-    const rt   = data.response_time      || {};
-    const cl   = data.class_location     || {};
-    const cr   = data.credit_hours       || {};
-    const wl   = data.workload_information || {};
-    const gsc  = data.grading_scale      || {};
-    const lt   = data.late_information   || {};
-    const at   = data.assignment_types   || {};
-    const ad   = data.assignment_delivery || {};
-    const gp   = data.grading_process    || {};
-
-    function isUNHEmail(v) { const lc = v.toLowerCase(); return lc.endsWith('@unh.edu') || lc.endsWith('@usnh.edu'); }
-
-    const sections = [];
-
-    // Contact
-    const cF = [];
-    if (!pref.found) cF.push({ key: 'preferred_contact_method', label: 'Preferred Contact Method',
-      placeholder: off.phone ? 'e.g. email, Teams, office hours (phone must be 10 digits)' : 'e.g. email, Teams (phone must be 10 digits)',
-      chips: [
-        em.found && em.email ? { label: 'Email', cls: 'found', val: em.email } : null,
-        off.phone  ? { label: 'Phone',        cls: 'found', val: off.phone } : null,
-        off.hours  ? { label: 'Office Hours', cls: 'found', val: off.hours } : null,
-        { label: 'Teams',  cls: 'option', val: 'Teams' },
-        { label: 'Canvas', cls: 'option', val: 'Canvas' },
-      ].filter(Boolean),
-      validate: v => {
-        if (!v) return null;
-        if (v.includes('@')) return isUNHEmail(v) ? null : 'Use your UNH/USNH email (@unh.edu or @usnh.edu)';
-        const digits = v.replace(/\D/g, '');
-        if (digits.length && digits.length !== 10) return 'Phone must be 10 digits';
-        return null;
-      }
+  document.querySelectorAll('.filter-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      activeFilter=btn.dataset.filter;
+      document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      renderResults();
     });
-    if (!em.found) cF.push({ key: 'email', label: 'Email Address', placeholder: 'e.g. professor@unh.edu', chips: [],
-      validate: v => { if (!v.includes('@')) return 'Enter a valid email.'; if (!isUNHEmail(v)) return 'Use your UNH email (@unh.edu or @usnh.edu)'; return null; }
-    });
-    if (!rt.found) cF.push({ key: 'response_time', label: 'Response Time Policy', placeholder: 'e.g. I respond within 48 hours on weekdays.',
-      chips: [
-        { label: '24 hrs', cls: 'option', val: 'I respond within 24 hours on weekdays.' },
-        { label: '48 hrs', cls: 'option', val: 'I respond within 48 hours on weekdays.' },
-        { label: '72 hrs', cls: 'option', val: 'I respond within 72 hours.' },
-      ], validate: null
-    });
-    if (cF.length) sections.push({ title: 'Contact Information', icon: 'fa-address-card', fields: cF });
+  });
 
-    // Instructor
-    const iF = [];
-    if (!ins.name)       iF.push({ key: 'instructor_name',       label: 'Full Name',   placeholder: 'e.g. Dr. Jane Smith',    chips: [], validate: null });
-    if (!ins.title)      iF.push({ key: 'instructor_title',      label: 'Title/Rank',  placeholder: 'e.g. Professor',         chips: [], validate: null });
-    if (!ins.department) iF.push({ key: 'instructor_department', label: 'Department',  placeholder: 'e.g. Computer Science',  chips: [], validate: null });
-    if (iF.length) sections.push({ title: 'Instructor Information', icon: 'fa-user-tie', fields: iF });
-
-    // Office
-    const oF = [];
-    if (!off.location) oF.push({ key: 'office_address', label: 'Office Location', placeholder: 'e.g. Kingsbury Hall, Room 201', chips: [], validate: null });
-    if (!off.hours)    oF.push({ key: 'office_hours',   label: 'Office Hours',    placeholder: 'e.g. Mon/Wed 2:00PM–4:00PM',  chips: [],
-      validate: v => /\d/.test(v) ? null : 'Include a time with digits' });
-    if (!off.phone)    oF.push({ key: 'office_phone',   label: 'Phone (optional)', placeholder: 'e.g. 6035551234',            chips: [],
-      validate: v => { if (!v) return null; const d = v.replace(/[\s\-\+\(\)]/g, ''); return /^\d+$/.test(d) && d.length !== 10 ? 'Enter a valid 10-digit number' : null; }
-    });
-    if (oF.length) sections.push({ title: 'Office Information', icon: 'fa-building', fields: oF });
-
-    // Course
-    const courseF = [];
-    if (!cl.found) courseF.push({ key: 'class_location', label: 'Class Location', placeholder: 'e.g. DeMeritt Hall 240 or Online',
-      chips: [{ label: 'Online', cls: 'option', val: 'Online' }, { label: 'Hybrid', cls: 'option', val: 'Hybrid' }, { label: 'In-Person', cls: 'option', val: 'In-Person' }], validate: null });
-    if (data.modality_status !== 'PASS') courseF.push({ key: 'modality', label: 'Course Modality', placeholder: 'e.g. In-Person, Online, Hybrid',
-      chips: [{ label: 'In-Person', cls: 'option', val: 'In-Person' }, { label: 'Online', cls: 'option', val: 'Online' }, { label: 'Hybrid', cls: 'option', val: 'Hybrid' }, { label: 'Async', cls: 'option', val: 'Asynchronous' }], validate: null });
-    if (!cr.found) courseF.push({ key: 'credit_hour', label: 'Credit Hours', placeholder: 'e.g. 3',
-      chips: [{ label: '1', cls: 'option', val: '1' }, { label: '2', cls: 'option', val: '2' }, { label: '3', cls: 'option', val: '3' }, { label: '4', cls: 'option', val: '4' }],
-      validate: v => /^\d+(\.\d+)?$/.test(v) && parseFloat(v) > 0 ? null : 'Enter a number, e.g. 3' });
-    if (!wl.found) courseF.push({ key: 'workload', label: 'Expected Workload', placeholder: 'e.g. 6–9 hours per week outside class.', chips: [], validate: null });
-    if (!data.course_code)    courseF.push({ key: 'course_code',    label: 'Course Code',        placeholder: 'e.g. BIOT753',          chips: [], validate: null });
-    if (!data.course_name)    courseF.push({ key: 'course_name',    label: 'Course Name',        placeholder: 'e.g. Cell Culture (Lecture)', chips: [], validate: null });
-    if (!data.semester_year)  courseF.push({ key: 'semester_year',  label: 'Semester and Year',  placeholder: 'e.g. Spring 2026',       chips: [], validate: null });
-    if (courseF.length) sections.push({ title: 'Course Details', icon: 'fa-book', fields: courseF });
-
-    // Academic
-    const aF = [];
-    if (data.slo_status !== 'PASS') aF.push({ key: 'SLOs', label: 'Student Learning Outcomes', placeholder: 'e.g. 1. Students will...\n2. Students will...', chips: [], validate: null });
-    if (!gsc.found) aF.push({ key: 'final_grade_scale', label: 'Grading Scale',  placeholder: 'e.g. A: 93–100, B: 83–92...', chips: [], validate: null });
-    if (!lt.found)  aF.push({ key: 'deadline_expectations_title', label: 'Late Work Policy', placeholder: 'e.g. Late work not accepted without prior approval.', chips: [], validate: null });
-    if (!at.found)  aF.push({ key: 'assignment_types_title', label: 'Assignment Types', placeholder: 'e.g. Exams, Papers, Projects',
-      chips: [{ label: 'Exams', cls: 'option', val: 'Exams' }, { label: 'Papers', cls: 'option', val: 'Research Papers' }, { label: 'Quizzes', cls: 'option', val: 'Quizzes' }, { label: 'Projects', cls: 'option', val: 'Group Projects' }, { label: 'Labs', cls: 'option', val: 'Lab Reports' }], validate: null });
-    if (!ad.found)  aF.push({ key: 'assignment_delivery', label: 'Submission Method', placeholder: 'e.g. Submit via Canvas by 11:59 PM',
-      chips: [{ label: 'Canvas', cls: 'option', val: 'Submit via Canvas' }, { label: 'Email', cls: 'option', val: 'Submit via email' }, { label: 'In-person', cls: 'option', val: 'Submit in person' }], validate: null });
-    if (!gp.found)  aF.push({ key: 'grading_process', label: 'Grading Process', placeholder: 'e.g. Graded within two weeks with rubrics provided.', chips: [], validate: null });
-    if (aF.length) sections.push({ title: 'Academic Policies & Assessments', icon: 'fa-clipboard-list', fields: aF });
-
-    // Scenario: Everything is found 100%
-    if (!sections.length) {
-      container.innerHTML = `
-        <div class="completion-banner">
-          <div class="cb-check" style="margin:0 auto 16px"><i class="fas fa-check"></i></div>
-          <div class="cb-title">Template is ready!</div>
-          <div class="cb-sub" style="color:rgba(150,180,240,0.6);margin-bottom:22px">All required fields were found in your syllabus.</div>
-          <button class="mfp-dl-btn" id="cb-dl-btn-all-found">
-            <i class="fas fa-download"></i> Download Template
-          </button>
+  function buildReviewRow(item,f,grid){
+    const row=document.createElement('div');
+    row.className='review-row';
+    function renderView(){
+      const val=(savedInputs[f.key]||'').trim();
+      row.classList.remove('editing');
+      row.innerHTML=`
+        <div class="review-row-view">
+          <div class="review-row-label">${esc(item.name)}</div>
+          <div class="review-row-val">${val?esc(val):'<span style="color:var(--text-dim);font-style:italic;">Not provided (optional)</span>'}</div>
+          <button class="edit-btn"><i class="fas fa-pencil"></i> Edit</button>
         </div>`;
-      document.getElementById('cb-dl-btn-all-found').addEventListener('click', () => doPost({}));
-      return;
+      row.querySelector('.edit-btn').addEventListener('click',renderEdit);
     }
-
-    const cid = 'mfp-' + Date.now();
-    const allFields = sections.flatMap(s => s.fields);
-    const optional = new Set(allFields.map(f => f.key));
-
-    function fieldHTML(f) {
-      const chipsHTML = f.chips.length
-        ? `<div class="mfp-chips" id="${cid}-chips-${f.key}">${f.chips.map(c =>
-            `<div class="mfp-chip ${c.cls}" data-key="${esc(f.key)}" data-val="${esc(c.val)}">${esc(c.label)}</div>`
-          ).join('')}</div>`
-        : '';
-      return `<div class="mfp-field">
-        <label class="mfp-label">${esc(f.label)}</label>
-        <input type="text" id="${cid}-${f.key}" class="mfp-input" placeholder="${esc(f.placeholder)}" autocomplete="off" value=""/>
-        <div id="${cid}-err-${f.key}" class="mfp-error"></div>
-        ${chipsHTML}
-      </div>`;
-    }
-
-    let formHTML = '';
-    sections.forEach(sec => {
-      formHTML += `<div class="mfp-section"><div class="mfp-section-title"><i class="fas ${sec.icon}" style="margin-right:8px"></i>${esc(sec.title)}</div>`;
-      sec.fields.forEach(f => { formHTML += fieldHTML(f); });
-      formHTML += '</div>';
-    });
-
-    container.innerHTML = `
-      <div class="mfp-card" id="${cid}">
-        <div class="mfp-header" id="${cid}-header">
-          <div class="mfp-header-icon" id="${cid}-h-icon"><i class="fas fa-exclamation-triangle"></i></div>
-          <div class="mfp-header-text" id="${cid}-h-text">
-            <strong>Action Required</strong>
-            <div class="mfp-sub">Complete the missing fields below to download your template.</div>
-          </div>
-        </div>
-        <div class="mfp-body" id="${cid}-body">
-          ${formHTML}
-          <div id="${cid}-err-main" class="mfp-error" style="margin-bottom:12px;font-size:13px"></div>
-          <div class="mfp-btn-row">
-            <button id="${cid}-submit" class="mfp-submit-btn"><i class="fas fa-paper-plane"></i> Review &amp; Submit</button>
-          </div>
-        </div>
-      </div>`;
-
-    const body = document.getElementById(cid + '-body');
-
-    function wireAll() {
-      body.querySelectorAll('.mfp-chip').forEach(chip => {
-        chip.addEventListener('click', function () {
-          const key = this.dataset.key, val = this.dataset.val;
-          const inp = document.getElementById(cid + '-' + key); if (!inp) return;
-          inp.value = val;
-          body.querySelectorAll(`.mfp-chip[data-key="${key}"]`).forEach(c => c.classList.remove('active'));
-          this.classList.add('active');
-          inp.dispatchEvent(new Event('input'));
-        });
-      });
-
-      allFields.forEach(f => {
-        const inp = document.getElementById(cid + '-' + f.key); if (!inp) return;
-        if (!inp.dataset.origPlaceholder) inp.dataset.origPlaceholder = inp.placeholder || '';
-        inp.addEventListener('input', function () {
-          const v = this.value.trim();
-          const errEl = document.getElementById(cid + '-err-' + f.key);
-          if (!v) { this.classList.remove('valid', 'invalid'); this.placeholder = this.dataset.origPlaceholder; if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; } return; }
-          if (f.validate) {
-            const err = f.validate(v);
-            if (err) { this.classList.add('invalid'); this.classList.remove('valid'); this.placeholder = err; if (errEl) { errEl.textContent = err; errEl.style.display = 'block'; } }
-            else     { this.classList.remove('invalid'); this.classList.add('valid'); this.placeholder = this.dataset.origPlaceholder; if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; } }
-          } else { this.classList.remove('valid', 'invalid'); }
-        });
-      });
-
-      const sb = document.getElementById(cid + '-submit');
-      if (sb) sb.addEventListener('click', function () {
-        const me = document.getElementById(cid + '-err-main'); me.style.display = 'none'; me.textContent = '';
-        if (!validateAll()) { me.textContent = 'Please fix the errors above before continuing.'; me.style.display = 'block'; return; }
-        showConfirmView(collectValues());
-      });
-    }
-
-    function validateAll() {
-      let ok = true;
-      allFields.forEach(f => {
-        const inp = document.getElementById(cid + '-' + f.key), err = document.getElementById(cid + '-err-' + f.key);
-        if (!inp || !err) return;
-        const v = inp.value.trim(); err.style.display = 'none'; err.textContent = '';
-        if (optional.has(f.key)) { if (v && f.validate) { const e = f.validate(v); if (e) { err.textContent = e; err.style.display = 'block'; ok = false; } } return; }
-        if (!v) { err.textContent = 'Please fill in ' + f.label.toLowerCase() + '.'; err.style.display = 'block'; ok = false; return; }
-        if (f.validate) { const e = f.validate(v); if (e) { err.textContent = e; err.style.display = 'block'; ok = false; } }
-      });
-      return ok;
-    }
-
-    function collectValues() {
-      const vals = {};
-      allFields.forEach(f => { const inp = document.getElementById(cid + '-' + f.key); if (inp) vals[f.key] = inp.value.trim(); });
-      return vals;
-    }
-
-    wireAll();
-
-    function showConfirmView(vals) {
-      const filled = allFields.filter(f => vals[f.key]);
-      const rows = filled.map(f =>
-        `<div class="mfp-confirm-row"><strong>${esc(f.label)}:</strong><span class="mfp-confirm-val">${esc(vals[f.key] || '')}</span></div>`
-      ).join('');
-      
-      body.innerHTML = `
-        <div class="mfp-confirm">
-          <div class="mfp-confirm-label"><i class="fas fa-eye" style="margin-right:5px"></i>Review before generating (${filled.length} field${filled.length !== 1 ? 's' : ''}):</div>
-          <div class="mfp-confirm-rows">${rows}</div>
-          <div id="${cid}-post-err" class="mfp-error" style="margin-bottom:12px"></div>
-          <div class="mfp-btn-row">
-            <button id="${cid}-confirm" class="mfp-submit-btn"><i class="fas fa-check"></i> Generate Template</button>
-            <button id="${cid}-edit"    class="mfp-edit-btn"><i class="fas fa-pencil-alt"></i> Edit Details</button>
+    function renderEdit(){
+      const val=(savedInputs[f.key]||'');
+      row.classList.add('editing');
+      row.innerHTML=`
+        <div class="review-row-edit">
+          <div class="review-row-edit-label">${esc(item.name)}</div>
+          <input type="text" class="review-inline-input" value="${esc(val)}" placeholder="${esc(f.placeholder)}"/>
+          <div class="review-row-edit-actions">
+            <button class="cancel-inline-btn">Cancel</button>
+            <button class="save-inline-btn"><i class="fas fa-check"></i> Save</button>
           </div>
         </div>`;
-      document.getElementById(cid + '-edit').addEventListener('click',    () => showInputView(vals));
-      document.getElementById(cid + '-confirm').addEventListener('click', () => doPost(vals));
-    }
-
-    function showInputView(prefill) {
-      // Revert header to warning state if user clicks edit after it changed to success
-      const hdr = document.getElementById(cid + '-header');
-      if (hdr) {
-        hdr.style.background = 'rgba(245, 158, 11, 0.08)';
-        hdr.style.borderBottom = '1px solid rgba(245, 158, 11, 0.15)';
-        document.getElementById(cid + '-h-icon').innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
-        document.getElementById(cid + '-h-icon').style.background = 'rgba(245, 158, 11, 0.15)';
-        document.getElementById(cid + '-h-icon').style.borderColor = 'rgba(245, 158, 11, 0.25)';
-        document.getElementById(cid + '-h-icon').style.color = '#fbbf24';
-        document.getElementById(cid + '-h-text').innerHTML = '<strong>Action Required</strong><div class="mfp-sub">Complete the missing fields below to download your template.</div>';
-      }
-
-      let fh = '';
-      sections.forEach(sec => {
-        fh += `<div class="mfp-section"><div class="mfp-section-title"><i class="fas ${sec.icon}" style="margin-right:8px"></i>${esc(sec.title)}</div>`;
-        sec.fields.forEach(f => { fh += fieldHTML(f); });
-        fh += '</div>';
-      });
-      body.innerHTML = `${fh}
-        <div id="${cid}-err-main" class="mfp-error" style="margin-bottom:12px;font-size:13px"></div>
-        <div class="mfp-btn-row"><button id="${cid}-submit" class="mfp-submit-btn"><i class="fas fa-paper-plane"></i> Review &amp; Submit</button></div>`;
-      allFields.forEach(f => { const inp = document.getElementById(cid + '-' + f.key); if (inp && prefill && prefill[f.key]) inp.value = prefill[f.key]; });
-      wireAll();
-    }
-
-    async function doPost(vals) {
-      const cb = document.getElementById(cid + '-confirm') || document.getElementById('cb-dl-btn-all-found');
-      const eb = document.getElementById(cid + '-edit');
-      
-      if (cb) {
-        cb.disabled = true;
-        cb.innerHTML = '<span class="btn-spin"></span> Generating…';
-      }
-      if (eb) eb.disabled = true;
-
-      try {
-        const payload = { user_inputs: Object.assign({}, vals), filename: (lastApiData && lastApiData.filename) || '' };
-        if (payload.user_inputs && payload.user_inputs.credit_hour) payload.user_inputs.credit_hours = payload.user_inputs.credit_hour;
-        
-        const response = await fetch('/submit_missing_fields', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
-        });
-        if (!response.ok) { const e = await response.json().catch(() => ({})); throw new Error(e.error || 'Server error. Please try again.'); }
-        
-        const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        const dlFilename = ((lastApiData && lastApiData.filename) ? lastApiData.filename.replace(/\.[^/.]+$/, '') : 'syllabus') + '_updated.docx';
-        const filled = Object.values(vals).filter(v => v).length;
-        
-        if (container.querySelector('.completion-banner')) {
-          // If all found path
-          const a = document.createElement('a'); a.href = blobUrl; a.download = dlFilename;
-          document.body.appendChild(a); a.click(); document.body.removeChild(a);
-          URL.revokeObjectURL(blobUrl);
-          if(cb) { cb.disabled = true; cb.innerHTML = '<i class="fas fa-check"></i> Downloaded!'; }
-        } else {
-          // Change the header to green success state
-          const hdr = document.getElementById(cid + '-header');
-          if (hdr) {
-            hdr.style.background = 'rgba(16, 185, 129, 0.08)';
-            hdr.style.borderBottom = '1px solid rgba(16, 185, 129, 0.15)';
-            document.getElementById(cid + '-h-icon').innerHTML = '<i class="fas fa-check-circle"></i>';
-            document.getElementById(cid + '-h-icon').style.background = 'rgba(16, 185, 129, 0.15)';
-            document.getElementById(cid + '-h-icon').style.borderColor = 'rgba(16, 185, 129, 0.25)';
-            document.getElementById(cid + '-h-icon').style.color = '#34d399';
-            document.getElementById(cid + '-h-text').innerHTML = '<strong style="color: #6ee7b7;">Submission Confirmed</strong><div class="mfp-sub" style="color: rgba(110, 231, 183, 0.7);">Your updated syllabus template is generated and ready for download.</div>';
+      const inp=row.querySelector('.review-inline-input');
+      inp.focus(); inp.select();
+      function doSave(){
+        savedInputs[f.key]=inp.value;
+        const formInp=document.getElementById(`input-${f.key}`);
+        if (formInp){
+          formInp.value=inp.value;
+          const filled=inp.value.trim().length>0;
+          formInp.classList.toggle('filled',filled);
+          // Sync req-badge in the form
+          if (f.req){
+            const badge=document.getElementById(`reqbadge-${f.key}`);
+            if (badge) badge.style.display=filled?'none':'';
           }
-
-          // Render Success Body
-          body.innerHTML = `
-            <div class="mfp-success">
-              <div class="mfp-check"><i class="fas fa-check"></i></div>
-              <div class="mfp-success-title">Your template is ready!</div>
-              <div class="mfp-success-sub">${filled} field${filled !== 1 ? 's' : ''} added to your syllabus.</div>
-              <button id="${cid}-dl" class="mfp-dl-btn"><i class="fas fa-download"></i> Download Template</button>
-              <button class="mfp-reenter" id="${cid}-reenter"><i class="fas fa-pencil-alt" style="font-size:11px;margin-right:4px"></i> Re-enter values</button>
-            </div>`;
-          document.getElementById(cid + '-dl').addEventListener('click', function () {
-            const a = document.createElement('a'); a.href = blobUrl; a.download = dlFilename;
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            URL.revokeObjectURL(blobUrl); this.disabled = true; this.innerHTML = '<i class="fas fa-check"></i> Downloaded!';
-          });
-          document.getElementById(cid + '-reenter').addEventListener('click', () => { URL.revokeObjectURL(blobUrl); showInputView(vals); });
         }
-      } catch (err) {
-        if (cb) { cb.disabled = false; cb.innerHTML = '<i class="fas fa-check"></i> Generate Template'; }
-        if (eb) eb.disabled = false;
-        const errEl = document.getElementById(cid + '-post-err');
-        if (errEl) { errEl.textContent = err.message || 'An unexpected error occurred. Please try again.'; errEl.style.display = 'block'; }
-        else alert('Download failed: ' + (err.message || 'Please try again.'));
+        renderView();
       }
+      row.querySelector('.save-inline-btn').addEventListener('click',doSave);
+      row.querySelector('.cancel-inline-btn').addEventListener('click',renderView);
+      inp.addEventListener('keydown',(e)=>{ if(e.key==='Enter'){e.preventDefault();doSave();} if(e.key==='Escape') renderView(); });
+    }
+    renderView();
+    grid.appendChild(row);
+  }
+
+  document.getElementById('open-review-btn').addEventListener('click',()=>{
+    const errorMsg=document.getElementById('global-error');
+    const footerNote=document.getElementById('footer-note');
+    errorMsg.style.display='none';
+
+    // Collect current input values
+    allItems.filter(i=>!i.found).forEach(item=>{
+      item.inputs.forEach(f=>{ const inp=document.getElementById(`input-${f.key}`); if(inp) savedInputs[f.key]=inp.value; });
+    });
+
+    // Validate — find first invalid input for immediate focus
+    let isValid=true, firstErrInput=null;
+    allItems.filter(i=>!i.found).forEach(item=>{
+      let sectionErr=false;
+      item.inputs.forEach(f=>{
+        const inp=document.getElementById(`input-${f.key}`);
+        if (!inp) return;
+        inp.classList.remove('invalid');
+        if (f.req && !inp.value.trim()){
+          inp.classList.add('invalid');
+          isValid=false; sectionErr=true;
+          if (!firstErrInput) firstErrInput=inp;
+        }
+      });
+      if (sectionErr){
+        // Open the section accordion so the field is visible
+        const c=document.getElementById(`input-${item.inputs[0].key}`)?.closest('.wc-row-container');
+        if (c && !c.classList.contains('open')){
+          c.classList.add('open');
+          c.querySelector('.row-content').classList.add('open');
+        }
+      }
+    });
+
+    if (!isValid){
+      errorMsg.style.display='flex';
+      footerNote.style.display='none';
+      if (firstErrInput){
+        // Scroll to field and immediately focus so user can start typing
+        const top=firstErrInput.getBoundingClientRect().top+window.scrollY-160;
+        window.scrollTo({top,behavior:'smooth'});
+        setTimeout(()=>{ firstErrInput.focus(); firstErrInput.select(); },420);
+      }
+      return;
+    }
+
+    // Build review panel
+    const grid=document.getElementById('review-grid');
+    grid.innerHTML='';
+    allItems.filter(i=>!i.found).forEach(item=>{
+      item.inputs.forEach(f=>{
+        const val=(savedInputs[f.key]||'').trim();
+        if (!val&&!f.req) return;
+        buildReviewRow(item,f,grid);
+      });
+    });
+    if (grid.children.length===0){
+      grid.innerHTML='<div style="font-size:14px;color:var(--text-muted);padding:8px 0;">All requirements were already found in the syllabus.</div>';
+    }
+    document.getElementById('review-panel').classList.add('open');
+    setTimeout(()=>{
+      const panel=document.getElementById('review-panel');
+      window.scrollTo({top:panel.getBoundingClientRect().top+window.scrollY-100,behavior:'smooth'});
+      setTimeout(()=>document.getElementById('generate-btn').focus(),400);
+    },50);
+  });
+
+  document.getElementById('generate-btn').addEventListener('click',()=>{
+    const vals={};
+    allItems.filter(i=>!i.found).forEach(item=>{
+      item.inputs.forEach(f=>{ const v=(savedInputs[f.key]||'').trim(); if(v) vals[f.key]=v; });
+    });
+    doPost(vals);
+  });
+
+  async function doPost(vals){
+    const btn=document.getElementById('generate-btn');
+    btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Generating…';
+    try {
+      const payload={user_inputs:vals,filename:(lastApiData&&lastApiData.filename)||''};
+      if (payload.user_inputs.credit_hour) payload.user_inputs.credit_hours=payload.user_inputs.credit_hour;
+      const response=await fetch('/submit_missing_fields',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      if (!response.ok) throw new Error('Server error.');
+      const blob=await response.blob();
+      const blobUrl=URL.createObjectURL(blob);
+      const dlName=((lastApiData?.filename)?lastApiData.filename.replace(/\.[^/.]+$/,''):'syllabus')+'_updated.docx';
+      const a=document.createElement('a'); a.href=blobUrl; a.download=dlName;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+      btn.classList.add('success-state'); btn.innerHTML='<i class="fas fa-circle-check"></i> Downloaded!';
+      showToast('Updated syllabus template downloaded.','success');
+      setTimeout(()=>{ btn.disabled=false; btn.classList.remove('success-state'); btn.innerHTML='<i class="fas fa-wand-magic-sparkles"></i> Generate Updated Template'; },3000);
+    } catch(err){
+      btn.disabled=false; btn.innerHTML='<i class="fas fa-wand-magic-sparkles"></i> Generate Updated Template';
+      showToast('Download failed. Please try again.','error');
     }
   }
 
-  // ── Show results ───────────────────────────────────────────────────────────
-  function showResults(data, filename) {
+  function showResults(data,filename){
     lastApiData=data;
-    allItems=buildItems(data);
+    Object.keys(savedInputs).forEach(k=>delete savedInputs[k]);
+    allItems=COMPLIANCES.map(comp=>({id:comp.id,name:comp.name,found:comp.checkFound(data),detail:comp.getDetail(data),inputs:comp.inputs}));
     document.getElementById('res-filename').textContent=filename||data.filename||'Syllabus';
-    updateCounts();
-    renderResults();
-    injectMissingFieldsCard(data);
-    showView('results');
+    activeFilter='all';
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.filter==='all'));
+    updateCounts(); renderResults(); showView('results');
+    setTimeout(()=>{ const first=document.querySelector('.sb-missing'); if(first) first.closest('.wc-row-header')?.click(); },450);
   }
 
-  // ── Upload / loading ───────────────────────────────────────────────────────
-  let _progressTimer=null;
-  let _progress=0;
-  const DROPZONE_IDLE=`
-    <div class="dropzone-shimmer"></div>
-    <div class="dropzone-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-    <div style="text-align:center">
-      <strong class="dropzone-title">Drop your syllabus here</strong>
-      <div class="dropzone-sub">or <span>click to browse</span> · PDF or DOCX</div>
-    </div>`;
-
-  function startLoading() {
-    uploading=true; _progress=0;
+  function startLoading(){
+    uploading=true;
     const dz=document.getElementById('dropzone');
-    dz.style.padding='44px 36px';
-    dz.innerHTML=`
-      <div class="loading-inner">
-        <div class="loading-spinner"></div>
-        <div class="loading-title">Analyzing your syllabus…</div>
-        <div class="loading-sub">Scanning 15 NECHE compliance requirements</div>
-        <div class="loading-track"><div class="loading-bar" id="loading-bar" style="width:0%"></div></div>
-        <div class="loading-pct" id="loading-pct">0%</div>
-      </div>`;
-    _progressTimer=setInterval(()=>{
-      _progress=_progress>=93?93:_progress+Math.random()*11;
-      const b=document.getElementById('loading-bar');
-      const p=document.getElementById('loading-pct');
-      if(b) b.style.width=_progress+'%';
-      if(p) p.textContent=Math.round(_progress)+'%';
-    },230);
+    dz.style.borderStyle='solid'; dz.style.borderColor='rgba(255,255,255,0.4)';
+    dz.innerHTML=`<div class="loading-ring"></div><div style="text-align:center"><div class="dz-title" style="margin-bottom:8px;">Analyzing your syllabus…</div><div class="loading-dots"><span></span><span></span><span></span></div></div>`;
   }
 
-  function stopLoading() {
-    clearInterval(_progressTimer); uploading=false;
-    const dz=document.getElementById('dropzone');
-    dz.style.padding='60px 36px';
-    dz.innerHTML=DROPZONE_IDLE;
+  function stopLoading(){
+    uploading=false; const dz=document.getElementById('dropzone');
+    dz.style.borderStyle=''; dz.style.borderColor=''; renderDropzone();
   }
 
-  async function handleFile(file) {
+  async function handleFile(file){
     if (!file) return;
     const ext=file.name.split('.').pop().toLowerCase();
-    if (!['pdf','docx'].includes(ext)){alert('Please upload a PDF or DOCX file.');return;}
+    if (!['pdf','docx'].includes(ext)){ showToast('Please upload a PDF or DOCX file.','error'); return; }
     startLoading();
     const fd=new FormData(); fd.append('file',file);
     try {
       const res=await fetch('/upload',{method:'POST',body:fd});
       const data=await res.json();
       stopLoading();
-      if (!res.ok){alert('Error: '+(data.error||'Upload failed.'));return;}
+      if (!res.ok){ showToast('Error: '+(data.error||'Upload failed.'),'error'); return; }
       showResults(data,file.name);
-    } catch(e){
-      console.error(e); stopLoading();
-      alert('Failed to upload. Please try again.');
-    }
+    } catch(e){ console.error(e); stopLoading(); showToast('Upload failed. Please try again.','error'); }
   }
 
-  // ── Dropzone wiring ────────────────────────────────────────────────────────
   const dropzone=document.getElementById('dropzone');
   const fileInput=document.getElementById('file-input');
-
   dropzone.addEventListener('click',()=>{ if(!uploading) fileInput.click(); });
   fileInput.addEventListener('change',e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); e.target.value=''; });
-  dropzone.addEventListener('dragover', e=>{ e.preventDefault(); if(!uploading) dropzone.classList.add('drag-over'); });
+  dropzone.addEventListener('dragover',e=>{ e.preventDefault(); if(!uploading) dropzone.classList.add('drag-over'); });
   dropzone.addEventListener('dragleave',()=>dropzone.classList.remove('drag-over'));
-  dropzone.addEventListener('drop',e=>{
-    e.preventDefault(); dropzone.classList.remove('drag-over');
-    if(!uploading&&e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
-  });
+  dropzone.addEventListener('drop',e=>{ e.preventDefault(); dropzone.classList.remove('drag-over'); if(!uploading&&e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
   document.getElementById('new-check-btn').addEventListener('click',resetAll);
-
-  // ── Filter tabs ────────────────────────────────────────────────────────────
-  document.querySelectorAll('.filter-btn').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      activeFilter=btn.dataset.filter;
-      document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b===btn));
-      renderResults();
-    });
-  });
-
-  // ── Background canvas + cursor ─────────────────────────────────────────────
-  (function(){
-    const bgCv=document.getElementById('bg-canvas');
-    const bgCx=bgCv.getContext('2d');
-    const curCv=document.getElementById('cursor-canvas');
-    const curCx=curCv.getContext('2d');
-    let W,H;
-    function resize(){
-      W=bgCv.width=curCv.width=window.innerWidth;
-      H=bgCv.height=curCv.height=window.innerHeight;
-    }
-    resize(); window.addEventListener('resize',resize);
-
-    const N=70;
-    const pts=Array.from({length:N},()=>({
-      x:Math.random()*window.innerWidth, y:Math.random()*window.innerHeight,
-      vx:(Math.random()-0.5)*0.3, vy:(Math.random()-0.5)*0.3,
-      r:Math.random()*2+0.5, a:Math.random()*0.25+0.05
-    }));
-
-    let mx=-200, my=-200, cursorOn=false;
-    document.addEventListener('mousemove',e=>{ mx=e.clientX; my=e.clientY; cursorOn=true; });
-    document.addEventListener('mouseleave',()=>{ cursorOn=false; });
-    document.addEventListener('mouseenter',()=>{ cursorOn=true; });
-
-    const CONTENT_SEL='#wc-header,.up-heading,.wc-dropzone,.up-features,.results-inner';
-    function overContent(){
-      if(!cursorOn) return true;
-      const el=document.elementFromPoint(mx,my);
-      return el ? !!el.closest(CONTENT_SEL) : false;
-    }
-
-    function drawCursor(x,y){
-      // 1. Soft Cyan Glow underneath
-      const g = curCx.createRadialGradient(x, y, 0, x, y, 25);
-      g.addColorStop(0, 'rgba(56, 189, 248, 0.4)');
-      g.addColorStop(1, 'rgba(56, 189, 248, 0)');
-      curCx.beginPath(); curCx.arc(x, y, 25, 0, Math.PI*2);
-      curCx.fillStyle = g; curCx.fill();
-
-      curCx.save();
-      curCx.translate(x, y);
-
-      // 2. Sleek Arrowhead Base (Cyan Border)
-      curCx.beginPath();
-      curCx.moveTo(0, 0);       // Tip
-      curCx.lineTo(14, 6);      // Right wing
-      curCx.lineTo(8, 8);       // Inner joint
-      curCx.lineTo(6, 14);      // Left wing / Tail
-      curCx.closePath();
-
-      curCx.fillStyle = 'rgba(230, 245, 255, 0.95)';
-      curCx.fill();
-      
-      curCx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
-      curCx.lineWidth = 1.5;
-      curCx.lineJoin = 'round';
-      curCx.stroke();
-
-      // 3. Central Bright Dot at the exact tip
-      curCx.beginPath(); curCx.arc(0, 0, 1.5, 0, Math.PI*2);
-      curCx.fillStyle = '#fff'; curCx.fill();
-      
-      curCx.restore();
-    }
-
-    function draw(){
-      bgCx.clearRect(0,0,W,H);
-      curCx.clearRect(0,0,W,H);
-
-      pts.forEach(p=>{
-        p.x+=p.vx; p.y+=p.vy;
-        if(p.x<0||p.x>W) p.vx*=-1;
-        if(p.y<0||p.y>H) p.vy*=-1;
-        bgCx.beginPath(); bgCx.arc(p.x,p.y,p.r,0,Math.PI*2);
-        bgCx.fillStyle=`rgba(100,150,255,${p.a})`; bgCx.fill();
-      });
-
-      for(let i=0;i<N;i++) for(let j=i+1;j<N;j++){
-        const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
-        const d=Math.sqrt(dx*dx+dy*dy);
-        if(d<120){
-          bgCx.beginPath(); bgCx.moveTo(pts[i].x,pts[i].y); bgCx.lineTo(pts[j].x,pts[j].y);
-          bgCx.strokeStyle=`rgba(100,150,255,${0.06*(1-d/120)})`; bgCx.lineWidth=0.5; bgCx.stroke();
-        }
-      }
-
-      if(cursorOn && !overContent()){
-        pts.forEach(p=>{
-          const dx=mx-p.x, dy=my-p.y;
-          const d=Math.sqrt(dx*dx+dy*dy);
-          if(d<200){
-            bgCx.beginPath(); bgCx.moveTo(mx,my); bgCx.lineTo(p.x,p.y);
-            bgCx.strokeStyle=`rgba(140,185,255,${0.45*(1-d/200)})`;
-            bgCx.lineWidth=0.9; bgCx.stroke();
-          }
-        });
-      }
-
-      if(cursorOn) drawCursor(mx,my);
-      requestAnimationFrame(draw);
-    }
-    draw();
-  })();
-
-  // ── Init ───────────────────────────────────────────────────────────────────
   showView('upload');
   </script>
 </body>

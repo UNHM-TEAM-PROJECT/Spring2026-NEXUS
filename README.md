@@ -15,7 +15,7 @@ The **Syllabus Field Detector** is a web application that automatically analyzes
 - Uses lightweight pattern matching for fast, explainable results with confidence scores
 - Provides instant, explainable results with confidence scores
 - Supports batch processing via ZIP uploads or folder selection
-- Achieves **90.8% F1 Score** overall across all detectors (tested on 310 files)
+- Achieves **92.4% F1 Score** overall across all detectors (tested on 310 files)
 - Guides users through filling all missing fields via an interactive UI form and generates a downloadable updated DOCX template
 
 ---
@@ -291,9 +291,9 @@ python test_runner.py
 
 ### Current Test Results (310 total files)
 | Field | Accuracy | Precision | Recall | F1 Score |
-|------|---------:|----------:|-------:|---------:|
+|-------|----------|-----------|--------|----------|
 | modality | 83.2% | 89.1% | 92.3% | 90.7% |
-| SLOs | 92.6% | 97.3% | 80.8% | 87.7% |
+| SLOs | 98.1% | 98.7% | 94.9% | 96.7% |
 | email | 94.8% | 100.0% | 94.2% | 97.0% |
 | credit_hour | 94.2% | 97.4% | 91.9% | 94.6% |
 | workload | 94.5% | 91.9% | 92.9% | 92.4% |
@@ -304,15 +304,15 @@ python test_runner.py
 | office_hours | 87.4% | 96.1% | 85.9% | 90.6% |
 | office_phone | 90.6% | 90.9% | 84.3% | 87.4% |
 | preferred_contact_method | 94.5% | 86.8% | 69.2% | 75.1% |
-| assignment_types_title | 84.8% | 89.7% | 82.2% | 85.8% |
-| deadline_expectations_title | 82.9% | 86.5% | 82.9% | 84.7% |
+| assignment_types_title | 92.3% | 90.4% | 95.8% | 93.0% |
+| deadline_expectations_title | 91.6% | 94.4% | 92.1% | 93.2% |
 | assignment_delivery | 90.6% | 96.4% | 90.3% | 93.3% |
 | final_grade_scale | 91.9% | 94.1% | 89.0% | 91.4% |
 | response_time | 98.4% | 92.7% | 96.8% | 94.4% |
 | class_location | 87.4% | 91.5% | 89.6% | 90.5% |
-| grading_process | 87.1% | 92.9% | 83.5% | 87.8% |
-| **OVERALL** | **90.8%** | **93.6%** | **88.2%** | **90.8%** |
-
+| grading_process | 95.2% | 98.2% | 94.8% | 96.5% |
+| **OVERALL** | **92.3%** | **94.3%** | **90.6%** | **92.4%** |
+ 
 ## Next Steps and Future Work
 
 ### Technical Debt
